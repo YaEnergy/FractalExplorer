@@ -13,5 +13,6 @@ struct ComplexNumber
 	}
 
 	public:
+		double GetSquaredDistanceFromOrigin() const;
 		double GetDistanceFromOrigin() const;
 };

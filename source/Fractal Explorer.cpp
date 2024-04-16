@@ -4,6 +4,7 @@
 #include "Fractal Explorer.h"
 #include "Mandelbrot.h"
 #include "raylib.h"
+#include <vector>
 
 //I prefer to use doubles for position here since it gives more precision
 
@@ -14,7 +15,7 @@ float zoomDeltaTime = 0.0f;
 
 double zoom = 100.0;
 double precision = 2.0;
-int iterations = 20;
+int maxIterations = 20;
 
 void UpdateDrawFrame();
 
@@ -105,30 +106,37 @@ void UpdateDrawFrame()
 
 	//Iteration keys
 	if (IsKeyPressed(KEY_KP_ADD))
-		iterations++;
+		maxIterations++;
 	else if (IsKeyPressed(KEY_KP_SUBTRACT))
-		iterations--;
+		maxIterations--;
 
 	//Draw
 	BeginDrawing();
 	ClearBackground(BLACK);
 
+	//generate fractal iteration palette
+	std::vector<Color> paletteColors = std::vector<Color>(maxIterations);
+
+	for (int i = 0; i < maxIterations; i++)
+	{
+		paletteColors[i] = ColorFromHSV((float)i * (360.0f / (float)maxIterations), 1.0f, 1.0f);
+	}
+
+	//draw fractal
 	for (int y = 0; y <= screenHeight; y++)
 	{
 		for (int x = 0; x <= screenWidth; x++)
 		{
-			ComplexNumber complex = GetMandelbrotSetComplexNumber({ ((double)x - (double)screenWidth / 2.0) / zoom + positionX, ((double)y - (double)screenHeight / 2.0) / zoom + positionY }, iterations);
+			int iterations = GetMandelbrotSetComplexNumberMaxIterations({ ((double)x - (double)screenWidth / 2.0) / zoom + positionX, ((double)y - (double)screenHeight / 2.0) / zoom + positionY }, maxIterations);
 
-			double distance = complex.GetDistanceFromOrigin();
-			if (distance <= 2.0)
-				DrawPixel(x, y, ColorFromHSV(distance / 2.0 * 360.0, 1.0f, 1.0f));
+			DrawPixel(x, y, paletteColors[iterations - 1]);
 		}
 	}
 
 	DrawFPS(10, 10);
 	DrawText(TextFormat("Position : %f, %f", (float)positionX, (float)positionY), 10, 10 + 24, 24, GREEN);
 	DrawText(TextFormat("Zoom: %f", zoom), 10, 10 + 24 * 2, 24, GREEN);
-	DrawText(TextFormat("Iterations: %i", iterations), 10, 10 + 24 * 3, 24, GREEN);
+	DrawText(TextFormat("Max iterations: %i", maxIterations), 10, 10 + 24 * 3, 24, GREEN);
 
 	EndDrawing();
 }
