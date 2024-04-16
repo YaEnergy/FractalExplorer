@@ -10,6 +10,8 @@
 double positionX = 0.0;
 double positionY = 0.0;
 
+float zoomDeltaTime = 0.0f;
+
 double zoom = 100.0;
 double precision = 2.0;
 int iterations = 20;
@@ -56,9 +58,10 @@ void UpdateDrawFrame()
 	float deltaTime = GetFrameTime();
 
 	//Update
+	zoomDeltaTime += deltaTime;
 
 	//Very basic camera movement
-	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 100.0f : 10.0f;
+	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 500.0f : 100.0f;
 
 	if (IsKeyDown(KEY_LEFT))
 		positionX -= (double)(movementSpeed * deltaTime) / zoom;
@@ -72,9 +75,27 @@ void UpdateDrawFrame()
 
 	//Very basic zoom
 	if (IsKeyDown(KEY_I))
-		zoom *= 1.1;
+	{
+		if (IsKeyPressed(KEY_I))
+			zoomDeltaTime = 0.05f;
+
+		while (zoomDeltaTime >= 0.05)
+		{
+			zoom *= 1.1;
+			zoomDeltaTime -= 0.05;
+		}
+	}
 	else if (IsKeyDown(KEY_O))
-		zoom /= 1.1;
+	{
+		if (IsKeyPressed(KEY_O))
+			zoomDeltaTime = 0.05f;
+
+		while (zoomDeltaTime >= 0.05)
+		{
+			zoom /= 1.1;
+			zoomDeltaTime -= 0.05;
+		}
+	}
 
 	//Very basic precision
 	if (IsKeyDown(KEY_Y))
