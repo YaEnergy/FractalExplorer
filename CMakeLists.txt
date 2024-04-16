@@ -37,7 +37,7 @@ endif()
 set(
 	SOURCES 
 	"source/Fractal Explorer.cpp"
- "source/Mandelbrot.cpp")
+ "source/Mandelbrot.cpp" "source/ComplexNumber.cpp")
 
 set(
 	INCLUDE_DIRECTORIES 

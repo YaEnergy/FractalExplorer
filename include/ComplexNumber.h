@@ -11,4 +11,7 @@ struct ComplexNumber
 		this->real = real;
 		this->imaginary = imaginary;
 	}
+
+	public:
+		double GetDistanceFromOrigin() const;
 };

@@ -1,27 +1,17 @@
 #include "Mandelbrot.h"
-#include "raymath.h"
+#include <cmath>
 
 //Ref: https://nl.wikipedia.org/wiki/Mandelbrotverzameling , Wiskundige Beschrijving
-ComplexNumber GetNextComplexNumber(ComplexNumber z, ComplexNumber c)
+ComplexNumber GetMandelbrotSetComplexNumber(ComplexNumber c, int iterations)
 {
-	//c = a + bi
-	return ComplexNumber(z.real * z.real - z.imaginary * z.imaginary + c.real,  2 * z.real * z.imaginary + c.imaginary);
-}
-
-//Ref: https://nl.wikipedia.org/wiki/Mandelbrotverzameling , Wiskundige Beschrijving
-ComplexNumber GetFractalComplexNumber(ComplexNumber c, int iterations)
-{
-	ComplexNumber complexNumber = { 0.0, 0.0 };
+	ComplexNumber z = { 0.0, 0.0 };
 	
 	for (int i = 0; i < iterations; i++)
 	{
-		complexNumber = GetNextComplexNumber(complexNumber, c);
+		//see ref
+		//c = a + bi
+		z = { z.real * z.real - z.imaginary * z.imaginary + c.real,  2 * z.real * z.imaginary + c.imaginary };
 	}
 
-	return complexNumber;
-}
-
-double GetComplexNumberDistance(ComplexNumber z)
-{
-	return sqrt(z.real * z.real + z.imaginary * z.imaginary);
+	return z;
 }

@@ -5,9 +5,13 @@
 #include "Mandelbrot.h"
 #include "raylib.h"
 
-Vector2 position = { 0.0f, 0.0f };
-double zoom = 1.0;
-double precision = 1000.0;
+//I prefer to use doubles for position here since it gives more precision
+
+double positionX = 0.0;
+double positionY = 0.0;
+
+double zoom = 100.0;
+double precision = 2.0;
 int iterations = 20;
 
 void UpdateDrawFrame();
@@ -26,6 +30,8 @@ int main()
 	//Init
 	InitWindow(800, 480, "Fractal Explorer");
 	InitAudioDevice();
+
+	SetWindowState(FLAG_WINDOW_RESIZABLE);
 
 	//TODO: Emscripten modifications
 	SetTargetFPS(120);
@@ -48,26 +54,33 @@ void UpdateDrawFrame()
 	int screenHeight = GetScreenHeight();
 
 	float deltaTime = GetFrameTime();
-	const float CAMERA_SPEED = 200.0f;
 
 	//Update
 
 	//Very basic camera movement
+	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 100.0f : 10.0f;
+
 	if (IsKeyDown(KEY_LEFT))
-		position = { position.x - CAMERA_SPEED * deltaTime, position.y };
+		positionX -= (double)(movementSpeed * deltaTime) / zoom;
 	else if (IsKeyDown(KEY_RIGHT))
-		position = { position.x + CAMERA_SPEED * deltaTime, position.y };
+		positionX += (double)(movementSpeed * deltaTime) / zoom;
 
 	if (IsKeyDown(KEY_UP))
-		position = { position.x, position.y - CAMERA_SPEED * deltaTime };
+		positionY -= (double)(movementSpeed * deltaTime) / zoom;
 	else if (IsKeyDown(KEY_DOWN))
-		position = { position.x, position.y + CAMERA_SPEED * deltaTime };
+		positionY += (double)(movementSpeed * deltaTime) / zoom;
 
 	//Very basic zoom
 	if (IsKeyDown(KEY_I))
-		zoom += 100.0f * deltaTime;
+		zoom *= 1.1;
 	else if (IsKeyDown(KEY_O))
-		zoom -= 100.0f * deltaTime;
+		zoom /= 1.1;
+
+	//Very basic precision
+	if (IsKeyDown(KEY_Y))
+		precision += 1.0 * deltaTime;
+	else if (IsKeyDown(KEY_U))
+		precision -= 1.0 * deltaTime;
 
 	//Iteration keys
 	if (IsKeyPressed(KEY_KP_ADD))
@@ -83,16 +96,16 @@ void UpdateDrawFrame()
 	{
 		for (int x = 0; x <= screenWidth; x++)
 		{
-			ComplexNumber complex = GetFractalComplexNumber({ (double)(x + position.x - screenWidth / 2.0f) / zoom, (double)(y + position.y - screenHeight / 2.0f) / zoom }, iterations);
+			ComplexNumber complex = GetMandelbrotSetComplexNumber({ ((double)x - (double)screenWidth / 2.0) / zoom + positionX, ((double)y - (double)screenHeight / 2.0) / zoom + positionY }, iterations);
 
-			double distance = GetComplexNumberDistance(complex);
+			double distance = complex.GetDistanceFromOrigin();
 			if (distance <= 2.0)
-				DrawRectangleRec({ (float)x, (float)y, 1.0f, 1.0f }, ColorFromHSV(distance / 2.0f * 360.0f, 1.0f, 1.0f));
+				DrawPixel(x, y, ColorFromHSV(distance / 2.0 * 360.0, 1.0f, 1.0f));
 		}
 	}
 
 	DrawFPS(10, 10);
-	DrawText(TextFormat("Position : %f, %f", position.x, position.y), 10, 10 + 24, 24, GREEN);
+	DrawText(TextFormat("Position : %f, %f", (float)positionX, (float)positionY), 10, 10 + 24, 24, GREEN);
 	DrawText(TextFormat("Zoom: %f", zoom), 10, 10 + 24 * 2, 24, GREEN);
 	DrawText(TextFormat("Iterations: %i", iterations), 10, 10 + 24 * 3, 24, GREEN);
 
