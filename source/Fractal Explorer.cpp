@@ -119,7 +119,7 @@ void UpdateDrawFrame()
 
 	for (int i = 0; i < maxIterations; i++)
 	{
-		paletteColors[i] = ColorFromHSV((float)i * (360.0f / (float)maxIterations), 1.0f, 1.0f);
+		paletteColors[i] = ColorFromHSV((i * 15) % 360, 1.0f, 1.0f);
 	}
 
 	//draw fractal
