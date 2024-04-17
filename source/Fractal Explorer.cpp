@@ -102,6 +102,7 @@ void UpdateDrawFrame()
 	float deltaTime = GetFrameTime();
 
 	//Update
+
 	zoomDeltaTime += deltaTime;
 
 	//Very basic camera movement
@@ -158,6 +159,12 @@ void UpdateDrawFrame()
 		SetQualityDivision(qualityDivision + 1);
 	else if (IsKeyPressed(KEY_S) && qualityDivision > 1)
 		SetQualityDivision(qualityDivision - 1);
+	//Update fractal render texture if screen size has changed
+	else if (screenWidth / qualityDivision != fractalRenderTexture.texture.width || screenHeight / qualityDivision != fractalRenderTexture.texture.height)
+	{
+		UnloadRenderTexture(fractalRenderTexture);
+		fractalRenderTexture = LoadRenderTexture(screenWidth / qualityDivision, screenHeight / qualityDivision);
+	}
 
 	if (IsKeyPressed(KEY_E))
 	{
