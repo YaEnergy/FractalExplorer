@@ -6,31 +6,30 @@
 
 //Ref: https://nl.wikipedia.org/wiki/Mandelbrotverzameling , Wiskundige Beschrijving
 //Can go out of bounds of mandelbrot set!
-ComplexNumber GetMandelbrotSetComplexNumber(ComplexNumber c, int iterations)
+ComplexDouble GetMandelbrotSetComplexDouble(ComplexDouble c, int iterations)
 {
-	ComplexNumber z = { 0.0, 0.0 };
+	ComplexDouble z = { 0.0, 0.0 };
 	
 	for (int i = 0; i < iterations; i++)
 	{
 		//see ref
-		//c = a + bi
-		z = { z.real * z.real - z.imaginary * z.imaginary + c.real,  2 * z.real * z.imaginary + c.imaginary };
+		z = z * z + c;
 	}
 
 	return z;
 }
 
 //ref: https://en.wikipedia.org/wiki/Mandelbrot_set , computer drawings
-int GetMandelbrotSetComplexNumberMaxIterations(ComplexNumber c, int maxIterations)
+int GetMandelbrotSetComplexDoubleMaxIterations(ComplexDouble c, int maxIterations)
 {
-	ComplexNumber z = { 0.0, 0.0 };
+	ComplexDouble z = { 0.0, 0.0 };
 	int iterations = 0;
 
-	while (z.real * z.real + z.imaginary * z.imaginary <= 2.0 * 2.0 && iterations < maxIterations)
+	while (z.GetMagnitudeSquared() <= 2.0 * 2.0 && iterations < maxIterations)
 	{
 		//see ref
-		//c = a + bi
-		z = { z.real * z.real - z.imaginary * z.imaginary + c.real,  2 * z.real * z.imaginary + c.imaginary };
+		z = z * z + c;
+
 		iterations++;
 	}
 
@@ -44,7 +43,7 @@ void DrawMandelbrotFractal(int width, int height, double positionX, double posit
 
 	for (int i = 0; i < maxIterations; i++)
 	{
-		paletteColors[i] = ColorFromHSV((i * 15) % 360, 1.0f, 1.0f);
+		paletteColors[i] = ColorFromHSV((float)((i * 15) % 360), 1.0f, 1.0f);
 	}
 
 	//draw fractal
@@ -52,7 +51,7 @@ void DrawMandelbrotFractal(int width, int height, double positionX, double posit
 	{
 		for (int x = 0; x <= width; x++)
 		{
-			int iterations = GetMandelbrotSetComplexNumberMaxIterations({ ((double)x - (double)width / 2.0) / zoom + positionX, ((double)y - (double)height / 2.0) / zoom + positionY }, maxIterations);
+			int iterations = GetMandelbrotSetComplexDoubleMaxIterations({ ((double)x - (double)width / 2.0) / zoom + positionX, ((double)y - (double)height / 2.0) / zoom + positionY }, maxIterations);
 
 			DrawPixel(x, y, paletteColors[(iterations - 1) % maxIterations]);
 		}
