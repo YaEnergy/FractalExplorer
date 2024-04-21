@@ -4,6 +4,7 @@
 #include "Fractal Explorer.h"
 #include "Mandelbrot.h"
 #include "raylib.h"
+#include "raymath.h"
 
 #include <string>
 #include <vector>
@@ -101,11 +102,7 @@ void UpdateDrawFrame()
 
 	float deltaTime = GetFrameTime();
 
-	//Update
-
-	zoomDeltaTime += deltaTime;
-
-	//Very basic camera movement
+	//Camera panning using keys
 	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 500.0f : 100.0f;
 
 	if (IsKeyDown(KEY_LEFT))
@@ -118,7 +115,18 @@ void UpdateDrawFrame()
 	else if (IsKeyDown(KEY_DOWN))
 		positionY += (double)(movementSpeed * deltaTime) / zoom;
 
-	//Very basic zoom
+	//Camera panning using mouse
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	{
+		Vector2 mouseDelta = GetMouseDelta();
+
+		positionX -= (double)(mouseDelta.x) / qualityDivision / zoom;
+		positionY -= (double)(mouseDelta.y) / qualityDivision / zoom;
+	}
+
+	//Camera zooming using keys
+	zoomDeltaTime += deltaTime;
+
 	if (IsKeyDown(KEY_I))
 	{
 		if (IsKeyPressed(KEY_I))
@@ -141,6 +149,16 @@ void UpdateDrawFrame()
 			zoomDeltaTime -= 0.05;
 		}
 	}
+
+	//Zooming using mouse wheel
+	//up scroll: zoom in
+	//down scroll: zoom out
+	float mouseWheelMoved = GetMouseWheelMove();
+	zoom += zoom * 0.1 * mouseWheelMoved;
+
+	//Zooming using pinching
+	Vector2 pinchMovement = GetGesturePinchVector();
+	zoom += zoom * 0.5 * (double)Vector2Length(pinchMovement);
 
 	//Very basic precision
 	if (IsKeyDown(KEY_Y))
