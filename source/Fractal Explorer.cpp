@@ -54,7 +54,6 @@ int main()
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 
 	//TODO: Emscripten modifications
-	SetTargetFPS(120);
 
 	while (!WindowShouldClose())
 	{
@@ -221,6 +220,8 @@ void UpdateDrawFrame()
 		DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, 10 + 24 * 5, 24, GREEN);
 		DrawText(TextFormat("Fractal size: %ix%i", screenWidth / qualityDivision, screenHeight / qualityDivision), 10, 10 + 24 * 6, 24, GREEN);
 		DrawText(TextFormat("Anti-Aliasing?: %s", std::to_string(useAntiAliasing).c_str()), 10, 10 + 24 * 7, 24, GREEN);
+		DrawText(TextFormat("Frame lines drawn: %i", GetNumLinesDrawnThisFractal()), 10, 10 + 24 * 8, 24, GREEN);
+		DrawText(TextFormat("Pixels: %i", screenWidth * screenHeight), 10, 10 + 24 * 9, 24, GREEN);
 	}
 
 	EndDrawing();
