@@ -1,4 +1,5 @@
 #include "ComplexDouble.h"
+#include "raymath.h"
 #include <cmath>
 
 double ComplexDouble::GetMagnitudeSquared() const
@@ -13,7 +14,7 @@ double ComplexDouble::GetMagnitude() const
 
 double ComplexDouble::GetAngleRadians() const
 {
-	return atan(imaginary / real);
+	return real > 0 ? atan(imaginary / real) : atan(imaginary / real) + 180.0 * (double)DEG2RAD;
 }
 
 ComplexDouble ComplexDouble::FromPolarForm(double magnitude, double angleRadians)
