@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 //Color helper function
 bool AreColorsEqual(Color a, Color b);

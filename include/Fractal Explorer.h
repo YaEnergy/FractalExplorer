@@ -7,6 +7,12 @@
 
 // TODO: Reference additional headers your program requires here.
 
+#if defined(PLATFORM_DESKTOP)
+#define GLSL_VERSION            330
+#else   // PLATFORM_ANDROID, PLATFORM_WEB
+#define GLSL_VERSION            100
+#endif
+
 #ifdef WIN32RELEASE
 int main();
 #endif // RELEASE
