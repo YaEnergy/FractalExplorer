@@ -72,9 +72,9 @@
                 "rhs": "Linux"
             },
             "vendor": {
-                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-                    "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-                }
+              "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+                "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+              }
             }
         },
         {

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "ComplexDouble.h"
+#include "ComplexNumbers/ComplexDouble.h"
+
+//CPU mandelbrot drawing functions
 
 ComplexDouble GetMandelbrotSetComplexDouble(ComplexDouble c, int iterations);
 

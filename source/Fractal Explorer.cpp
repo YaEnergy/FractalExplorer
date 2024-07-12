@@ -2,12 +2,31 @@
 //
 
 #include "Fractal Explorer.h"
-#include "Mandelbrot.h"
+
+#include <cmath>
+#include <string>
+#include <vector>
+
 #include "raylib.h"
 #include "raymath.h"
 
-#include <string>
-#include <vector>
+#include "Fractals/Mandelbrot.h"
+#include "ComplexNumbers/ComplexFloat.h"
+
+struct MandelbrotFractalOptions
+{
+	Vector2 position;
+	float zoom;
+	int maxIterations;
+};
+
+struct JuliaFractalOptions
+{
+	Vector2 position;
+	ComplexFloat c;
+	float zoom;
+	int maxIterations;
+};
 
 Vector2 position = Vector2{ 0.0f, 0.0f };
 
@@ -55,8 +74,6 @@ int WinMain()
 
 int main()
 {
-	std::cout << "Hello CMake, and raylib!" << std::endl;
-
 	const int START_WINDOW_WIDTH = 800;
 	const int START_WINDOW_HEIGHT = 480;
 
@@ -165,9 +182,9 @@ void UpdateDrawFrame()
 		position.x += (double)(movementSpeed * deltaTime) / zoom;
 
 	if (IsKeyDown(KEY_UP))
-		position.y -= (double)(movementSpeed * deltaTime) / zoom;
-	else if (IsKeyDown(KEY_DOWN))
 		position.y += (double)(movementSpeed * deltaTime) / zoom;
+	else if (IsKeyDown(KEY_DOWN))
+		position.y -= (double)(movementSpeed * deltaTime) / zoom;
 
 	//Camera panning using mouse
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -186,40 +203,49 @@ void UpdateDrawFrame()
 	if (IsKeyDown(KEY_I))
 	{
 		if (IsKeyPressed(KEY_I))
-			zoomDeltaTime = 0.05f;
+			zoomDeltaTime = 0.01f;
 
-		while (zoomDeltaTime >= 0.05)
+		while (zoomDeltaTime >= 0.01f)
 		{
-			zoom *= 1.1;
-			zoomDeltaTime -= 0.05;
+			zoom *= 1.02f;
+			zoomDeltaTime -= 0.01f;
 		}
 	}
 	else if (IsKeyDown(KEY_O))
 	{
 		if (IsKeyPressed(KEY_O))
-			zoomDeltaTime = 0.05f;
+			zoomDeltaTime = 0.01f;
 
-		while (zoomDeltaTime >= 0.05)
+		while (zoomDeltaTime >= 0.01f)
 		{
-			zoom /= 1.1;
-			zoomDeltaTime -= 0.05;
+			zoom /= 1.02f;
+			zoomDeltaTime -= 0.01f;
 		}
 	}
 
 	if (selectedFractalTypeIndex == FRACTAL_JULIA)
 	{
 		//c panning using keys
-		float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.5f : 0.05f;
+		float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.05f : 0.01f;
 
 		if (IsKeyDown(KEY_A))
-			juliaC.x -= (double)(movementSpeed * deltaTime);
+			juliaC.x -= (double)(movementSpeed * deltaTime) / zoom;
 		else if (IsKeyDown(KEY_D))
-			juliaC.x += (double)(movementSpeed * deltaTime);
+			juliaC.x += (double)(movementSpeed * deltaTime) / zoom;
 
 		if (IsKeyDown(KEY_W))
-			juliaC.y -= (double)(movementSpeed * deltaTime);
+			juliaC.y += (double)(movementSpeed * deltaTime) / zoom;
 		else if (IsKeyDown(KEY_S))
-			juliaC.y += (double)(movementSpeed * deltaTime);
+			juliaC.y -= (double)(movementSpeed * deltaTime) / zoom;
+
+		//c panning using mouse right click
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+		{
+			Vector2 mouseDelta = GetMouseDelta();
+
+			juliaC.x -= mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom; /// qualityDivision / zoom;
+			juliaC.y += mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom; /// qualityDivision / zoom;
+		}
 
 		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &juliaC, SHADER_UNIFORM_VEC2);
 	}

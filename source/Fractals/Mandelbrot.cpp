@@ -1,4 +1,4 @@
-#include "Mandelbrot.h"
+#include "Fractals/Mandelbrot.h"
 #include "raylib.h"
 
 #include <vector>

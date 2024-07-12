@@ -37,7 +37,7 @@ endif()
 set(
 	SOURCES 
 	"source/Fractal Explorer.cpp"
- "source/Mandelbrot.cpp" "source/ComplexDouble.cpp")
+ "source/Fractals/Mandelbrot.cpp" "source/ComplexNumbers/ComplexDouble.cpp" "source/ComplexNumbers/ComplexFloat.cpp")
 
 set(
 	INCLUDE_DIRECTORIES 
@@ -46,25 +46,16 @@ set(
 
 # search for emsdk environment var or something idk yet
 
-if (WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        #this is to get rid of the console window. Yeah I know, I suck.
+if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    #this is to get rid of the console window. Yeah I know, I suck.
 
-        # Add sources to this project's executable.
-        add_executable (${PROJECT_NAME} WIN32 ${SOURCES})
+    # Add sources to this project's executable.
+    add_executable (${PROJECT_NAME} WIN32 ${SOURCES})
 
-        add_compile_definitions(WIN32RELEASE)
-    else()
-        # Add sources to this project's executable.
-       add_executable (${PROJECT_NAME} ${SOURCES})
-    endif()
+    add_compile_definitions(WIN32RELEASE)
 else()
     # Add sources to this project's executable.
     add_executable (${PROJECT_NAME} ${SOURCES})
-
-    # if config is not debug set the variable to "-mwindows" else nothing
-    set(SUBSYSTEM_LINKER_OPTIONS "$<IF:$<NOT:$<CONFIG:Debug>>,-mwindows,>")
-    target_link_options(${PROJECT_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
@@ -99,8 +90,15 @@ set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 include(CPack)
 
+#Keep assets folder up-to-date
+message(STATUS "Updating binary assets directory")
+
+#clear assets folder if exists
+if (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/assets)
+    message(STATUS "Clearing binary assets directory")
+    file(REMOVE RECURSIVE ${CMAKE_CURRENT_BINARY_DIR}/assets)
+endif()
+
 # Copy assets folder to build folder
-add_custom_target(copy_assets
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets
-)
-add_dependencies(${PROJECT_NAME} copy_assets)
+message(STATUS "Copying assets to binary directory")
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
