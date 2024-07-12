@@ -31,6 +31,7 @@ struct JuliaFractalOptions
 Vector2 position = Vector2{ 0.0f, 0.0f };
 
 Vector2 juliaC = Vector2{ 0.0f, 0.0f };
+float juliaPower = 2.0f;
 
 float zoom = 1.0f;
 float zoomDeltaTime = 0.0f;
@@ -88,8 +89,9 @@ int main()
 	else
 		SetTextureFilter(fractalRenderTexture.texture, TEXTURE_FILTER_POINT);
 
+	
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
-
+	
 	//Load fractal shaders
 	fractalShaders[FRACTAL_MANDELBROT] = LoadShader(NULL, "assets/shaders/mandelbrotFractal.frag");
 	fractalShaders[FRACTAL_JULIA] = LoadShader(NULL, "assets/shaders/juliaFractal.frag");
@@ -140,6 +142,7 @@ void SetFractalType(FractalType fractalType)
 		}
 		case FRACTAL_JULIA:
 			juliaC = Vector2{ 0.0f, 0.0f };
+			juliaPower = 2.0f;
 			position = Vector2{ 0.0f, 0.0f };
 			maxIterations = 20;
 			zoom = 1.0f;
@@ -153,6 +156,7 @@ void SetFractalType(FractalType fractalType)
 			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &position, SHADER_UNIFORM_VEC2);
 			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &zoom, SHADER_UNIFORM_FLOAT);
 			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &maxIterations, SHADER_UNIFORM_INT);
+			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &juliaPower, SHADER_UNIFORM_FLOAT);
 
 			break;
 	}
@@ -225,6 +229,18 @@ void UpdateDrawFrame()
 
 	if (selectedFractalTypeIndex == FRACTAL_JULIA)
 	{
+		//Power changing using keys
+		if (IsKeyDown(KEY_F))
+			juliaPower -= 1.0f * deltaTime;
+		else if (IsKeyDown(KEY_G))
+			juliaPower += 1.0f * deltaTime;
+
+		//Round power down
+		if (IsKeyPressed(KEY_H))
+			juliaPower = floor(juliaPower);
+
+		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &juliaPower, SHADER_UNIFORM_FLOAT);
+
 		//c panning using keys
 		float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.05f : 0.01f;
 
@@ -331,7 +347,7 @@ void UpdateDrawFrame()
 		if (showDebugInfo)
 		{
 			DrawFPS(10, 10);
-			DrawText(TextFormat("Position : %f, %f", (float)position.x, (float)position.y), 10, 10 + 24, 24, GREEN);
+			DrawText(TextFormat("Position : %f, %f", position.x, position.y), 10, 10 + 24, 24, GREEN);
 			DrawText(TextFormat("Zoom: %f", zoom), 10, 10 + 24 * 2, 24, GREEN);
 			DrawText(TextFormat("Max iterations: %i", maxIterations), 10, 10 + 24 * 3, 24, GREEN);
 			DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, 10 + 24 * 4, 24, GREEN);
@@ -341,7 +357,10 @@ void UpdateDrawFrame()
 			DrawText(fractalNames[selectedFractalTypeIndex], 10, 10 + 24 * 7, 24, WHITE);
 
 			if (selectedFractalTypeIndex == FRACTAL_JULIA)
-				DrawText(TextFormat("Julia C : %f, %f", (float)juliaC.x, (float)juliaC.y), 10, 10 + 24 * 8, 24, WHITE);
+			{
+				DrawText(TextFormat("Julia C : %f, %f", juliaC.x, juliaC.y), 10, 10 + 24 * 8, 24, WHITE);
+				DrawText(TextFormat("Julia Pow : %f", juliaPower), 10, 10 + 24 * 9, 24, WHITE);
+			}
 		}
 
 	}

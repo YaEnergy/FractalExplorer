@@ -1,26 +1,42 @@
 #version 330 core
 
+#define PI 3.1415926535897932384626433
+
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform float widthStretch = 1.0;
 
 uniform vec2 c = vec2(0.5, 0.2);
-uniform vec2 position = vec2(0.0, 0.0);
-uniform vec2 offset = vec2(0.0, 0.0);
-uniform float zoom = 1.0;
+uniform float power = 2.0;
 uniform int maxIterations = 20;
 
+uniform vec2 position = vec2(0.0, 0.0);
+uniform vec2 offset = vec2(0.0, 0.0);
+
+uniform float zoom = 1.0;
+
 out vec4 finalColor;
+
+//2-argument arctangent, used to (for example:) get the angle of a complex number
+float atan2(float y, float x)
+{
+    return x > 0 ? atan(y / x) : atan(y / x) + PI;
+}
+
+vec2 AddComplexNumbers(vec2 a, vec2 b)
+{
+    return vec2(a.x + b.x, a.y + b.y);
+}
 
 vec2 MultiplyComplexNumbers(vec2 a, vec2 b)
 {
     return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
-vec2 AddComplexNumbers(vec2 a, vec2 b)
+vec2 PowComplexNumber(vec2 z, float power)
 {
-    return vec2(a.x + b.x, a.y + b.y);
+    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
 vec3 hsv2rgb(vec3 hsv)
@@ -77,7 +93,7 @@ void main()
 
     while (z.x * z.x + z.y * z.y <= 2.0 * 2.0 && complexIterations <= maxIterations)
     {
-        z = AddComplexNumbers(MultiplyComplexNumbers(z, z), c);
+        z = AddComplexNumbers(PowComplexNumber(z, power), c);
         
         complexIterations++;
     }
