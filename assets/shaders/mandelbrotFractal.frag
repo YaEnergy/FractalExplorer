@@ -10,6 +10,8 @@ uniform vec2 offset = vec2(0.0, 0.0);
 uniform float zoom = 1.0;
 uniform int maxIterations = 20;
 
+uniform int colorBanding = 0;
+
 out vec4 finalColor;
 
 vec2 MultiplyComplexNumbers(vec2 a, vec2 b)
@@ -82,5 +84,13 @@ void main()
         complexIterations++;
     }
 
-    finalColor = hsva2rgba(vec4(mod(complexIterations * 15.0, 360), 1.0, 1.0, 1.0));
+    if (colorBanding == 1)
+    {
+        finalColor = hsva2rgba(vec4(mod(complexIterations * 15.0, 360), 1.0, 1.0, 1.0));
+    }
+    else
+    {
+        float absZsquared = z.x * z.x + z.y * z.y;
+        finalColor = hsva2rgba(vec4(mod((complexIterations + 1.0 - log(log(absZsquared))/log(2.0)) * 15.0, 360.0), 1.0, 1.0, 1.0));
+    }
 } 
