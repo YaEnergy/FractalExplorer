@@ -13,22 +13,6 @@
 #include "Fractals/Mandelbrot.h"
 #include "ComplexNumbers/ComplexFloat.h"
 
-Vector2 position = Vector2{ 0.0f, 0.0f };
-
-Vector2 juliaC = Vector2{ 0.0f, 0.0f };
-float juliaPower = 2.0f;
-
-float zoom = 1.0f;
-float zoomDeltaTime = 0.0f;
-
-int maxIterations = 20;
-
-RenderTexture fractalRenderTexture;
-
-bool colorBanding = false;
-
-bool showDebugInfo = false;
-
 const int NUM_FRACTAL_TYPES = 2;
 
 enum FractalType
@@ -43,8 +27,31 @@ const char* fractalNames[NUM_FRACTAL_TYPES] =
 	"Julia Set Fractal"
 };
 
-FractalType selectedFractalTypeIndex = FRACTAL_MANDELBROT;
 Shader fractalShaders[NUM_FRACTAL_TYPES] = { 0 };
+
+FractalType selectedFractalType = FRACTAL_MANDELBROT;
+RenderTexture fractalRenderTexture;
+
+//Main complex fractal parameters
+
+Vector2 position = Vector2{ 0.0f, 0.0f };
+float zoom = 1.0f;
+int maxIterations = 200;
+
+// Extra julia set fractal parameters
+
+Vector2 juliaC = Vector2{ 0.0f, 0.0f };
+float juliaPower = 2.0f;
+
+// Extra options
+
+bool colorBanding = false;
+bool showDebugInfo = false;
+
+//Delta times
+
+float zoomDeltaTime = 0.0f;
+
 
 void UpdateDrawFrame();
 
@@ -52,10 +59,10 @@ void Update();
 void Draw();
 
 #pragma region Fractal functions
+void ResetFractalParameters();
 void SetFractalType(FractalType fractalType);
 
-void UpdateJuliaShaderValues();
-void UpdateMandelbrotShaderValues();
+void UpdateFractalShaderValues();
 
 void UpdateFractal();
 void UpdateFractalControls();
@@ -84,7 +91,7 @@ int main()
 	const int START_WINDOW_HEIGHT = 480;
 
 	//Init
-	InitWindow(START_WINDOW_WIDTH, START_WINDOW_HEIGHT, "Fractal Explorer");
+	InitWindow(START_WINDOW_WIDTH, START_WINDOW_HEIGHT, "Complex Fractal Explorer");
 	InitAudioDevice();
 
 	fractalRenderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
@@ -107,8 +114,8 @@ int main()
 	//Deinit
 	UnloadRenderTexture(fractalRenderTexture);
 
-	CloseWindow();
 	CloseAudioDevice();
+	CloseWindow();
 
 	return 0;
 }
@@ -146,74 +153,54 @@ void Draw()
 
 #pragma region Fractal function implementations
 
-void SetFractalType(FractalType fractalType)
+void ResetFractalParameters()
 {
-	selectedFractalTypeIndex = fractalType;
+	position = Vector2{ 0.0f, 0.0f };
+	maxIterations = 300;
+	zoom = 1.0f;
 
-	switch (fractalType)
+	//julia set fractal parameters
+	if (selectedFractalType == FRACTAL_JULIA)
 	{
-		case FRACTAL_MANDELBROT:
-			position = Vector2{ 0.0f, 0.0f };
-			maxIterations = 20;
-			zoom = 1.0f;
-
-			UpdateMandelbrotShaderValues();
-
-			break;
-		case FRACTAL_JULIA:
-			juliaC = Vector2{ 0.0f, 0.0f };
-			juliaPower = 2.0f;
-			position = Vector2{ 0.0f, 0.0f };
-			maxIterations = 20;
-			zoom = 1.0f;
-
-			UpdateJuliaShaderValues();
-
-			break;
+		juliaC = Vector2{ 0.0f, 0.0f };
+		juliaPower = 2.0f;
 	}
 }
 
-void UpdateJuliaShaderValues()
+void SetFractalType(FractalType fractalType)
 {
-	Shader fractalShader = fractalShaders[FRACTAL_JULIA];
+	selectedFractalType = fractalType;
 
-	Vector2 offset = { -0.5f, -0.5f };
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
-
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &position, SHADER_UNIFORM_VEC2);
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &zoom, SHADER_UNIFORM_FLOAT);
-
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &juliaC, SHADER_UNIFORM_VEC2);
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &juliaPower, SHADER_UNIFORM_FLOAT);
-
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &maxIterations, SHADER_UNIFORM_INT);
-
-	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "widthStretch"), &widthStretch, SHADER_UNIFORM_FLOAT);
-
-	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
-	int colorBandingInt = colorBanding ? 1 : 0;
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
+	ResetFractalParameters();
 }
 
-void UpdateMandelbrotShaderValues()
+void UpdateFractalShaderValues()
 {
-	Shader fractalShader = fractalShaders[FRACTAL_MANDELBROT];
+	Shader fractalShader = fractalShaders[selectedFractalType];
 
+	//display shader values
 	Vector2 offset = { -0.5f, -0.5f };
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
-
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &position, SHADER_UNIFORM_VEC2);
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &zoom, SHADER_UNIFORM_FLOAT);
-
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &maxIterations, SHADER_UNIFORM_INT);
 
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "widthStretch"), &widthStretch, SHADER_UNIFORM_FLOAT);
 
+	// Main complex fractal shader values
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &position, SHADER_UNIFORM_VEC2);
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &zoom, SHADER_UNIFORM_FLOAT);
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &maxIterations, SHADER_UNIFORM_INT);
+
+	//extra options
 	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
 	int colorBandingInt = colorBanding ? 1 : 0;
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
+
+	//julia set fractal shader values
+	if (selectedFractalType == FRACTAL_JULIA)
+	{
+		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &juliaC, SHADER_UNIFORM_VEC2);
+		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &juliaPower, SHADER_UNIFORM_FLOAT);
+	}
 }
 
 void UpdateFractal()
@@ -226,7 +213,7 @@ void UpdateFractal()
 	else if (IsKeyPressed(KEY_TWO))
 		SetFractalType(FRACTAL_JULIA);
 
-	Shader fractalShader = fractalShaders[selectedFractalTypeIndex];
+	Shader fractalShader = fractalShaders[selectedFractalType];
 
 	//Update fractal render texture if screen size has changed
 	if (screenWidth != fractalRenderTexture.texture.width || screenHeight != fractalRenderTexture.texture.height)
@@ -242,6 +229,9 @@ void UpdateFractalControls()
 {
 	float deltaTime = GetFrameTime();
 
+	if (IsKeyPressed(KEY_R))
+		ResetFractalParameters();
+
 	UpdateFractalCamera();
 
 	//Iteration keys
@@ -250,7 +240,7 @@ void UpdateFractalControls()
 	else if (IsKeyPressed(KEY_KP_SUBTRACT))
 		maxIterations--;
 
-	if (selectedFractalTypeIndex == FRACTAL_JULIA)
+	if (selectedFractalType == FRACTAL_JULIA)
 	{
 		//Power changing using keys
 		if (IsKeyDown(KEY_F))
@@ -280,8 +270,8 @@ void UpdateFractalControls()
 		{
 			Vector2 mouseDelta = GetMouseDelta();
 
-			juliaC.x -= mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom; /// qualityDivision / zoom;
-			juliaC.y += mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom; /// qualityDivision / zoom;
+			juliaC.x += mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom;
+			juliaC.y += mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom;
 		}
 	}
 }
@@ -291,17 +281,17 @@ void UpdateFractalCamera()
 	float deltaTime = GetFrameTime();
 
 	//Camera panning using keys
-	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.05f : 0.01f;
+	float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.5f : 0.1f;
 
 	if (IsKeyDown(KEY_LEFT))
-		position.x -= (double)(movementSpeed * deltaTime) / zoom;
+		position.x -= movementSpeed * deltaTime / zoom;
 	else if (IsKeyDown(KEY_RIGHT))
-		position.x += (double)(movementSpeed * deltaTime) / zoom;
+		position.x += movementSpeed * deltaTime / zoom;
 
 	if (IsKeyDown(KEY_UP))
-		position.y += (double)(movementSpeed * deltaTime) / zoom;
+		position.y -= movementSpeed * deltaTime / zoom;
 	else if (IsKeyDown(KEY_DOWN))
-		position.y -= (double)(movementSpeed * deltaTime) / zoom;
+		position.y += movementSpeed * deltaTime / zoom;
 
 	//Camera panning using mouse
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -309,7 +299,7 @@ void UpdateFractalCamera()
 		Vector2 mouseDelta = GetMouseDelta();
 
 		position.x -= mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom; /// qualityDivision / zoom;
-		position.y += mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom; /// qualityDivision / zoom;
+		position.y -= mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom; /// qualityDivision / zoom;
 	}
 
 	//Camera zooming using keys
@@ -342,11 +332,11 @@ void UpdateFractalCamera()
 	//up scroll: zoom in
 	//down scroll: zoom out
 	float mouseWheelMoved = GetMouseWheelMove();
-	zoom += zoom * 0.1 * mouseWheelMoved;
+	zoom += zoom * 0.1f * mouseWheelMoved;
 
 	//Zooming using pinching
 	Vector2 pinchMovement = GetGesturePinchVector();
-	zoom += zoom * 0.5 * (double)Vector2Length(pinchMovement);
+	zoom += zoom * 0.5f * Vector2Length(pinchMovement);
 
 	if (zoom <= 0.01f)
 		zoom = 0.01f;
@@ -357,19 +347,9 @@ void DrawFractal()
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
-	Shader fractalShader = fractalShaders[selectedFractalTypeIndex];
+	Shader fractalShader = fractalShaders[selectedFractalType];
 
-	switch(selectedFractalTypeIndex)
-	{
-		case FRACTAL_JULIA:
-			UpdateJuliaShaderValues();
-			break;
-		case FRACTAL_MANDELBROT:
-			UpdateMandelbrotShaderValues();
-			break;
-		default:
-			break;
-	}
+	UpdateFractalShaderValues();
 
 	BeginTextureMode(fractalRenderTexture);
 	{
@@ -378,11 +358,9 @@ void DrawFractal()
 	}
 	EndTextureMode();
 
-
 	BeginShaderMode(fractalShader);
 	{
-		//render texture is flipped because of OpenGL
-		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, -(float)fractalRenderTexture.texture.height };
+		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, (float)fractalRenderTexture.texture.height };
 		Rectangle fractalDestination = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
 
 		DrawTexturePro(fractalRenderTexture.texture, fractalSource, fractalDestination, { 0.0f, 0.0f }, 0.0f, WHITE);
@@ -411,12 +389,12 @@ void DrawUI()
 		DrawText(TextFormat("Zoom: %f", zoom), 10, 10 + 24 * 2, 24, GREEN);
 		DrawText(TextFormat("Max iterations: %i", maxIterations), 10, 10 + 24 * 3, 24, GREEN);
 		DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, 10 + 24 * 4, 24, GREEN);
-		DrawText(TextFormat("Color banding?: %s", (colorBanding ? "Reduced" : "Yes")), 10, 10 + 24 * 5, 24, GREEN);
+		DrawText(TextFormat("Color banding?: %s", (colorBanding ? "Yes" : "Reduced")), 10, 10 + 24 * 5, 24, GREEN);
 		DrawText(TextFormat("Pixels: %i", screenWidth * screenHeight), 10, 10 + 24 * 6, 24, GREEN);
 
-		DrawText(fractalNames[selectedFractalTypeIndex], 10, 10 + 24 * 7, 24, WHITE);
+		DrawText(fractalNames[selectedFractalType], 10, 10 + 24 * 7, 24, WHITE);
 
-		if (selectedFractalTypeIndex == FRACTAL_JULIA)
+		if (selectedFractalType == FRACTAL_JULIA)
 		{
 			DrawText(TextFormat("Julia C : %f, %f", juliaC.x, juliaC.y), 10, 10 + 24 * 8, 24, WHITE);
 			DrawText(TextFormat("Julia Pow : %f", juliaPower), 10, 10 + 24 * 9, 24, WHITE);

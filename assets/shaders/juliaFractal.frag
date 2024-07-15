@@ -18,6 +18,8 @@ uniform float zoom = 1.0;
 
 uniform int colorBanding = 0;
 
+const float escapeRadius = 2.0;
+
 out vec4 finalColor;
 
 //2-argument arctangent, used to (for example:) get the angle of a complex number
@@ -93,14 +95,18 @@ void main()
     int complexIterations = 0;
     vec2 z = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
 
-    while (z.x * z.x + z.y * z.y <= 2.0 * 2.0 && complexIterations <= maxIterations)
+    while (z.x * z.x + z.y * z.y <= escapeRadius * escapeRadius && complexIterations < maxIterations)
     {
         z = AddComplexNumbers(PowComplexNumber(z, power), c);
         
         complexIterations++;
     }
 
-    if (colorBanding == 1)
+     if (complexIterations == maxIterations)
+    {
+        finalColor = vec4(0.0, 0.0, 0.0, 255.0);
+    }
+    else if (colorBanding == 1)
     {
         finalColor = hsva2rgba(vec4(mod(complexIterations * 15.0, 360), 1.0, 1.0, 1.0));
     }

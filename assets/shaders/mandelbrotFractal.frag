@@ -1,5 +1,7 @@
 #version 330 core
 
+#define PI 3.1415926535897932384626433
+
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -12,16 +14,66 @@ uniform int maxIterations = 20;
 
 uniform int colorBanding = 0;
 
+const float escapeRadius = 2.0;
+
 out vec4 finalColor;
 
-vec2 MultiplyComplexNumbers(vec2 a, vec2 b)
+//2-argument arctangent, used to (for example:) get the angle of a complex number
+float atan2(float y, float x)
+{
+    return x > 0 ? atan(y / x) : atan(y / x) + PI;
+}
+
+float ComplexAbs(vec2 z)
+{
+    return sqrt(z.x * z.x + z.y * z.y);
+}
+
+float ComplexAbsSquared(vec2 z)
+{
+    return z.x * z.x + z.y * z.y;
+}
+
+vec2 GetComplexConjugate(vec2 z)
+{
+    return vec2(z.x, -z.y);
+}
+
+//z = a + b
+vec2 ComplexAdd(vec2 a, vec2 b)
+{
+    return vec2(a.x + b.x, a.y + b.y);
+}
+
+//z = a * b
+vec2 ComplexMultiply(vec2 a, vec2 b)
 {
     return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
-vec2 AddComplexNumbers(vec2 a, vec2 b)
+//z = a / b
+vec2 ComplexDivide(vec2 a, vec2 b)
 {
-    return vec2(a.x + b.x, a.y + b.y);
+    //ref: Delta 4B, p. 133
+			
+			//z1 / z2
+			//(a + bi) / (c + di)
+			//(a + bi) / (c + di) * ((c - di) / (c - di))
+			//(ac - adi + bco - bdi*i)/(c*c-d*d*i*i)
+			//(ac + bd - adi + bci)/(c*c+d*d)
+			//((ac + bd) + (bc - ad)i) / (c*c+d*d)
+			//(ac + bd) / (c*c+d*d) + (bc - ad) / (c*c + d * d) i
+
+			//real: (ac + bd) / (c*c+d*d)
+			//imaginary: (bc - ad) / (c*c + d * d) i
+
+    return vec2( (a.x *  b.x - a.y * b.y) / (b.x * b.x + b.y * b.y), (a.y * b.x - a.x * b.y) / (b.x * b.x + b.y * b.y) );
+}
+
+//z^power
+vec2 ComplexPow(vec2 z, float power)
+{
+    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
 vec3 hsv2rgb(vec3 hsv)
@@ -77,20 +129,22 @@ void main()
     vec2 c = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
     vec2 z = vec2(0.0, 0.0);
 
-    while (z.x * z.x + z.y * z.y <= 2.0 * 2.0 && complexIterations <= maxIterations)
+    while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
     {
-        z = AddComplexNumbers(MultiplyComplexNumbers(z, z), c);
-        
+        z = ComplexAdd(ComplexMultiply(z, z), c);
         complexIterations++;
     }
 
-    if (colorBanding == 1)
+    if (complexIterations == maxIterations)
+    {
+        finalColor = vec4(0.0, 0.0, 0.0, 255.0);
+    }
+    else if (colorBanding == 1)
     {
         finalColor = hsva2rgba(vec4(mod(complexIterations * 15.0, 360), 1.0, 1.0, 1.0));
     }
     else
     {
-        float absZsquared = z.x * z.x + z.y * z.y;
-        finalColor = hsva2rgba(vec4(mod((complexIterations + 1.0 - log(log(absZsquared))/log(2.0)) * 15.0, 360.0), 1.0, 1.0, 1.0));
+        finalColor = hsva2rgba(vec4(mod((complexIterations + 1.0 - log(log(ComplexAbsSquared(z)))/log(2.0)) * 15.0, 360.0), 1.0, 1.0, 1.0));
     }
 } 
