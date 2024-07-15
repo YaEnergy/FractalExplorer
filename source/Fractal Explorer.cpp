@@ -13,17 +13,19 @@
 #include "Fractals/Mandelbrot.h"
 #include "ComplexNumbers/ComplexFloat.h"
 
-const int NUM_FRACTAL_TYPES = 2;
+const int NUM_FRACTAL_TYPES = 3;
 
 enum FractalType
 {
 	FRACTAL_MANDELBROT = 0,
-	FRACTAL_JULIA = 1
+	FRACTAL_BURNING_SHIP = 1,
+	FRACTAL_JULIA = 2
 };
 
 const char* fractalNames[NUM_FRACTAL_TYPES] =
 {
 	"Mandelbrot Set Fractal",
+	"Burning Ship Fractal",
 	"Julia Set Fractal"
 };
 
@@ -100,6 +102,7 @@ int main()
 	
 	//Load fractal shaders
 	fractalShaders[FRACTAL_MANDELBROT] = LoadShader(NULL, "assets/shaders/mandelbrotFractal.frag");
+	fractalShaders[FRACTAL_BURNING_SHIP] = LoadShader(NULL, "assets/shaders/burningShipFractal.frag");
 	fractalShaders[FRACTAL_JULIA] = LoadShader(NULL, "assets/shaders/juliaFractal.frag");
 
 	SetFractalType(FRACTAL_MANDELBROT);
@@ -211,7 +214,12 @@ void UpdateFractal()
 	if (IsKeyPressed(KEY_ONE))
 		SetFractalType(FRACTAL_MANDELBROT);
 	else if (IsKeyPressed(KEY_TWO))
+		SetFractalType(FRACTAL_BURNING_SHIP);
+	else if (IsKeyPressed(KEY_THREE))
 		SetFractalType(FRACTAL_JULIA);
+
+	if (IsKeyPressed(KEY_T))
+		SetFractalType((FractalType)(((int)selectedFractalType + 1) % NUM_FRACTAL_TYPES));
 
 	Shader fractalShader = fractalShaders[selectedFractalType];
 
@@ -271,7 +279,7 @@ void UpdateFractalControls()
 			Vector2 mouseDelta = GetMouseDelta();
 
 			juliaC.x += mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom;
-			juliaC.y += mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom;
+			juliaC.y -= mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom;
 		}
 	}
 }
