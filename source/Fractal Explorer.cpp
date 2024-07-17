@@ -6,6 +6,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -71,6 +72,8 @@ void UpdateFractalControls();
 void UpdateFractalCamera();
 
 void DrawFractal();
+
+void SaveFractalToImage();
 #pragma endregion
 
 #pragma region UI functions
@@ -78,6 +81,7 @@ void UpdateUI();
 
 void DrawUI();
 #pragma endregion
+
 
 
 #ifdef WIN32RELEASE
@@ -89,11 +93,8 @@ int WinMain()
 
 int main()
 {
-	const int START_WINDOW_WIDTH = 800;
-	const int START_WINDOW_HEIGHT = 480;
-
 	//Init
-	InitWindow(START_WINDOW_WIDTH, START_WINDOW_HEIGHT, "Complex Fractal Explorer");
+	InitWindow(DESIGN_WIDTH, DESIGN_HEIGHT, "Complex Fractal Explorer");
 	InitAudioDevice();
 
 	fractalRenderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
@@ -139,6 +140,9 @@ void Update()
 
 	if (IsKeyPressed(KEY_SPACE))
 		showDebugInfo = !showDebugInfo;
+
+	if (IsKeyPressed(KEY_H))
+		SaveFractalToImage();
 }
 
 void Draw()
@@ -228,6 +232,13 @@ void UpdateFractal()
 	{
 		UnloadRenderTexture(fractalRenderTexture);
 		fractalRenderTexture = LoadRenderTexture(screenWidth, screenHeight);
+
+		BeginTextureMode(fractalRenderTexture);
+		{
+			ClearBackground(BLACK);
+			DrawRectangle(0, 0, fractalRenderTexture.texture.width, fractalRenderTexture.texture.height, BLACK);
+		}
+		EndTextureMode();
 	}
 
 	UpdateFractalControls();
@@ -352,37 +363,94 @@ void UpdateFractalCamera()
 
 void DrawFractal()
 {
-	int screenWidth = GetScreenWidth();
-	int screenHeight = GetScreenHeight();
+	int renderWidth = GetRenderWidth();
+	int renderHeight = GetRenderHeight();
 
 	Shader fractalShader = fractalShaders[selectedFractalType];
 
 	UpdateFractalShaderValues();
 
-	BeginTextureMode(fractalRenderTexture);
-	{
-		ClearBackground(BLACK);
-		DrawRectangle(0, 0, fractalRenderTexture.texture.width, fractalRenderTexture.texture.height, BLACK);
-	}
-	EndTextureMode();
-
 	BeginShaderMode(fractalShader);
 	{
 		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, (float)fractalRenderTexture.texture.height };
-		Rectangle fractalDestination = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
+		Rectangle fractalDestination = { 0.0f, 0.0f, (float)renderWidth, (float)renderHeight };
 
 		DrawTexturePro(fractalRenderTexture.texture, fractalSource, fractalDestination, { 0.0f, 0.0f }, 0.0f, WHITE);
 	}
 	EndShaderMode();
 }
 
+void SaveFractalToImage()
+{
+	//TODO: Web modifications
+
+	//Fractal_Screenshots directory
+	std::filesystem::path fractalScreenshotsPath = std::filesystem::current_path().append("Fractal_Screenshots");
+
+	std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
+	if (!std::filesystem::exists(fractalScreenshotsPath))
+	{
+		bool success = std::filesystem::create_directories(fractalScreenshotsPath);
+
+		if (!success)
+		{
+			std::cout << "Failed to create fractal screenshots directory!" << std::endl;
+			return;
+		}
+		else
+		{
+			std::cout << "Created fractal screenshots directory!" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Fractal screenshots directory exists!" << std::endl;
+	}
+
+	std::cout << fractalScreenshotsPath.string() << std::endl;
+
+	//Fractal render
+	RenderTexture2D fractalImageRender = LoadRenderTexture(fractalRenderTexture.texture.width, fractalRenderTexture.texture.height);
+
+	BeginTextureMode(fractalImageRender);
+	{
+		ClearBackground(BLACK);
+
+		DrawFractal();
+	}
+	EndTextureMode();
+
+	Image fractalImage = LoadImageFromTexture(fractalImageRender.texture);
+
+	//render textures are flipped
+	ImageFlipVertical(&fractalImage);
+
+	//Save & Export
+	int num = 1;
+
+	while (std::filesystem::exists(TextFormat("%s\\%s-%i.png", fractalScreenshotsPath.string().c_str(), fractalNames[selectedFractalType], num)))
+		num++;
+
+	ExportImage(fractalImage, TextFormat("%s\\%s-%i.png", fractalScreenshotsPath.string().c_str(), fractalNames[selectedFractalType], num));
+
+	//Unload
+	UnloadRenderTexture(fractalImageRender);
+	UnloadImage(fractalImage);
+}
+
 #pragma endregion
 
-#pragma region UI
+#pragma region UI function implementations
 
 void UpdateUI()
 {
 
+}
+
+static float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier = 0.1f)
+{
+	const float BASE_FONT_SIZE = 16.0f;
+	return BASE_FONT_SIZE / MeasureTextEx(font, text, BASE_FONT_SIZE, BASE_FONT_SIZE * spacingMultiplier).x * width;
 }
 
 void DrawUI()
@@ -408,6 +476,25 @@ void DrawUI()
 			DrawText(TextFormat("Julia Pow : %f", juliaPower), 10, 10 + 24 * 9, 24, WHITE);
 		}
 	}
+
+	Font mainFont = GetFontDefault();
+	Color mainBackgroundColor = DARKGRAY;
+	const float FONT_SPACING_MULTIPLIER = 0.1f;
+
+	float screenRatio = std::min((float)screenWidth / (float)DESIGN_WIDTH, (float)screenHeight / (float)DESIGN_HEIGHT);
+
+	//Fractal selection panel
+	{
+		float fractalSelectionHeight = 32.0f * screenRatio;
+		Rectangle fractalSelectionRect = Rectangle{ (float)screenWidth * 0.25f, (float)screenHeight - fractalSelectionHeight * 1.5f, (float)screenWidth * 0.5f, fractalSelectionHeight };
+		
+		DrawRectangleRec(fractalSelectionRect, ColorAlpha(mainBackgroundColor, 0.4f));
+
+		float fractalNameFontSize = std::min(GetFontSizeForWidth(mainFont, fractalNames[selectedFractalType], fractalSelectionRect.width * 0.8f, FONT_SPACING_MULTIPLIER), fractalSelectionHeight * 0.8f);
+		Vector2 fractalNameTextSize = MeasureTextEx(mainFont, fractalNames[selectedFractalType], fractalNameFontSize, fractalNameFontSize / 10.0f);
+		DrawTextEx(mainFont, fractalNames[selectedFractalType], Vector2{ fractalSelectionRect.x + fractalSelectionRect.width / 2.0f - fractalNameTextSize.x / 2.0f, fractalSelectionRect.y + fractalSelectionRect.height * 0.5f - fractalNameTextSize.y * 0.5f}, fractalNameFontSize, fractalNameFontSize / 10.0f, WHITE);
+	}
+
 }
 
-#pragma endregion function implementations
+#pragma endregion

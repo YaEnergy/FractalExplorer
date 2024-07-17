@@ -16,3 +16,6 @@
 #ifdef WIN32RELEASE
 int main();
 #endif // RELEASE
+
+const int DESIGN_WIDTH = 800;
+const int DESIGN_HEIGHT = 480;
