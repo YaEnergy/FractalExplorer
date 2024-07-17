@@ -34,7 +34,7 @@ float ComplexAbsSquared(vec2 z)
     return z.x * z.x + z.y * z.y;
 }
 
-vec2 GetComplexConjugate(vec2 z)
+vec2 ComplexConjugate(vec2 z)
 {
     return vec2(z.x, -z.y);
 }

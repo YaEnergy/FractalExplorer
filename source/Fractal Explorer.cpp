@@ -11,21 +11,20 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include "Fractals/Mandelbrot.h"
-#include "ComplexNumbers/ComplexFloat.h"
-
-const int NUM_FRACTAL_TYPES = 3;
+const int NUM_FRACTAL_TYPES = 4;
 
 enum FractalType
 {
 	FRACTAL_MANDELBROT = 0,
-	FRACTAL_BURNING_SHIP = 1,
-	FRACTAL_JULIA = 2
+	FRACTAL_TRICORN = 1,
+	FRACTAL_BURNING_SHIP = 2,
+	FRACTAL_JULIA = 3
 };
 
 const char* fractalNames[NUM_FRACTAL_TYPES] =
 {
 	"Mandelbrot Set Fractal",
+	"Tricorn Fractal AKA Mandelbar",
 	"Burning Ship Fractal",
 	"Julia Set Fractal"
 };
@@ -103,6 +102,7 @@ int main()
 	
 	//Load fractal shaders
 	fractalShaders[FRACTAL_MANDELBROT] = LoadShader(NULL, "assets/shaders/mandelbrotFractal.frag");
+	fractalShaders[FRACTAL_TRICORN] = LoadShader(NULL, "assets/shaders/tricornFractal.frag");
 	fractalShaders[FRACTAL_BURNING_SHIP] = LoadShader(NULL, "assets/shaders/burningShipFractal.frag");
 	fractalShaders[FRACTAL_JULIA] = LoadShader(NULL, "assets/shaders/juliaFractal.frag");
 
@@ -218,8 +218,10 @@ void UpdateFractal()
 	if (IsKeyPressed(KEY_ONE))
 		SetFractalType(FRACTAL_MANDELBROT);
 	else if (IsKeyPressed(KEY_TWO))
-		SetFractalType(FRACTAL_BURNING_SHIP);
+		SetFractalType(FRACTAL_TRICORN);
 	else if (IsKeyPressed(KEY_THREE))
+		SetFractalType(FRACTAL_BURNING_SHIP);
+	else if (IsKeyPressed(KEY_FOUR))
 		SetFractalType(FRACTAL_JULIA);
 
 	if (IsKeyPressed(KEY_T))

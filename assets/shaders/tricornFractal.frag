@@ -131,7 +131,7 @@ void main()
 
     while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
     {
-        z = ComplexAdd(ComplexMultiply(z, z), c);
+        z = ComplexAdd(ComplexMultiply(ComplexConjugate(z), ComplexConjugate(z)), c);
         complexIterations++;
     }
 
