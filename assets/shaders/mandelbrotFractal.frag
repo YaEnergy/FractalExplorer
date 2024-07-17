@@ -141,10 +141,10 @@ void main()
     }
     else if (colorBanding == 1)
     {
-        finalColor = hsva2rgba(vec4(mod(complexIterations * 15.0, 360), 1.0, 1.0, 1.0));
+        finalColor = hsva2rgba(vec4(mod((complexIterations - 1) * 15.0, 360), 1.0, 1.0, 1.0));
     }
     else
     {
-        finalColor = hsva2rgba(vec4(mod((complexIterations + 1.0 - log(log(ComplexAbsSquared(z)))/log(2.0)) * 15.0, 360.0), 1.0, 1.0, 1.0));
+        finalColor = hsva2rgba(vec4(mod((complexIterations - log(log(ComplexAbsSquared(z)))/log(2.0)) * 15.0, 360.0), 1.0, 1.0, 1.0));
     }
 } 
