@@ -9,7 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("FractalExplorer" VERSION 1.0.0)
+project ("ComplexFractalExplorer" VERSION 1.0.0)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -37,7 +37,10 @@ endif()
 set(
 	SOURCES 
 	"source/Fractal Explorer.cpp"
- "source/Fractals/Mandelbrot.cpp" "source/ComplexNumbers/ComplexDouble.cpp" "source/ComplexNumbers/ComplexFloat.cpp")
+    "source/Fractals/Mandelbrot.cpp" 
+    "source/ComplexNumbers/ComplexDouble.cpp" 
+    "source/ComplexNumbers/ComplexFloat.cpp"
+)
 
 set(
 	INCLUDE_DIRECTORIES 

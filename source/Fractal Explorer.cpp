@@ -326,8 +326,9 @@ void UpdateFractalCamera()
 	{
 		Vector2 mouseDelta = GetMouseDelta();
 
-		position.x -= mouseDelta.x / (float)fractalRenderTexture.texture.width / zoom; /// qualityDivision / zoom;
-		position.y -= mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom; /// qualityDivision / zoom;
+		//fractal fits screen height
+		position.x -= mouseDelta.x / (float)fractalRenderTexture.texture.height / zoom;
+		position.y -= mouseDelta.y / (float)fractalRenderTexture.texture.height / zoom;
 	}
 
 	//Camera zooming using keys
