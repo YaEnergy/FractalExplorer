@@ -14,9 +14,6 @@ uniform int maxIterations = 20;
 
 uniform int colorBanding = 0;
 
-//https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring
-const float escapeRadius = 16.0;
-
 out vec4 finalColor;
 
 //2-argument arctangent, used to (for example:) get the angle of a complex number
@@ -125,6 +122,9 @@ void main()
 {
     //next z = z * z + c
     //until magtinude z > escapeRadius or max iterations is reached
+
+    //https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring
+    float escapeRadius = colorBanding == 1 ? 2.0 : 16.0;
 
     int complexIterations = 0;
     vec2 c = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
