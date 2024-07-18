@@ -58,7 +58,9 @@ else()
     add_executable (${PROJECT_NAME} ${SOURCES})
 endif()
 
-target_sources(${PROJECT_NAME} PRIVATE resource.rc)
+if (WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE resource.rc)
+endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
 
