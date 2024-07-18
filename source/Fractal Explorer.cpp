@@ -96,10 +96,17 @@ int main()
 	InitWindow(DESIGN_WIDTH, DESIGN_HEIGHT, "Complex Fractal Explorer");
 	InitAudioDevice();
 
+	SetWindowState(FLAG_WINDOW_RESIZABLE);
+
+	//Set up icon
+	Image windowIcon = LoadImage("assets/fractalExplorerIcon.png");
+	ImageFormat(&windowIcon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8); //Required for window icon
+	SetWindowIcon(windowIcon);
+	UnloadImage(windowIcon);
+	
+	//Fractal set up
 	fractalRenderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
-	SetWindowState(FLAG_WINDOW_RESIZABLE);
-	
 	//Load fractal shaders
 	fractalShaders[FRACTAL_MANDELBROT] = LoadShader(NULL, "assets/shaders/mandelbrotFractal.frag");
 	fractalShaders[FRACTAL_TRICORN] = LoadShader(NULL, "assets/shaders/tricornFractal.frag");

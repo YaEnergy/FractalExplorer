@@ -1,9 +1,9 @@
 #include "Fractals/Mandelbrot.h"
-#include "raylib.h"
 
-#include <vector>
 #include <cmath>
-#include <algorithm>
+#include <vector>
+
+#include "raylib.h"
 
 //Color helper function
 bool AreColorsEqual(Color a, Color b);
