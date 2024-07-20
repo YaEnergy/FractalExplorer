@@ -11,14 +11,15 @@
 #include "raylib.h"
 #include "raymath.h"
 
-const int NUM_FRACTAL_TYPES = 4;
+const int NUM_FRACTAL_TYPES = 5;
 
 enum FractalType
 {
 	FRACTAL_MANDELBROT = 0,
 	FRACTAL_TRICORN = 1,
 	FRACTAL_BURNING_SHIP = 2,
-	FRACTAL_JULIA = 3
+	FRACTAL_JULIA = 3,
+	FRACTAL_MULTIBROT = 4
 };
 
 const char* fractalNames[NUM_FRACTAL_TYPES] =
@@ -26,7 +27,8 @@ const char* fractalNames[NUM_FRACTAL_TYPES] =
 	"Mandelbrot Set Fractal",
 	"Tricorn Fractal AKA Mandelbar",
 	"Burning Ship Fractal",
-	"Julia Set Fractal"
+	"Julia Set Fractal",
+	"Multibrot Set Fractal"
 };
 
 Shader fractalShaders[NUM_FRACTAL_TYPES] = { 0 };
@@ -40,10 +42,10 @@ Vector2 position = Vector2{ 0.0f, 0.0f };
 float zoom = 1.0f;
 int maxIterations = 200;
 
-// Extra julia set fractal parameters
+// Extra fractal parameters
 
 Vector2 juliaC = Vector2{ 0.0f, 0.0f };
-float juliaPower = 2.0f;
+float power = 2.0f;
 
 // Extra options
 
@@ -112,6 +114,7 @@ int main()
 	fractalShaders[FRACTAL_TRICORN] = LoadShader(NULL, "assets/shaders/tricornFractal.frag");
 	fractalShaders[FRACTAL_BURNING_SHIP] = LoadShader(NULL, "assets/shaders/burningShipFractal.frag");
 	fractalShaders[FRACTAL_JULIA] = LoadShader(NULL, "assets/shaders/juliaFractal.frag");
+	fractalShaders[FRACTAL_MULTIBROT] = LoadShader(NULL, "assets/shaders/multibrotFractal.frag");
 
 	SetFractalType(FRACTAL_MANDELBROT);
 
@@ -148,7 +151,7 @@ void Update()
 	if (IsKeyPressed(KEY_SPACE))
 		showDebugInfo = !showDebugInfo;
 
-	if (IsKeyPressed(KEY_H))
+	if (IsKeyPressed(KEY_J))
 		SaveFractalToImage();
 }
 
@@ -173,11 +176,18 @@ void ResetFractalParameters()
 	maxIterations = 300;
 	zoom = 1.0f;
 
-	//julia set fractal parameters
-	if (selectedFractalType == FRACTAL_JULIA)
+	//extra fractal parameters
+	switch (selectedFractalType)
 	{
-		juliaC = Vector2{ 0.0f, 0.0f };
-		juliaPower = 2.0f;
+		case FRACTAL_JULIA:
+			juliaC = Vector2{ 0.0f, 0.0f };
+			power = 2.0f;
+			break;
+		case FRACTAL_MULTIBROT:
+			power = 3.0f;
+			break;
+		default:
+			break;
 	}
 }
 
@@ -209,11 +219,18 @@ void UpdateFractalShaderValues()
 	int colorBandingInt = colorBanding ? 1 : 0;
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
 
-	//julia set fractal shader values
-	if (selectedFractalType == FRACTAL_JULIA)
+	//extra fractal shader values
+	switch (selectedFractalType)
 	{
-		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &juliaC, SHADER_UNIFORM_VEC2);
-		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &juliaPower, SHADER_UNIFORM_FLOAT);
+		case FRACTAL_JULIA:
+			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &juliaC, SHADER_UNIFORM_VEC2);
+			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &power, SHADER_UNIFORM_FLOAT);
+			break;
+		case FRACTAL_MULTIBROT:
+			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &power, SHADER_UNIFORM_FLOAT);
+			break;
+		default:
+			break;
 	}
 }
 
@@ -230,6 +247,8 @@ void UpdateFractal()
 		SetFractalType(FRACTAL_BURNING_SHIP);
 	else if (IsKeyPressed(KEY_FOUR))
 		SetFractalType(FRACTAL_JULIA);
+	else if (IsKeyPressed(KEY_FIVE))
+		SetFractalType(FRACTAL_MULTIBROT);
 
 	if (IsKeyPressed(KEY_T))
 		SetFractalType((FractalType)(((int)selectedFractalType + 1) % NUM_FRACTAL_TYPES));
@@ -268,30 +287,33 @@ void UpdateFractalControls()
 	else if (IsKeyPressed(KEY_KP_SUBTRACT))
 		maxIterations--;
 
-	if (selectedFractalType == FRACTAL_JULIA)
+	if (selectedFractalType == FRACTAL_JULIA || selectedFractalType == FRACTAL_MULTIBROT)
 	{
 		//Power changing using keys
 		if (IsKeyDown(KEY_F))
-			juliaPower -= 1.0f * deltaTime;
+			power -= 1.0f * deltaTime;
 		else if (IsKeyDown(KEY_G))
-			juliaPower += 1.0f * deltaTime;
+			power += 1.0f * deltaTime;
 
 		//Round power down
 		if (IsKeyPressed(KEY_H))
-			juliaPower = floor(juliaPower);
+			power = floor(power);
+	}
 
+	if (selectedFractalType == FRACTAL_JULIA)
+	{
 		//c panning using keys
 		float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.05f : 0.01f;
 
 		if (IsKeyDown(KEY_A))
-			juliaC.x -= (double)(movementSpeed * deltaTime) / zoom;
+			juliaC.x -= (movementSpeed * deltaTime) / zoom;
 		else if (IsKeyDown(KEY_D))
-			juliaC.x += (double)(movementSpeed * deltaTime) / zoom;
+			juliaC.x += (movementSpeed * deltaTime) / zoom;
 
 		if (IsKeyDown(KEY_W))
-			juliaC.y += (double)(movementSpeed * deltaTime) / zoom;
+			juliaC.y += (movementSpeed * deltaTime) / zoom;
 		else if (IsKeyDown(KEY_S))
-			juliaC.y -= (double)(movementSpeed * deltaTime) / zoom;
+			juliaC.y -= (movementSpeed * deltaTime) / zoom;
 
 		//c panning using mouse right click
 		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
@@ -480,10 +502,14 @@ void DrawUI()
 
 		DrawText(fractalNames[selectedFractalType], 10, 10 + 24 * 7, 24, WHITE);
 
+		if (selectedFractalType == FRACTAL_JULIA || selectedFractalType == FRACTAL_MULTIBROT)
+		{
+			DrawText(TextFormat("Pow : %f", power), 10, 10 + 24 * 8, 24, WHITE);
+		}
+
 		if (selectedFractalType == FRACTAL_JULIA)
 		{
-			DrawText(TextFormat("Julia C : %f, %f", juliaC.x, juliaC.y), 10, 10 + 24 * 8, 24, WHITE);
-			DrawText(TextFormat("Julia Pow : %f", juliaPower), 10, 10 + 24 * 9, 24, WHITE);
+			DrawText(TextFormat("Julia C : %f, %f", juliaC.x, juliaC.y), 10, 10 + 24 * 9, 24, WHITE);
 		}
 	}
 
