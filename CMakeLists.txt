@@ -40,7 +40,7 @@ set(
     "source/Fractals/Mandelbrot.cpp" 
     "source/ComplexNumbers/ComplexDouble.cpp" 
     "source/ComplexNumbers/ComplexFloat.cpp"
-)
+  "source/Fractal.cpp")
 
 set(
 	INCLUDE_DIRECTORIES 
