@@ -79,7 +79,7 @@ int main()
 	fractalParameters.type = FRACTAL_MANDELBROT;
 	shaderFractal = LoadShaderFractal(FRACTAL_MANDELBROT);
 
-	shaderFractal.SetNormalizedScreenOffset(Vector2{ 0.5f, 0.5f });
+	shaderFractal.SetNormalizedScreenOffset(Vector2{ -0.5f, -0.5f });
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 	shaderFractal.SetWidthStretch(widthStretch);
 
@@ -141,7 +141,7 @@ void ChangeFractal(FractalType fractalType)
 	shaderFractal.Unload();
 	shaderFractal = LoadShaderFractal(fractalType);
 
-	shaderFractal.SetNormalizedScreenOffset(Vector2{ 0.5f, 0.5f });
+	shaderFractal.SetNormalizedScreenOffset(Vector2{ -0.5f, -0.5f });
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 	shaderFractal.SetWidthStretch(widthStretch);
 
@@ -171,8 +171,6 @@ void ResetFractalParameters()
 
 	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_JULIA)
 		shaderFractal.SetPower(fractalParameters.power);
-
-	//TODO: Update shader fractal parameters
 }
 
 void UpdateFractal()

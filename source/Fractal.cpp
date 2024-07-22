@@ -73,44 +73,6 @@ void UnloadFractalRenderTexture()
 #pragma endregion
 
 #pragma region Shaders
-/*void UpdateFractalShaderValues(const FractalParameters& parameters)
-{
-	Shader fractalShader = fractalShaders[parameters.type];
-
-	//TODO: Don't set these every frame! This is very expensive!
-	
-	//display shader values
-	Vector2 offset = {-0.5f, -0.5f};
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
-
-	float widthStretch = 1.0f / ((float)GetRenderWidth() / (float)GetRenderHeight());
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "widthStretch"), &widthStretch, SHADER_UNIFORM_FLOAT);
-
-	// Main complex fractal shader values
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &parameters.position, SHADER_UNIFORM_VEC2);
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &parameters.zoom, SHADER_UNIFORM_FLOAT);
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &parameters.maxIterations, SHADER_UNIFORM_INT);
-
-	//extra options
-	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
-	int colorBandingInt = parameters.colorBanding ? 1 : 0;
-	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
-
-	//extra fractal shader values
-	switch (parameters.type)
-	{
-		case FRACTAL_JULIA:
-			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &parameters.c, SHADER_UNIFORM_VEC2);
-			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &parameters.power, SHADER_UNIFORM_FLOAT);
-			break;
-		case FRACTAL_MULTIBROT:
-			SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &parameters.power, SHADER_UNIFORM_FLOAT);
-			break;
-		default:
-			break;
-	}
-}*/
-
 ShaderFractal LoadShaderFractal(FractalType type)
 {
 	Shader fractalShader = LoadShader(NULL, fragmentShaderFilePaths[type]);
