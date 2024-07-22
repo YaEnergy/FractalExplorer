@@ -23,6 +23,7 @@ const char* fractalEquations[NUM_FRACTAL_TYPES] =
 };
 
 FractalParameters fractalParameters = FractalParameters();
+ShaderFractal shaderFractal;
 bool showDebugInfo = false;
 
 //Delta times
@@ -64,6 +65,7 @@ int main()
 	InitAudioDevice();
 
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
+	SetExitKey(KEY_NULL);
 
 	//Set up icon
 	Image windowIcon = LoadImage("assets/fractalExplorerIcon.png");
@@ -73,9 +75,15 @@ int main()
 	
 	//Fractal set up
 	InitFractalRenderTexture(GetScreenWidth(), GetScreenHeight());
-	LoadFractalShaders();
 	
-	ChangeFractal(FRACTAL_MANDELBROT);
+	fractalParameters.type = FRACTAL_MANDELBROT;
+	shaderFractal = LoadShaderFractal(FRACTAL_MANDELBROT);
+
+	shaderFractal.SetNormalizedScreenOffset(Vector2{ 0.5f, 0.5f });
+	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+	shaderFractal.SetWidthStretch(widthStretch);
+
+	ResetFractalParameters();
 
 	//TODO: Emscripten modifications
 
@@ -86,7 +94,7 @@ int main()
 
 	//Deinit
 	UnloadFractalRenderTexture();
-	UnloadFractalShaders();
+	shaderFractal.Unload();
 
 	CloseAudioDevice();
 	CloseWindow();
@@ -109,7 +117,7 @@ void Update()
 		showDebugInfo = !showDebugInfo;
 
 	if (IsKeyPressed(KEY_J))
-		SaveFractalToImage(fractalParameters);
+		SaveShaderFractalToImage(shaderFractal);
 }
 
 void Draw()
@@ -118,7 +126,7 @@ void Draw()
 	{
 		ClearBackground(BLACK);
 
-		DrawFractal(fractalParameters, Rectangle{0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()});
+		shaderFractal.Draw(Rectangle{0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()});
 
 		DrawUI();
 	}
@@ -130,25 +138,47 @@ void ChangeFractal(FractalType fractalType)
 {
 	fractalParameters.type = fractalType;
 
+	shaderFractal.Unload();
+	shaderFractal = LoadShaderFractal(fractalType);
+
+	shaderFractal.SetNormalizedScreenOffset(Vector2{ 0.5f, 0.5f });
+	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+	shaderFractal.SetWidthStretch(widthStretch);
+
 	ResetFractalParameters();
 }
 
 void ResetFractalParameters()
 {
 	fractalParameters.position = Vector2{ 0.0f, 0.0f };
+	shaderFractal.SetPosition(fractalParameters.position);
+
 	fractalParameters.zoom = 1.0f;
+	shaderFractal.SetZoom(fractalParameters.zoom);
+
 	fractalParameters.maxIterations = 300;
+	shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 
 	fractalParameters.c = Vector2{ 0.0f, 0.0f };
+
+	if (fractalParameters.type == FRACTAL_JULIA)
+		shaderFractal.SetC(fractalParameters.c);
 
 	if (fractalParameters.type == FRACTAL_MULTIBROT)
 		fractalParameters.power = 3.0f;
 	else
 		fractalParameters.power = 2.0f;
+
+	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_JULIA)
+		shaderFractal.SetPower(fractalParameters.power);
+
+	//TODO: Update shader fractal parameters
 }
 
 void UpdateFractal()
 {
+	//TODO: Update shader fractal parameters
+
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
@@ -167,12 +197,18 @@ void UpdateFractal()
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
 
 	if (IsKeyPressed(KEY_E))
+	{
 		fractalParameters.colorBanding = !fractalParameters.colorBanding;
+		shaderFractal.SetColorBanding(fractalParameters.colorBanding);
+	}
 
 	//Update fractal render texture if screen size has changed
 	if (screenWidth != GetFractalRenderTextureWidth() || screenHeight != GetFractalRenderTextureHeight())
 	{
 		SetFractalRenderTextureSize(screenWidth, screenHeight);
+		
+		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+		shaderFractal.SetWidthStretch(widthStretch);
 	}
 
 	UpdateFractalControls();
@@ -180,6 +216,8 @@ void UpdateFractal()
 
 void UpdateFractalControls()
 {
+	//TODO: Update shader fractal parameters
+
 	float deltaTime = GetFrameTime();
 
 	if (IsKeyPressed(KEY_R))
@@ -189,9 +227,15 @@ void UpdateFractalControls()
 
 	//Iteration keys
 	if (IsKeyPressed(KEY_KP_ADD))
+	{
 		fractalParameters.maxIterations++;
+		shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
+	}
 	else if (IsKeyPressed(KEY_KP_SUBTRACT))
+	{
 		fractalParameters.maxIterations--;
+		shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
+	}
 
 	if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT)
 	{
@@ -204,6 +248,10 @@ void UpdateFractalControls()
 		//Round power down
 		if (IsKeyPressed(KEY_H))
 			fractalParameters.power = floor(fractalParameters.power);
+
+		//Update shader fractal if any of the above power keys were pressed
+		if (IsKeyDown(KEY_F) || IsKeyDown(KEY_G) || IsKeyPressed(KEY_H))
+			shaderFractal.SetPower(fractalParameters.power);
 	}
 
 	if (fractalParameters.type == FRACTAL_JULIA)
@@ -230,11 +278,17 @@ void UpdateFractalControls()
 			fractalParameters.c.x += mouseDelta.x / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 			fractalParameters.c.y -= mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 		}
+
+		//Update shader fractal if necessary
+		if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+			shaderFractal.SetC(fractalParameters.c);
 	}
 }
 
 void UpdateFractalCamera()
 {
+	//TODO: Update shader fractal parameters
+
 	float deltaTime = GetFrameTime();
 
 	//Camera panning using keys
@@ -259,6 +313,10 @@ void UpdateFractalCamera()
 		fractalParameters.position.x -= mouseDelta.x / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 		fractalParameters.position.y -= mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 	}
+
+	//Update shader fractal if necessary
+	if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN) || IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		shaderFractal.SetPosition(fractalParameters.position);
 
 	//Camera zooming using keys
 	zoomDeltaTime += deltaTime;
@@ -298,6 +356,10 @@ void UpdateFractalCamera()
 
 	if (fractalParameters.zoom <= 0.01f)
 		fractalParameters.zoom = 0.01f;
+
+	//Update shader fractal if necessary
+	if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
+		shaderFractal.SetZoom(fractalParameters.zoom);
 }
 #pragma endregion
 

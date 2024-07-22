@@ -2,10 +2,12 @@
 
 #include "raylib.h"
 
+//Not including FRACTAL_UNKNOWN: not a fractal
 const int NUM_FRACTAL_TYPES = 5;
 
 enum FractalType
 {
+	FRACTAL_UNKNOWN = -1,
 	FRACTAL_MANDELBROT = 0,
 	FRACTAL_TRICORN = 1,
 	FRACTAL_BURNING_SHIP = 2,
@@ -58,6 +60,7 @@ struct FractalParameters
 
 const char* GetFractalName(FractalType);
 
+
 //Render Texture
 
 void InitFractalRenderTexture(int width, int height);
@@ -68,13 +71,49 @@ void UnloadFractalRenderTexture();
 
 //Shaders
 
-void LoadFractalShaders();
-void UnloadFractalShaders();
+class ShaderFractal
+{
+	private:
+		Shader fractalShader;
+		FractalType type;
+	public:
+		FractalType GetFractalType() const;
+
+		void SetNormalizedScreenOffset(Vector2);
+		void SetWidthStretch(float);
+
+		void SetPosition(Vector2);
+		void SetZoom(float);
+		void SetMaxIterations(int);
+
+		void SetPower(float);
+		void SetC(Vector2);
+
+		void SetColorBanding(bool);
+
+		void Draw(Rectangle destination) const;
+
+		void Unload();
+
+		ShaderFractal()
+		{
+			fractalShader = { 0 };
+			type = FRACTAL_UNKNOWN;
+		}
+
+		ShaderFractal(Shader shader, FractalType fractalType)
+		{
+			fractalShader = shader;
+			type = fractalType;
+		}
+};
+
+ShaderFractal LoadShaderFractal(FractalType);
 
 //Drawing
 
-void DrawFractal(const FractalParameters&, Rectangle destination);
-void SaveFractalToImage(const FractalParameters&);
+//void DrawShaderFractal(Rectangle destination);
+void SaveShaderFractalToImage(const ShaderFractal& shaderFractal);
 
 
 

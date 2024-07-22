@@ -6,10 +6,17 @@
 #include "raylib.h"
 #include "raymath.h"
 
-Shader fractalShaders[NUM_FRACTAL_TYPES] = { 0 };
+const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
+	"assets/shaders/mandelbrotFractal.frag",
+	"assets/shaders/tricornFractal.frag",
+	"assets/shaders/burningShipFractal.frag",
+	"assets/shaders/juliaFractal.frag",
+	"assets/shaders/multibrotFractal.frag"
+};
+
 RenderTexture fractalRenderTexture;
 
-void UpdateFractalShaderValues(const FractalParameters& parameters);
+//void UpdateFractalShaderValues(const FractalParameters& parameters);
 
 const char* GetFractalName(FractalType fractalType)
 {
@@ -66,21 +73,14 @@ void UnloadFractalRenderTexture()
 #pragma endregion
 
 #pragma region Shaders
-void LoadFractalShaders()
-{
-	fractalShaders[FRACTAL_MANDELBROT] = LoadShader(NULL, "assets/shaders/mandelbrotFractal.frag");
-	fractalShaders[FRACTAL_TRICORN] = LoadShader(NULL, "assets/shaders/tricornFractal.frag");
-	fractalShaders[FRACTAL_BURNING_SHIP] = LoadShader(NULL, "assets/shaders/burningShipFractal.frag");
-	fractalShaders[FRACTAL_JULIA] = LoadShader(NULL, "assets/shaders/juliaFractal.frag");
-	fractalShaders[FRACTAL_MULTIBROT] = LoadShader(NULL, "assets/shaders/multibrotFractal.frag");
-}
-
-void UpdateFractalShaderValues(const FractalParameters& parameters)
+/*void UpdateFractalShaderValues(const FractalParameters& parameters)
 {
 	Shader fractalShader = fractalShaders[parameters.type];
 
+	//TODO: Don't set these every frame! This is very expensive!
+	
 	//display shader values
-	Vector2 offset = { -0.5f, -0.5f };
+	Vector2 offset = {-0.5f, -0.5f};
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
 
 	float widthStretch = 1.0f / ((float)GetRenderWidth() / (float)GetRenderHeight());
@@ -109,26 +109,73 @@ void UpdateFractalShaderValues(const FractalParameters& parameters)
 		default:
 			break;
 	}
+}*/
+
+ShaderFractal LoadShaderFractal(FractalType type)
+{
+	Shader fractalShader = LoadShader(NULL, fragmentShaderFilePaths[type]);
+
+	return ShaderFractal(fractalShader, type);
 }
 
-void UnloadFractalShaders()
+FractalType ShaderFractal::GetFractalType() const
 {
-	for (int i = 0; i < NUM_FRACTAL_TYPES; i++)
-	{
-		UnloadShader(fractalShaders[i]);
-	}
+	return type;
+}
+
+void ShaderFractal::SetNormalizedScreenOffset(Vector2 offset)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
+}
+
+void ShaderFractal::SetWidthStretch(float widthStretch)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "widthStretch"), &widthStretch, SHADER_UNIFORM_FLOAT);
+}
+
+void ShaderFractal::SetPosition(Vector2 position)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "position"), &position, SHADER_UNIFORM_VEC2);
+}
+
+void ShaderFractal::SetZoom(float zoom)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "zoom"), &zoom, SHADER_UNIFORM_FLOAT);
+}
+
+void ShaderFractal::SetMaxIterations(int maxIterations)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "maxIterations"), &maxIterations, SHADER_UNIFORM_INT);
+}
+
+void ShaderFractal::SetPower(float power)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "power"), &power, SHADER_UNIFORM_FLOAT);
+}
+
+void ShaderFractal::SetC(Vector2 c)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &c, SHADER_UNIFORM_VEC2);
+}
+
+void ShaderFractal::SetColorBanding(bool colorBanding)
+{
+	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
+	int colorBandingInt = colorBanding ? 1 : 0;
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
+}
+
+void ShaderFractal::Unload()
+{
+	UnloadShader(fractalShader);
 }
 #pragma endregion
 
 #pragma region Drawing
-void DrawFractal(const FractalParameters& parameters, Rectangle destination)
+void ShaderFractal::Draw(Rectangle destination) const
 {
 	int renderWidth = GetRenderWidth();
 	int renderHeight = GetRenderHeight();
-
-	Shader fractalShader = fractalShaders[parameters.type];
-
-	UpdateFractalShaderValues(parameters);
 
 	BeginShaderMode(fractalShader);
 	{
@@ -139,7 +186,7 @@ void DrawFractal(const FractalParameters& parameters, Rectangle destination)
 	EndShaderMode();
 }
 
-void SaveFractalToImage(const FractalParameters& parameters)
+void SaveShaderFractalToImage(const ShaderFractal& shaderFractal)
 {
 	//TODO: Web modifications
 
@@ -175,7 +222,7 @@ void SaveFractalToImage(const FractalParameters& parameters)
 	{
 		ClearBackground(BLACK);
 
-		DrawFractal(parameters, Rectangle{0.0f, 0.0f, (float)fractalImageRender.texture.width, (float)fractalImageRender.texture.height});
+		shaderFractal.Draw(Rectangle{0.0f, 0.0f, (float)fractalImageRender.texture.width, (float)fractalImageRender.texture.height});
 	}
 	EndTextureMode();
 
