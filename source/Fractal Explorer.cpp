@@ -175,8 +175,6 @@ void ResetFractalParameters()
 
 void UpdateFractal()
 {
-	//TODO: Update shader fractal parameters
-
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
@@ -214,8 +212,6 @@ void UpdateFractal()
 
 void UpdateFractalControls()
 {
-	//TODO: Update shader fractal parameters
-
 	float deltaTime = GetFrameTime();
 
 	if (IsKeyPressed(KEY_R))
@@ -247,7 +243,7 @@ void UpdateFractalControls()
 		if (IsKeyPressed(KEY_H))
 			fractalParameters.power = floor(fractalParameters.power);
 
-		//Update shader fractal if any of the above power keys were pressed
+		//Update shader fractal power if any of the above power keys were pressed
 		if (IsKeyDown(KEY_F) || IsKeyDown(KEY_G) || IsKeyPressed(KEY_H))
 			shaderFractal.SetPower(fractalParameters.power);
 	}
@@ -277,7 +273,7 @@ void UpdateFractalControls()
 			fractalParameters.c.y -= mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 		}
 
-		//Update shader fractal if necessary
+		//Update shader fractal c if necessary
 		if (IsKeyDown(KEY_A) || IsKeyDown(KEY_D) || IsKeyDown(KEY_W) || IsKeyDown(KEY_S) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 			shaderFractal.SetC(fractalParameters.c);
 	}
@@ -285,8 +281,6 @@ void UpdateFractalControls()
 
 void UpdateFractalCamera()
 {
-	//TODO: Update shader fractal parameters
-
 	float deltaTime = GetFrameTime();
 
 	//Camera panning using keys
@@ -312,8 +306,8 @@ void UpdateFractalCamera()
 		fractalParameters.position.y -= mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 	}
 
-	//Update shader fractal if necessary
-	if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN) || IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	//Update shader fractal position if necessary
+	if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN) || IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 		shaderFractal.SetPosition(fractalParameters.position);
 
 	//Camera zooming using keys
@@ -355,7 +349,7 @@ void UpdateFractalCamera()
 	if (fractalParameters.zoom <= 0.01f)
 		fractalParameters.zoom = 0.01f;
 
-	//Update shader fractal if necessary
+	//Update shader fractal zoom if necessary
 	if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
 		shaderFractal.SetZoom(fractalParameters.zoom);
 }

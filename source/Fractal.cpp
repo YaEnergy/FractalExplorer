@@ -16,8 +16,6 @@ const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
 
 RenderTexture fractalRenderTexture;
 
-//void UpdateFractalShaderValues(const FractalParameters& parameters);
-
 const char* GetFractalName(FractalType fractalType)
 {
 	switch (fractalType)

@@ -112,7 +112,6 @@ ShaderFractal LoadShaderFractal(FractalType);
 
 //Drawing
 
-//void DrawShaderFractal(Rectangle destination);
 void SaveShaderFractalToImage(const ShaderFractal& shaderFractal);
 
 
