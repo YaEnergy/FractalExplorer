@@ -35,6 +35,9 @@ void Update();
 void Draw();
 
 #pragma region Fractal functions
+Vector2 GetScreenToFractalPosition(Vector2 screenPosition);
+Vector2 GetFractalToScreenPosition(Vector2 fractalPosition);
+
 void ChangeFractal(FractalType fractalType);
 
 void ResetFractalParameters();
@@ -45,8 +48,11 @@ void UpdateFractalCamera();
 #pragma endregion
 
 #pragma region UI functions
-void UpdateUI();
+float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier = 0.1f);
 
+void DrawFractalGridAxises();
+
+void UpdateUI();
 void DrawUI();
 #pragma endregion
 
@@ -134,6 +140,54 @@ void Draw()
 }
 
 #pragma region Fractal function implementations
+Vector2 GetScreenToFractalPosition(Vector2 screenPosition)
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
+	Vector2 normalizedScreenOffset = Vector2{ 0.5f, 0.5f };
+	Vector2 fragTexCoord = Vector2{ screenPosition.x / (float)screenWidth, screenPosition.y / (float)screenHeight };
+	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+
+	// fp.x = ((sp.x / sw) + o.x) / w / z) + p.x
+	// fp.x = (sp.x / sw) + o.x) / (w * z) + p.x
+	// fp.x = ((sp.x / sw) + o.x) * sw * sh / z + p.x
+	// fp.y = ((sp.y / sh) + o.y) / z + p.y
+
+	Vector2 fractalPosition = Vector2{
+		(fragTexCoord.x + normalizedScreenOffset.x) / (widthStretch * fractalParameters.zoom) + fractalParameters.position.x,
+		(fragTexCoord.y + normalizedScreenOffset.y) / fractalParameters.zoom + fractalParameters.position.y
+	};
+
+	return fractalPosition;
+}
+
+Vector2 GetFractalToScreenPosition(Vector2 fractalPosition)
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
+	Vector2 normalizedScreenOffset = Vector2{ -0.5f, -0.5f };
+	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+
+	// fp.x = ((sp.x / sw) + o.x) / w / z) + p.x
+	// fp.y = ((sp.y / sh) + o.y) / z) + p.y
+
+	// fp.x - p.x = (sp.x / sw) + o.x) / (w * z)
+	// (fp.x - p.x) * w * z = (sp.x / sw) + o.x
+	// ((fp.x - p.x) * w * z - o.x) * sw = sp.x
+
+	// (fp.y - p.y) * z = (sp.y / sh) + o.y
+	// ((fp.y - p.y) * z - o.y) * sh = sp.y
+
+	Vector2 screenPosition = Vector2{
+		((fractalPosition.x - fractalParameters.position.x) * widthStretch * fractalParameters.zoom - normalizedScreenOffset.x) * (float)screenWidth,
+		((fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
+	};
+
+	return screenPosition;
+}
+
 void ChangeFractal(FractalType fractalType)
 {
 	fractalParameters.type = fractalType;
@@ -363,15 +417,45 @@ void UpdateFractalCamera()
 //Allows text with sub- and superscript
 //void DrawScriptTextEx(Font font, const char* text, Vector2 position, float fontSize, float spacing, Color tint);
 
-void UpdateUI()
-{
-
-}
-
-static float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier = 0.1f)
+float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier)
 {
 	const float BASE_FONT_SIZE = 16.0f;
 	return BASE_FONT_SIZE / MeasureTextEx(font, text, BASE_FONT_SIZE, BASE_FONT_SIZE * spacingMultiplier).x * width;
+}
+
+void DrawFractalGridAxises()
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+	Vector2 fractalCenterScreenPosition = GetFractalToScreenPosition(Vector2Zero());
+
+	//Vertical grid line is on screen
+	if (fractalCenterScreenPosition.x >= 0.0f || fractalCenterScreenPosition.x <= (float)screenWidth)
+	{
+		DrawLineEx(Vector2{ fractalCenterScreenPosition.x, 0.0f }, Vector2{ fractalCenterScreenPosition.x, (float)screenHeight }, 2.0f, WHITE);
+	}
+
+	//Horizontal grid line is on screen
+	if (fractalCenterScreenPosition.y >= 0.0f || fractalCenterScreenPosition.y <= (float)screenHeight)
+	{
+		DrawLineEx(Vector2{ 0.0f, fractalCenterScreenPosition.y }, Vector2{ (float)screenWidth, fractalCenterScreenPosition.y }, 2.0f, WHITE);
+	}
+
+	//Letters
+	//Always visible
+	//Clamped to screen edges
+	//x leaves space in top right for y
+
+	int letterFontSize = 24;
+	int letterPadding = 10;
+
+	DrawText("x >", screenWidth - MeasureText("x >", letterFontSize) - letterPadding, (int)std::clamp(fractalCenterScreenPosition.y - (float)letterFontSize - (float)letterPadding, (float)letterPadding * 2.0f + (float)letterFontSize, (float)screenHeight - (float)letterFontSize - (float)letterPadding), letterFontSize, WHITE);
+	DrawText("y /\\", (int)std::clamp(fractalCenterScreenPosition.x + (float)letterPadding, (float)letterPadding, (float)screenWidth - (float)MeasureText("y /\\", letterFontSize) - (float)letterPadding), letterPadding, letterFontSize, WHITE);
+}
+
+void UpdateUI()
+{
+	
 }
 
 void DrawUI()
@@ -381,6 +465,8 @@ void DrawUI()
 
 	if (showDebugInfo)
 	{
+		DrawFractalGridAxises();
+
 		DrawFPS(10, 10);
 		DrawText(TextFormat("Position : %f, %f", fractalParameters.position.x, fractalParameters.position.y), 10, 10 + 24, 24, GREEN);
 		DrawText(TextFormat("Zoom: %f", fractalParameters.zoom), 10, 10 + 24 * 2, 24, GREEN);
