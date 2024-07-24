@@ -11,7 +11,8 @@ const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
 	"assets/shaders/tricornFractal.frag",
 	"assets/shaders/burningShipFractal.frag",
 	"assets/shaders/juliaFractal.frag",
-	"assets/shaders/multibrotFractal.frag"
+	"assets/shaders/multibrotFractal.frag",
+	"assets/shaders/multicornFractal.frag"
 };
 
 RenderTexture fractalRenderTexture;
@@ -30,6 +31,8 @@ const char* GetFractalName(FractalType fractalType)
 			return "Julia Set Fractal";
 		case FRACTAL_MULTIBROT:
 			return "Multibrot Set Fractal";
+		case FRACTAL_MULTICORN:
+			return "Multicorn Set Fractal";
 	}
 }
 
@@ -139,7 +142,8 @@ void ShaderFractal::Draw(Rectangle destination) const
 
 	BeginShaderMode(fractalShader);
 	{
-		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, (float)fractalRenderTexture.texture.height };
+		//Fractal is drawn flipped because of flipped render texture
+		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, -(float)fractalRenderTexture.texture.height };
 
 		DrawTexturePro(fractalRenderTexture.texture, fractalSource, destination, { 0.0f, 0.0f }, 0.0f, WHITE);
 	}

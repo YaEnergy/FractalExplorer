@@ -145,21 +145,16 @@ Vector2 GetScreenToFractalPosition(Vector2 screenPosition)
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
-	Vector2 normalizedScreenOffset = Vector2{ 0.5f, 0.5f };
+	Vector2 normalizedScreenOffset = Vector2{ -0.5f, -0.5f };
 	Vector2 fragTexCoord = Vector2{ screenPosition.x / (float)screenWidth, screenPosition.y / (float)screenHeight };
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 
-	// fp.x = ((sp.x / sw) + o.x) / w / z) + p.x
-	// fp.x = (sp.x / sw) + o.x) / (w * z) + p.x
-	// fp.x = ((sp.x / sw) + o.x) * sw * sh / z + p.x
-	// fp.y = ((sp.y / sh) + o.y) / z + p.y
-
 	Vector2 fractalPosition = Vector2{
 		(fragTexCoord.x + normalizedScreenOffset.x) / (widthStretch * fractalParameters.zoom) + fractalParameters.position.x,
-		(fragTexCoord.y + normalizedScreenOffset.y) / fractalParameters.zoom + fractalParameters.position.y
+		(fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom - fractalParameters.position.y
 	};
 
-	return fractalPosition;
+	return Vector2{ fractalPosition.x, fractalPosition.y };
 }
 
 Vector2 GetFractalToScreenPosition(Vector2 fractalPosition)
@@ -170,19 +165,9 @@ Vector2 GetFractalToScreenPosition(Vector2 fractalPosition)
 	Vector2 normalizedScreenOffset = Vector2{ -0.5f, -0.5f };
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 
-	// fp.x = ((sp.x / sw) + o.x) / w / z) + p.x
-	// fp.y = ((sp.y / sh) + o.y) / z) + p.y
-
-	// fp.x - p.x = (sp.x / sw) + o.x) / (w * z)
-	// (fp.x - p.x) * w * z = (sp.x / sw) + o.x
-	// ((fp.x - p.x) * w * z - o.x) * sw = sp.x
-
-	// (fp.y - p.y) * z = (sp.y / sh) + o.y
-	// ((fp.y - p.y) * z - o.y) * sh = sp.y
-
 	Vector2 screenPosition = Vector2{
 		((fractalPosition.x - fractalParameters.position.x) * widthStretch * fractalParameters.zoom - normalizedScreenOffset.x) * (float)screenWidth,
-		((fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
+		(-(fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
 	};
 
 	return screenPosition;
@@ -218,12 +203,12 @@ void ResetFractalParameters()
 	if (fractalParameters.type == FRACTAL_JULIA)
 		shaderFractal.SetC(fractalParameters.c);
 
-	if (fractalParameters.type == FRACTAL_MULTIBROT)
+	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
 		fractalParameters.power = 3.0f;
 	else
 		fractalParameters.power = 2.0f;
 
-	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_JULIA)
+	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTICORN)
 		shaderFractal.SetPower(fractalParameters.power);
 }
 
@@ -242,6 +227,8 @@ void UpdateFractal()
 		ChangeFractal(FRACTAL_JULIA);
 	else if (IsKeyPressed(KEY_FIVE))
 		ChangeFractal(FRACTAL_MULTIBROT);
+	else if (IsKeyPressed(KEY_SIX))
+		ChangeFractal(FRACTAL_MULTICORN);
 
 	if (IsKeyPressed(KEY_T))
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
@@ -285,7 +272,7 @@ void UpdateFractalControls()
 		shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 	}
 
-	if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT)
+	if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
 	{
 		//Power changing using keys
 		if (IsKeyDown(KEY_F))
@@ -346,9 +333,9 @@ void UpdateFractalCamera()
 		fractalParameters.position.x += movementSpeed * deltaTime / fractalParameters.zoom;
 
 	if (IsKeyDown(KEY_UP))
-		fractalParameters.position.y -= movementSpeed * deltaTime / fractalParameters.zoom;
-	else if (IsKeyDown(KEY_DOWN))
 		fractalParameters.position.y += movementSpeed * deltaTime / fractalParameters.zoom;
+	else if (IsKeyDown(KEY_DOWN))
+		fractalParameters.position.y -= movementSpeed * deltaTime / fractalParameters.zoom;
 
 	//Camera panning using mouse
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -357,7 +344,7 @@ void UpdateFractalCamera()
 
 		//fractal fits screen height
 		fractalParameters.position.x -= mouseDelta.x / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
-		fractalParameters.position.y -= mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
+		fractalParameters.position.y += mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 	}
 
 	//Update shader fractal position if necessary
@@ -425,20 +412,61 @@ float GetFontSizeForWidth(Font font, const char* text, float width, float spacin
 
 void DrawFractalGridAxises()
 {
+	const float GRID_LINE_THICKNESS = 2.0f;
+
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
+
 	Vector2 fractalCenterScreenPosition = GetFractalToScreenPosition(Vector2Zero());
 
 	//Vertical grid line is on screen
 	if (fractalCenterScreenPosition.x >= 0.0f || fractalCenterScreenPosition.x <= (float)screenWidth)
 	{
-		DrawLineEx(Vector2{ fractalCenterScreenPosition.x, 0.0f }, Vector2{ fractalCenterScreenPosition.x, (float)screenHeight }, 2.0f, WHITE);
+		DrawLineEx(Vector2{ fractalCenterScreenPosition.x, 0.0f }, Vector2{ fractalCenterScreenPosition.x, (float)screenHeight }, GRID_LINE_THICKNESS, WHITE);
 	}
 
 	//Horizontal grid line is on screen
 	if (fractalCenterScreenPosition.y >= 0.0f || fractalCenterScreenPosition.y <= (float)screenHeight)
 	{
-		DrawLineEx(Vector2{ 0.0f, fractalCenterScreenPosition.y }, Vector2{ (float)screenWidth, fractalCenterScreenPosition.y }, 2.0f, WHITE);
+		DrawLineEx(Vector2{ 0.0f, fractalCenterScreenPosition.y }, Vector2{ (float)screenWidth, fractalCenterScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
+	}
+
+	// Grid line markers
+	//TODO: Allow fractional number markers
+
+	//Bottom left of the screen has the smallest x & y
+	Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight});
+
+	//Top right of the screen has the largest x & y
+	Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{(float)screenWidth, 0.0f});
+
+	float markerLength = 20.0f;
+	int numberFontSize = 20;
+	float numberPadding = 5.0f;
+
+	for (int x = (int)minFractalPosition.x; x <= (int)maxFractalPosition.x; x++)
+	{
+		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ (float)x, 0.0f });
+
+		DrawLineEx(Vector2{fractalScreenPosition.x, fractalCenterScreenPosition.y - markerLength / 2.0f}, Vector2{ fractalScreenPosition.x, fractalCenterScreenPosition.y + markerLength / 2.0f }, GRID_LINE_THICKNESS, WHITE);
+		
+		if (x != 0)
+		{
+			int numberLength = MeasureText(TextFormat("%i", x), numberFontSize);
+			DrawText(TextFormat("%i", x), (int)fractalScreenPosition.x - numberLength / 2, (int)(fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding), numberFontSize, WHITE);
+		}
+	}
+
+	for (int y = (int)minFractalPosition.y; y <= (int)maxFractalPosition.y; y++)
+	{
+		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, (float)y });
+		
+		DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
+	
+		if (y != 0)
+		{
+			DrawText(TextFormat("%i", y), (int)(fractalCenterScreenPosition.x + markerLength / 2.0f + numberPadding), (int)fractalScreenPosition.y - numberFontSize / 2, numberFontSize, WHITE);
+		}
 	}
 
 	//Letters
@@ -451,6 +479,7 @@ void DrawFractalGridAxises()
 
 	DrawText("x >", screenWidth - MeasureText("x >", letterFontSize) - letterPadding, (int)std::clamp(fractalCenterScreenPosition.y - (float)letterFontSize - (float)letterPadding, (float)letterPadding * 2.0f + (float)letterFontSize, (float)screenHeight - (float)letterFontSize - (float)letterPadding), letterFontSize, WHITE);
 	DrawText("y /\\", (int)std::clamp(fractalCenterScreenPosition.x + (float)letterPadding, (float)letterPadding, (float)screenWidth - (float)MeasureText("y /\\", letterFontSize) - (float)letterPadding), letterPadding, letterFontSize, WHITE);
+
 }
 
 void UpdateUI()
@@ -477,7 +506,7 @@ void DrawUI()
 
 		DrawText(GetFractalName(fractalParameters.type), 10, 10 + 24 * 7, 24, WHITE);
 
-		if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT)
+		if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
 		{
 			DrawText(TextFormat("Pow : %f", fractalParameters.power), 10, 10 + 24 * 8, 24, WHITE);
 		}

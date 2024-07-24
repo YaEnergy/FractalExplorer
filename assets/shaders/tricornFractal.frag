@@ -6,9 +6,9 @@ in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform float widthStretch = 1.0;
+uniform vec2 offset = vec2(0.0, 0.0);
 
 uniform vec2 position = vec2(0.0, 0.0);
-uniform vec2 offset = vec2(0.0, 0.0);
 uniform float zoom = 1.0;
 uniform int maxIterations = 20;
 

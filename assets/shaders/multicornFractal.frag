@@ -6,11 +6,14 @@ in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform float widthStretch = 1.0;
+uniform vec2 offset = vec2(0.0, 0.0);
 
 uniform vec2 position = vec2(0.0, 0.0);
-uniform vec2 offset = vec2(0.0, 0.0);
 uniform float zoom = 1.0;
 uniform int maxIterations = 20;
+
+//Allows multicorns
+uniform float power = 2.0;
 
 uniform int colorBanding = 0;
 
@@ -120,10 +123,10 @@ vec4 hsva2rgba(vec4 hsva)
 
 void main()
 {
-    //next z = z * z + c
+    //next z = ComplexConjugate(z) * ComplexConjugate(z) + c
     //until magtinude z > escapeRadius or max iterations is reached
 
-    //https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring
+     //https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring
     float escapeRadius = colorBanding == 1 ? 2.0 : 16.0;
 
     int complexIterations = 0;
@@ -132,7 +135,7 @@ void main()
 
     while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
     {
-        z = ComplexAdd(ComplexMultiply(z, z), c);
+        z = ComplexAdd(ComplexPow(ComplexConjugate(z), power), c);
         complexIterations++;
     }
 
@@ -142,9 +145,7 @@ void main()
     }
     else
     {
-        //finalColor = hsva2rgba(vec4(mod(pow((float(complexIterations) / float(maxIterations)), 1.5) * 360.0, 360.0), 1.0, 1.0, 1.0));
-
-        float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(2.0);
+        float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(power);
 
         finalColor = hsva2rgba(vec4(mod((complexIterations + 1 - nu) * 15.0, 360.0), 1.0, 1.0, 1.0));
     }
