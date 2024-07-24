@@ -431,7 +431,7 @@ void DrawFractalGridAxises()
 		DrawLineEx(Vector2{ 0.0f, fractalCenterScreenPosition.y }, Vector2{ (float)screenWidth, fractalCenterScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
 	}
 
-	// Grid line markers
+	// Axis number markers
 	//TODO: Allow fractional number markers
 
 	//Bottom left of the screen has the smallest x & y
@@ -444,7 +444,10 @@ void DrawFractalGridAxises()
 	int numberFontSize = 20;
 	float numberPadding = 5.0f;
 
-	for (int x = (int)minFractalPosition.x; x <= (int)maxFractalPosition.x; x++)
+	//0 at center
+	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
+
+	for (int x = (int)minFractalPosition.x - 1; x <= (int)maxFractalPosition.x + 1; x++)
 	{
 		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ (float)x, 0.0f });
 
@@ -457,7 +460,7 @@ void DrawFractalGridAxises()
 		}
 	}
 
-	for (int y = (int)minFractalPosition.y; y <= (int)maxFractalPosition.y; y++)
+	for (int y = (int)minFractalPosition.y - 1; y <= (int)maxFractalPosition.y + 1; y++)
 	{
 		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, (float)y });
 		
