@@ -443,33 +443,8 @@ void DrawFractalGridAxises()
 	int numberFontSize = 18;
 	float numberPadding = 5.0f;
 
-	float increment = 0.5f;
-
-	int zoomLevel = 0;
-	
-	//Get largest increment that fits within the difference between the max and min fractal x less than 20 times
-	if (increment >= (maxFractalPosition.x - minFractalPosition.x) / 20.0f)
-	{
-		//Min zoom level is -2
-		while (increment >= (maxFractalPosition.x - minFractalPosition.x) / 20.0f && zoomLevel >= -2)
-		{
-			zoomLevel--;
-			increment /= 10.0f;
-		}
-
-		//go back a level
-		zoomLevel++;
-		increment *= 10.0f;
-	}
-	else
-	{
-		//Max zoom level is 10
-		while (increment <= (maxFractalPosition.x - minFractalPosition.x) / 20.0f && zoomLevel < 10)
-		{
-			zoomLevel++;
-			increment *= 10.0f;
-		}
-	}
+	int zoomLevel = std::max(-(int)trunc(log10(fractalParameters.zoom)), -5);
+	float increment = 0.5f * pow(10, (float)zoomLevel);
 
 	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : -zoomLevel + 1) + "f";
 
