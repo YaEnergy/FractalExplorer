@@ -151,7 +151,7 @@ Vector2 GetScreenToFractalPosition(Vector2 screenPosition)
 
 	Vector2 fractalPosition = Vector2{
 		(fragTexCoord.x + normalizedScreenOffset.x) / (widthStretch * fractalParameters.zoom) + fractalParameters.position.x,
-		(fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom - fractalParameters.position.y
+		(fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom + fractalParameters.position.y
 	};
 
 	return Vector2{ fractalPosition.x, fractalPosition.y };
