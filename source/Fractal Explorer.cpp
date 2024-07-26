@@ -387,8 +387,8 @@ void UpdateFractalCamera()
 	Vector2 pinchMovement = GetGesturePinchVector();
 	fractalParameters.zoom += fractalParameters.zoom * 0.5f * Vector2Length(pinchMovement);
 
-	if (fractalParameters.zoom <= 0.01f)
-		fractalParameters.zoom = 0.01f;
+	if (fractalParameters.zoom <= 1.0f / 1000.0f)
+		fractalParameters.zoom = 1.0f / 1000.0f;
 
 	//Update shader fractal zoom if necessary
 	if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
@@ -432,7 +432,6 @@ void DrawFractalGridAxises()
 	}
 
 	// Axis number markers
-	//TODO: Allow fractional number markers
 
 	//Bottom left of the screen has the smallest x & y
 	Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight});
@@ -441,35 +440,69 @@ void DrawFractalGridAxises()
 	Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{(float)screenWidth, 0.0f});
 
 	float markerLength = 20.0f;
-	int numberFontSize = 20;
+	int numberFontSize = 18;
 	float numberPadding = 5.0f;
+
+	float increment = 0.5f;
+
+	int zoomLevel = 0;
+	
+	//Get largest increment that fits within the difference between the max and min fractal x less than 20 times
+	if (increment >= (maxFractalPosition.x - minFractalPosition.x) / 20.0f)
+	{
+		//Min zoom level is -2
+		while (increment >= (maxFractalPosition.x - minFractalPosition.x) / 20.0f && zoomLevel >= -2)
+		{
+			zoomLevel--;
+			increment /= 10.0f;
+		}
+
+		//go back a level
+		zoomLevel++;
+		increment *= 10.0f;
+	}
+	else
+	{
+		//Max zoom level is 10
+		while (increment <= (maxFractalPosition.x - minFractalPosition.x) / 20.0f && zoomLevel < 10)
+		{
+			zoomLevel++;
+			increment *= 10.0f;
+		}
+	}
+
+	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : -zoomLevel + 1) + "f";
 
 	//0 at center
 	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
 
-	for (int x = (int)minFractalPosition.x - 1; x <= (int)maxFractalPosition.x + 1; x++)
+	//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
+	for (float x = minFractalPosition.x - fmod(minFractalPosition.x, increment); x <= maxFractalPosition.x + increment; x += increment)
 	{
-		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ (float)x, 0.0f });
+		//don't draw 0, due to floating point imprecision we can't check if x is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
+		if (abs(x) < increment / 2.0f)
+			continue;
+
+		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ x, 0.0f });
 
 		DrawLineEx(Vector2{fractalScreenPosition.x, fractalCenterScreenPosition.y - markerLength / 2.0f}, Vector2{ fractalScreenPosition.x, fractalCenterScreenPosition.y + markerLength / 2.0f }, GRID_LINE_THICKNESS, WHITE);
 		
-		if (x != 0)
-		{
-			int numberLength = MeasureText(TextFormat("%i", x), numberFontSize);
-			DrawText(TextFormat("%i", x), (int)fractalScreenPosition.x - numberLength / 2, (int)(fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding), numberFontSize, WHITE);
-		}
+		int numberLength = MeasureText(TextFormat(formatString.c_str(), x), numberFontSize);
+		DrawText(TextFormat(formatString.c_str(), x), (int)fractalScreenPosition.x - numberLength / 2, (int)(fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding), numberFontSize, WHITE);
 	}
 
-	for (int y = (int)minFractalPosition.y - 1; y <= (int)maxFractalPosition.y + 1; y++)
+	//Start at multiple of increment closest to min fractal y and draw markers until max fractal y
+	for (float y = minFractalPosition.y - fmod(minFractalPosition.y, increment); y <= maxFractalPosition.y + increment; y += increment)
 	{
-		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, (float)y });
+		//don't draw 0, due to floating point imprecision we can't check if y is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
+		if (abs(y) < increment / 2.0f)
+			continue;
+
+		Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, y });
 		
 		DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
 	
-		if (y != 0)
-		{
-			DrawText(TextFormat("%i", y), (int)(fractalCenterScreenPosition.x + markerLength / 2.0f + numberPadding), (int)fractalScreenPosition.y - numberFontSize / 2, numberFontSize, WHITE);
-		}
+		DrawText(TextFormat(formatString.c_str(), y), (int)(fractalCenterScreenPosition.x + markerLength / 2.0f + numberPadding), (int)fractalScreenPosition.y - numberFontSize / 2, numberFontSize, WHITE);
 	}
 
 	//Letters
