@@ -29,9 +29,9 @@ uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
 
 const vec4[NUM_ROOTS] ROOT_COLORS = vec4[NUM_ROOTS]
 (
-    vec4(1.0, 0.0, 0.0, 1.0), // RED
-    vec4(0.0, 1.0, 0.0, 1.0), // GREEN
-    vec4(0.0, 0.0, 1.0, 1.0) // BLUE
+    vec4(1.0, 0.2, 0.2, 1.0), // RED
+    vec4(0.2, 1.0, 0.2, 1.0), // GREEN
+    vec4(0.2, 0.2, 1.0, 1.0) // BLUE
 );
 
 out vec4 finalColor;

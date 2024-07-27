@@ -3,7 +3,7 @@
 #include "raylib.h"
 
 //Not including FRACTAL_UNKNOWN: not a fractal
-const int NUM_FRACTAL_TYPES = 6;
+const int NUM_FRACTAL_TYPES = 7;
 
 enum FractalType
 {
@@ -13,7 +13,8 @@ enum FractalType
 	FRACTAL_BURNING_SHIP = 2,
 	FRACTAL_JULIA = 3,
 	FRACTAL_MULTIBROT = 4,
-	FRACTAL_MULTICORN = 5
+	FRACTAL_MULTICORN = 5,
+	FRACTAL_NEWTON_3DEG = 6
 };
 
 struct FractalParameters

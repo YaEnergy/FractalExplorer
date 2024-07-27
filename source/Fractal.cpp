@@ -12,7 +12,8 @@ const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
 	"assets/shaders/burningShipFractal.frag",
 	"assets/shaders/juliaFractal.frag",
 	"assets/shaders/multibrotFractal.frag",
-	"assets/shaders/multicornFractal.frag"
+	"assets/shaders/multicornFractal.frag",
+	"assets/shaders/newtonFractal_3.frag"
 };
 
 RenderTexture fractalRenderTexture;
@@ -33,6 +34,8 @@ const char* GetFractalName(FractalType fractalType)
 			return "Multibrot Set Fractal";
 		case FRACTAL_MULTICORN:
 			return "Multicorn Set Fractal";
+		case FRACTAL_NEWTON_3DEG:
+			return "Newton Fractal - 3rd-degree polynomial";
 	}
 }
 
