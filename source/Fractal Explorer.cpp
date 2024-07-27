@@ -229,6 +229,8 @@ void UpdateFractal()
 		ChangeFractal(FRACTAL_MULTIBROT);
 	else if (IsKeyPressed(KEY_SIX))
 		ChangeFractal(FRACTAL_MULTICORN);
+	else if (IsKeyPressed(KEY_SEVEN))
+		ChangeFractal(FRACTAL_NEWTON_3DEG);
 
 	if (IsKeyPressed(KEY_T))
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
@@ -387,8 +389,8 @@ void UpdateFractalCamera()
 	Vector2 pinchMovement = GetGesturePinchVector();
 	fractalParameters.zoom += fractalParameters.zoom * 0.5f * Vector2Length(pinchMovement);
 
-	if (fractalParameters.zoom <= 1.0f / 1000.0f)
-		fractalParameters.zoom = 1.0f / 1000.0f;
+	if (fractalParameters.zoom <= 1.0f / 100000.0f)
+		fractalParameters.zoom = 1.0f / 100000.0f;
 
 	//Update shader fractal zoom if necessary
 	if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
@@ -443,10 +445,63 @@ void DrawFractalGridAxises()
 	int numberFontSize = 18;
 	float numberPadding = 5.0f;
 
-	int zoomLevel = std::max(-(int)trunc(log10(fractalParameters.zoom)), -5);
-	float increment = 0.5f * pow(10, (float)zoomLevel);
+	float minMaxYDifference = maxFractalPosition.y - minFractalPosition.y;
 
-	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : -zoomLevel + 1) + "f";
+	int defaultIncrement = 5;
+	int zoomLevel = 0;
+
+	if (defaultIncrement >= minMaxYDifference / 10.0f)
+	{
+		while (pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement >= minMaxYDifference / 10.0f)
+		{
+			zoomLevel--;
+
+			if (defaultIncrement == 1)
+				defaultIncrement = 5;
+			else
+				defaultIncrement /= 2;
+		}
+
+		//go back a level
+		zoomLevel++;
+
+		switch (defaultIncrement)
+		{
+			case 5:
+				defaultIncrement = 1;
+				break;
+			case 2:
+				defaultIncrement = 5;
+				break;
+			case 1:
+				defaultIncrement = 2;
+				break;
+		}
+	}
+	else
+	{
+		while (pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement < minMaxYDifference / 10.0f)
+		{
+			zoomLevel++;
+
+			switch (defaultIncrement)
+			{
+				case 5:
+					defaultIncrement = 10;
+					break;
+				case 20:
+					defaultIncrement = 5;
+					break;
+				case 10:
+					defaultIncrement = 20;
+					break;
+			}
+		}
+	}
+
+	float increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
+
+	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : zoomLevel / -3) + "f";
 
 	//0 at center
 	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
@@ -477,7 +532,7 @@ void DrawFractalGridAxises()
 		
 		DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
 	
-		DrawText(TextFormat(formatString.c_str(), y), (int)(fractalCenterScreenPosition.x + markerLength / 2.0f + numberPadding), (int)fractalScreenPosition.y - numberFontSize / 2, numberFontSize, WHITE);
+		DrawText(TextFormat(formatString.c_str(), y), (int)(fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding - MeasureText(TextFormat(formatString.c_str(), y), numberFontSize)), (int)fractalScreenPosition.y - numberFontSize / 2, numberFontSize, WHITE);
 	}
 
 	//Letters
@@ -506,6 +561,15 @@ void DrawUI()
 	if (showDebugInfo)
 	{
 		DrawFractalGridAxises();
+
+		//Test
+		if (fractalParameters.type == FRACTAL_JULIA)
+		{
+			Vector2 dotTest = GetFractalToScreenPosition(fractalParameters.c);
+			DrawCircleV(dotTest, 6.0f, BLACK);
+			DrawCircleV(dotTest, 4.0f, WHITE);
+			DrawText("c", (int)dotTest.x + 4, (int)dotTest.y - 4 - 24, 24, WHITE);
+		}
 
 		DrawFPS(10, 10);
 		DrawText(TextFormat("Position : %f, %f", fractalParameters.position.x, fractalParameters.position.y), 10, 10 + 24, 24, GREEN);
