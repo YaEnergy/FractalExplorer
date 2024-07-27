@@ -389,8 +389,8 @@ void UpdateFractalCamera()
 	Vector2 pinchMovement = GetGesturePinchVector();
 	fractalParameters.zoom += fractalParameters.zoom * 0.5f * Vector2Length(pinchMovement);
 
-	if (fractalParameters.zoom <= 1.0f / 100000.0f)
-		fractalParameters.zoom = 1.0f / 100000.0f;
+	//min & max zoom
+	fractalParameters.zoom = std::clamp(fractalParameters.zoom, 1.0f / 100000.0f, pow(10.0f, 10.0f));
 
 	//Update shader fractal zoom if necessary
 	if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
@@ -445,14 +445,16 @@ void DrawFractalGridAxises()
 	int numberFontSize = 18;
 	float numberPadding = 5.0f;
 
-	float minMaxYDifference = maxFractalPosition.y - minFractalPosition.y;
+	float minMaxDifference = std::max(maxFractalPosition.x - minFractalPosition.x, maxFractalPosition.y - minFractalPosition.y);
 
 	int defaultIncrement = 5;
 	int zoomLevel = 0;
+	float increment = defaultIncrement;
 
-	if (defaultIncrement >= minMaxYDifference / 10.0f)
+	if (defaultIncrement >= minMaxDifference / 15.0f)
 	{
-		while (pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement >= minMaxYDifference / 10.0f)
+		//Increment can become so small that if added to position, it adds 0 instead due to floating point imprecision
+		while (increment >= minMaxDifference / 15.0f && minFractalPosition.x + increment != minFractalPosition.x && minFractalPosition.y + increment != minFractalPosition.y)
 		{
 			zoomLevel--;
 
@@ -460,6 +462,8 @@ void DrawFractalGridAxises()
 				defaultIncrement = 5;
 			else
 				defaultIncrement /= 2;
+
+			increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
 		}
 
 		//go back a level
@@ -477,34 +481,28 @@ void DrawFractalGridAxises()
 				defaultIncrement = 2;
 				break;
 		}
+
+		increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
 	}
 	else
 	{
-		while (pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement < minMaxYDifference / 10.0f)
+		while (increment < minMaxDifference / 15.0f)
 		{
 			zoomLevel++;
 
-			switch (defaultIncrement)
-			{
-				case 5:
-					defaultIncrement = 10;
-					break;
-				case 20:
-					defaultIncrement = 5;
-					break;
-				case 10:
-					defaultIncrement = 20;
-					break;
-			}
+			if (defaultIncrement == 20)
+				defaultIncrement = 5;
+			else
+				defaultIncrement *= 2;
+
+			increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
 		}
 	}
-
-	float increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
 
 	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : zoomLevel / -3) + "f";
 
 	//0 at center
-	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
+	DrawText("0", fractalCenterScreenPosition.x - numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
 
 	//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
 	for (float x = minFractalPosition.x - fmod(minFractalPosition.x, increment); x <= maxFractalPosition.x + increment; x += increment)
@@ -543,8 +541,29 @@ void DrawFractalGridAxises()
 	int letterFontSize = 24;
 	int letterPadding = 10;
 
-	DrawText("x >", screenWidth - MeasureText("x >", letterFontSize) - letterPadding, (int)std::clamp(fractalCenterScreenPosition.y - (float)letterFontSize - (float)letterPadding, (float)letterPadding * 2.0f + (float)letterFontSize, (float)screenHeight - (float)letterFontSize - (float)letterPadding), letterFontSize, WHITE);
-	DrawText("y /\\", (int)std::clamp(fractalCenterScreenPosition.x + (float)letterPadding, (float)letterPadding, (float)screenWidth - (float)MeasureText("y /\\", letterFontSize) - (float)letterPadding), letterPadding, letterFontSize, WHITE);
+	DrawText(
+		"x >", 
+		screenWidth - MeasureText("x >", letterFontSize) - letterPadding, 
+		(int)std::clamp(
+			fractalCenterScreenPosition.y - (float)letterFontSize - (float)letterPadding, 
+			(float)letterPadding * 2.0f + (float)letterFontSize, 
+			std::max((float)screenHeight - (float)letterFontSize - (float)letterPadding, (float)letterPadding * 2.0f + (float)letterFontSize)
+		), 
+		letterFontSize, 
+		WHITE
+	);
+
+	DrawText(
+		"y /\\", 
+		(int)std::clamp(
+			fractalCenterScreenPosition.x + (float)letterPadding, 
+			(float)letterPadding, 
+			std::max((float)screenWidth - (float)MeasureText("y /\\", letterFontSize) - (float)letterPadding, (float)letterPadding)
+		), 
+		letterPadding, 
+		letterFontSize, 
+		WHITE
+	);
 
 }
 
