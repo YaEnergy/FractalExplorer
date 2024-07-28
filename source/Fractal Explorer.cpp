@@ -12,6 +12,7 @@
 #include "raymath.h"
 
 #include "Fractal.h"
+#include "UI/UIUtils.h"
 
 const char* fractalEquations[NUM_FRACTAL_TYPES] =
 {
@@ -19,7 +20,9 @@ const char* fractalEquations[NUM_FRACTAL_TYPES] =
 	"(Re(z) - Im(z) i) ^ 2 + c",
 	"(|Re(z) + |Im (z)| i) ^ 2 + c",
 	"z ^ n + c",
-	"z ^ n + c"
+	"z ^ n + c",
+	"(Re(z) - Im(z) i) ^ n + c",
+	"z - (P(z)/P'(z))"
 };
 
 FractalParameters fractalParameters = FractalParameters();
@@ -29,10 +32,13 @@ bool showDebugInfo = false;
 //Delta times
 float zoomDeltaTime = 0.0f;
 
+//Dots
+bool isDraggingDot = false;
+int draggingDotId = -1;
+
 void UpdateDrawFrame();
 
 void Update();
-void Draw();
 
 #pragma region Fractal functions
 Vector2 GetScreenToFractalPosition(Vector2 screenPosition);
@@ -52,8 +58,12 @@ float GetFontSizeForWidth(Font font, const char* text, float width, float spacin
 
 void DrawFractalGridAxises();
 
-void UpdateUI();
-void DrawUI();
+//Immediate-Mode UI
+void UpdateDrawUI();
+
+void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
+
+void UpdateDrawDraggableDots();
 #pragma endregion
 
 
@@ -112,7 +122,15 @@ void UpdateDrawFrame()
 {
 	Update();
 
-	Draw();
+	BeginDrawing();
+	{
+		ClearBackground(BLACK);
+
+		shaderFractal.Draw(Rectangle{ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() });
+
+		UpdateDrawUI();
+	}
+	EndDrawing();
 }
 
 void Update()
@@ -124,19 +142,6 @@ void Update()
 
 	if (IsKeyPressed(KEY_J))
 		SaveShaderFractalToImage(shaderFractal);
-}
-
-void Draw()
-{
-	BeginDrawing();
-	{
-		ClearBackground(BLACK);
-
-		shaderFractal.Draw(Rectangle{0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()});
-
-		DrawUI();
-	}
-	EndDrawing();
 }
 
 #pragma region Fractal function implementations
@@ -200,7 +205,7 @@ void ResetFractalParameters()
 
 	fractalParameters.c = Vector2{ 0.0f, 0.0f };
 
-	if (fractalParameters.type == FRACTAL_JULIA)
+	if (shaderFractal.SupportsC())
 		shaderFractal.SetC(fractalParameters.c);
 
 	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
@@ -208,8 +213,20 @@ void ResetFractalParameters()
 	else
 		fractalParameters.power = 2.0f;
 
-	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTICORN)
+
+	if (shaderFractal.SupportsPower())
 		shaderFractal.SetPower(fractalParameters.power);
+
+	if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+	{
+		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
+		fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
+		fractalParameters.roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
+		fractalParameters.roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
+	}
+
+	if (shaderFractal.GetNumSettableRoots() > 0)
+		shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
 }
 
 void UpdateFractal()
@@ -235,7 +252,7 @@ void UpdateFractal()
 	if (IsKeyPressed(KEY_T))
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
 
-	if (IsKeyPressed(KEY_E))
+	if (IsKeyPressed(KEY_E) && shaderFractal.SupportsColorBanding())
 	{
 		fractalParameters.colorBanding = !fractalParameters.colorBanding;
 		shaderFractal.SetColorBanding(fractalParameters.colorBanding);
@@ -274,7 +291,7 @@ void UpdateFractalControls()
 		shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 	}
 
-	if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
+	if (shaderFractal.SupportsPower())
 	{
 		//Power changing using keys
 		if (IsKeyDown(KEY_F))
@@ -291,7 +308,7 @@ void UpdateFractalControls()
 			shaderFractal.SetPower(fractalParameters.power);
 	}
 
-	if (fractalParameters.type == FRACTAL_JULIA)
+	if (shaderFractal.SupportsC())
 	{
 		//c panning using keys
 		float movementSpeed = IsKeyDown(KEY_LEFT_SHIFT) ? 0.05f : 0.01f;
@@ -339,8 +356,8 @@ void UpdateFractalCamera()
 	else if (IsKeyDown(KEY_DOWN))
 		fractalParameters.position.y -= movementSpeed * deltaTime / fractalParameters.zoom;
 
-	//Camera panning using mouse
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	//Camera panning using mouse, if not dragging dot
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !isDraggingDot)
 	{
 		Vector2 mouseDelta = GetMouseDelta();
 
@@ -502,7 +519,7 @@ void DrawFractalGridAxises()
 	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : zoomLevel / -3) + "f";
 
 	//0 at center
-	DrawText("0", fractalCenterScreenPosition.x - numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
+	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
 
 	//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
 	for (float x = minFractalPosition.x - fmod(minFractalPosition.x, increment); x <= maxFractalPosition.x + increment; x += increment)
@@ -567,12 +584,9 @@ void DrawFractalGridAxises()
 
 }
 
-void UpdateUI()
-{
-	
-}
 
-void DrawUI()
+
+void UpdateDrawUI()
 {
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
@@ -581,33 +595,54 @@ void DrawUI()
 	{
 		DrawFractalGridAxises();
 
-		//Test
-		if (fractalParameters.type == FRACTAL_JULIA)
-		{
-			Vector2 dotTest = GetFractalToScreenPosition(fractalParameters.c);
-			DrawCircleV(dotTest, 6.0f, BLACK);
-			DrawCircleV(dotTest, 4.0f, WHITE);
-			DrawText("c", (int)dotTest.x + 4, (int)dotTest.y - 4 - 24, 24, WHITE);
-		}
+		UpdateDrawDraggableDots();
+
+		const int STAT_FONT_SIZE = 24;
+		int statY = 10;
 
 		DrawFPS(10, 10);
-		DrawText(TextFormat("Position : %f, %f", fractalParameters.position.x, fractalParameters.position.y), 10, 10 + 24, 24, GREEN);
-		DrawText(TextFormat("Zoom: %f", fractalParameters.zoom), 10, 10 + 24 * 2, 24, GREEN);
-		DrawText(TextFormat("Max iterations: %i", fractalParameters.maxIterations), 10, 10 + 24 * 3, 24, GREEN);
-		DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, 10 + 24 * 4, 24, GREEN);
-		DrawText(TextFormat("Color banding?: %s", (fractalParameters.colorBanding ? "Yes" : "Reduced")), 10, 10 + 24 * 5, 24, GREEN);
-		DrawText(TextFormat("Pixels: %i", screenWidth * screenHeight), 10, 10 + 24 * 6, 24, GREEN);
+		statY += STAT_FONT_SIZE;
 
-		DrawText(GetFractalName(fractalParameters.type), 10, 10 + 24 * 7, 24, WHITE);
+		DrawText(TextFormat("Position : %f, %f", fractalParameters.position.x, fractalParameters.position.y), 10, statY, STAT_FONT_SIZE, GREEN);
+		statY += STAT_FONT_SIZE;
 
-		if (fractalParameters.type == FRACTAL_JULIA || fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
+		DrawText(TextFormat("Zoom: %f", fractalParameters.zoom), 10, statY, STAT_FONT_SIZE, GREEN);
+		statY += STAT_FONT_SIZE;
+
+		DrawText(TextFormat("Max iterations: %i", fractalParameters.maxIterations), 10, statY, STAT_FONT_SIZE, GREEN);
+		statY += STAT_FONT_SIZE;
+
+		DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, statY, STAT_FONT_SIZE, GREEN);
+		statY += STAT_FONT_SIZE;
+
+		DrawText(TextFormat("Pixels: %i", screenWidth * screenHeight), 10, statY, STAT_FONT_SIZE, GREEN);
+		statY += STAT_FONT_SIZE;
+
+		DrawText(GetFractalName(fractalParameters.type), 10, statY, STAT_FONT_SIZE, WHITE);
+		statY += STAT_FONT_SIZE;
+
+		if (shaderFractal.SupportsPower())
 		{
-			DrawText(TextFormat("Pow : %f", fractalParameters.power), 10, 10 + 24 * 8, 24, WHITE);
+			DrawText(TextFormat("Pow : %f", fractalParameters.power), 10, statY, STAT_FONT_SIZE, WHITE);
+			statY += STAT_FONT_SIZE;
 		}
 
-		if (fractalParameters.type == FRACTAL_JULIA)
+		if (shaderFractal.SupportsC())
 		{
-			DrawText(TextFormat("c = %f + %f i", fractalParameters.c.x, fractalParameters.c.y), 10, 10 + 24 * 9, 24, WHITE);
+			DrawText(TextFormat("c = %f + %f i", fractalParameters.c.x, fractalParameters.c.y), 10, statY, STAT_FONT_SIZE, WHITE);
+			statY += STAT_FONT_SIZE;
+		}
+
+		if (shaderFractal.SupportsColorBanding())
+		{
+			DrawText(TextFormat("Color banding?: %s", (fractalParameters.colorBanding ? "Yes" : "Reduced")), 10, statY, STAT_FONT_SIZE, WHITE);
+			statY += STAT_FONT_SIZE;
+		}
+
+		for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
+		{
+			DrawText(TextFormat("r%i = %f + %f i", i + 1, fractalParameters.roots[i].x, fractalParameters.roots[i].y), 10, statY, STAT_FONT_SIZE, WHITE);
+			statY += STAT_FONT_SIZE;
 		}
 	}
 
@@ -631,5 +666,76 @@ void DrawUI()
 	}
 
 }
+
+void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
+{
+	DrawCircleV(position, radius, outlineColor);
+	DrawCircleV(position, radius * 2.0f / 3.0f, isHovered ? ColorBrightness(fillColor, isDown ? -0.6f : -0.3f) : fillColor);
+}
+
+void UpdateDrawDraggableDots()
+{
+	const float DRAGGABLE_DOT_RADIUS = 6.0f;
+
+	if (shaderFractal.SupportsC())
+	{
+		Vector2 cScreenPosition = GetFractalToScreenPosition(fractalParameters.c);
+
+		bool dotPressed = IsCirclePressed(cScreenPosition, DRAGGABLE_DOT_RADIUS);
+
+		//Start drag
+		if (dotPressed && !isDraggingDot)
+		{
+			isDraggingDot = true;
+			draggingDotId = 0;
+		}
+
+		//Update drag
+		if (draggingDotId == 0 && isDraggingDot)
+		{
+			cScreenPosition = GetMousePosition();
+			fractalParameters.c = GetScreenToFractalPosition(cScreenPosition);
+			shaderFractal.SetC(fractalParameters.c);
+		}
+
+		DrawDraggableDot(cScreenPosition, DRAGGABLE_DOT_RADIUS, WHITE, BLACK, IsCircleHovered(cScreenPosition, 6.0f), draggingDotId == 0);
+		DrawText("c", (int)cScreenPosition.x + 4, (int)cScreenPosition.y - 4 - 24, 24, WHITE);
+	}
+
+	for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
+	{
+		int id = 1 + i;
+
+		Vector2 rootScreenPosition = GetFractalToScreenPosition(fractalParameters.roots[i]);
+
+		bool dotPressed = IsCirclePressed(rootScreenPosition, DRAGGABLE_DOT_RADIUS);
+
+		//Start drag
+		if (dotPressed && !isDraggingDot)
+		{
+			isDraggingDot = true;
+			draggingDotId = id;
+		}
+
+		//Update drag
+		if (draggingDotId == id && isDraggingDot)
+		{
+			rootScreenPosition = GetMousePosition();
+			fractalParameters.roots[i] = GetScreenToFractalPosition(rootScreenPosition);
+			shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
+		}
+
+		DrawDraggableDot(rootScreenPosition, DRAGGABLE_DOT_RADIUS, ColorFromHSV(120.0f * i, 1.0f, 1.0f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
+		DrawText(TextFormat("r%i", i + 1), (int)rootScreenPosition.x + 4, (int)rootScreenPosition.y - 4 - 24, 24, WHITE);
+	}
+
+	//End drag
+	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+	{
+		isDraggingDot = false;
+		draggingDotId = -1;
+	}
+}
+
 
 #pragma endregion

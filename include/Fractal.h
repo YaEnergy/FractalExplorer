@@ -1,9 +1,14 @@
 #pragma once
 
+#include <cmath>
+#include <array>
+
 #include "raylib.h"
 
 //Not including FRACTAL_UNKNOWN: not a fractal
 const int NUM_FRACTAL_TYPES = 7;
+
+const int NUM_MAX_ROOTS = 3;
 
 enum FractalType
 {
@@ -29,6 +34,8 @@ struct FractalParameters
 
 	Vector2 c;
 
+	std::array<Vector2, NUM_MAX_ROOTS> roots;
+
 	bool colorBanding;
 
 	FractalParameters()
@@ -42,10 +49,15 @@ struct FractalParameters
 
 		c = Vector2{ 0.0f, 0.0f };
 
+		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
+		roots[0] = Vector2{ 1.0f, 0.0f };
+		roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
+		roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
+
 		colorBanding = false;
 	}
 
-	FractalParameters(FractalType type, Vector2 position, float zoom, int maxIterations, float power, Vector2 c, bool colorBanding)
+	FractalParameters(FractalType type, Vector2 position, float zoom, int maxIterations, float power, Vector2 c, std::array<Vector2, NUM_MAX_ROOTS> roots, bool colorBanding)
 	{
 		this->type = type;
 		this->position = position;
@@ -55,6 +67,8 @@ struct FractalParameters
 		this->power = power;
 
 		this->c = c;
+
+		this->roots = roots;
 
 		this->colorBanding = colorBanding;
 	}
@@ -90,7 +104,16 @@ class ShaderFractal
 		void SetPower(float);
 		void SetC(Vector2);
 
+		void SetRoots(const Vector2* roots, int num);
+
 		void SetColorBanding(bool);
+
+		bool SupportsPower() const;
+		bool SupportsC() const;
+
+		int GetNumSettableRoots() const;
+
+		bool SupportsColorBanding() const;
 
 		void Draw(Rectangle destination) const;
 

@@ -124,12 +124,44 @@ void ShaderFractal::SetC(Vector2 c)
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "c"), &c, SHADER_UNIFORM_VEC2);
 }
 
+void ShaderFractal::SetRoots(const Vector2* roots, int num)
+{
+	SetShaderValueV(fractalShader, GetShaderLocation(fractalShader, "roots"), roots, SHADER_UNIFORM_VEC2, num);
+}
+
 void ShaderFractal::SetColorBanding(bool colorBanding)
 {
 	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
 	int colorBandingInt = colorBanding ? 1 : 0;
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
 }
+
+bool ShaderFractal::SupportsPower() const
+{
+	return type == FRACTAL_MULTIBROT || type == FRACTAL_MULTICORN || type == FRACTAL_JULIA;
+}
+
+bool ShaderFractal::SupportsC() const
+{
+	return type == FRACTAL_JULIA;
+}
+
+int ShaderFractal::GetNumSettableRoots() const
+{
+	switch (type)
+	{
+		case FRACTAL_NEWTON_3DEG:
+			return 3;
+		default:
+			return 0;
+	}
+}
+
+bool ShaderFractal::SupportsColorBanding() const
+{
+	return type != FRACTAL_NEWTON_3DEG;
+}
+
 
 void ShaderFractal::Unload()
 {
