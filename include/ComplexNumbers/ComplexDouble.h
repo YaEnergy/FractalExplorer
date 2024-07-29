@@ -64,4 +64,10 @@ struct ComplexDouble
 
 			return { (real *  obj.real - imaginary * obj.imaginary) / (obj.real * obj.real + obj.imaginary * obj.imaginary), (imaginary * obj.real - real * obj.imaginary) / (obj.real * obj.real + obj.imaginary * obj.imaginary) };
 		}
+
+		//Negate
+		ComplexDouble operator-()
+		{
+			return ComplexDouble{ -real, -imaginary };
+		}
 };

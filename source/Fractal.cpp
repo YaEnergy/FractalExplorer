@@ -36,6 +36,8 @@ const char* GetFractalName(FractalType fractalType)
 			return "Multicorn Set Fractal";
 		case FRACTAL_NEWTON_3DEG:
 			return "Newton Fractal - 3rd-degree polynomial";
+		default: //Or FRACTAL_UNKNOWN
+			return "UNKNOWN FRACTAL";
 	}
 }
 
@@ -129,6 +131,11 @@ void ShaderFractal::SetRoots(const Vector2* roots, int num)
 	SetShaderValueV(fractalShader, GetShaderLocation(fractalShader, "roots"), roots, SHADER_UNIFORM_VEC2, num);
 }
 
+void ShaderFractal::SetA(Vector2 a)
+{
+	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "a"), &a, SHADER_UNIFORM_VEC2);
+}
+
 void ShaderFractal::SetColorBanding(bool colorBanding)
 {
 	//SetShaderValue has no way of setting uniform bools, so an integer is used instead
@@ -155,6 +162,11 @@ int ShaderFractal::GetNumSettableRoots() const
 		default:
 			return 0;
 	}
+}
+
+bool ShaderFractal::SupportsA() const
+{
+	return type == FRACTAL_NEWTON_3DEG;
 }
 
 bool ShaderFractal::SupportsColorBanding() const

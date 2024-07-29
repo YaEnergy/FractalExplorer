@@ -34,6 +34,8 @@ const vec4[NUM_ROOTS] ROOT_COLORS = vec4[NUM_ROOTS]
     vec4(0.2, 0.2, 1.0, 1.0) // BLUE
 );
 
+uniform vec2 a = vec2(1.0, 0.0);
+
 out vec4 finalColor;
 
 //2-argument arctangent, used to (for example:) get the angle of a complex number
@@ -216,10 +218,10 @@ void main()
 
     for (int iteration = 0; iteration < maxIterations; iteration++)
     {
-        z -= ComplexDivide(
+        z -= ComplexMultiply(a, ComplexDivide(
             ThirdDegreePolynomial(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
             ThirdDegreePolynomialDerivative(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
-            );
+            ));
 
         //check if we are near any roots
         //if found, break and set the finalColor to that root's color

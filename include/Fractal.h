@@ -36,6 +36,8 @@ struct FractalParameters
 
 	std::array<Vector2, NUM_MAX_ROOTS> roots;
 
+	Vector2 a;
+
 	bool colorBanding;
 
 	FractalParameters()
@@ -54,10 +56,12 @@ struct FractalParameters
 		roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
 		roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
 
+		a = Vector2{ 1.0f, 0.0f };
+
 		colorBanding = false;
 	}
 
-	FractalParameters(FractalType type, Vector2 position, float zoom, int maxIterations, float power, Vector2 c, std::array<Vector2, NUM_MAX_ROOTS> roots, bool colorBanding)
+	FractalParameters(FractalType type, Vector2 position, float zoom, int maxIterations, float power, Vector2 c, std::array<Vector2, NUM_MAX_ROOTS> roots, Vector2 a, bool colorBanding)
 	{
 		this->type = type;
 		this->position = position;
@@ -69,6 +73,8 @@ struct FractalParameters
 		this->c = c;
 
 		this->roots = roots;
+
+		this->a = a;
 
 		this->colorBanding = colorBanding;
 	}
@@ -106,12 +112,16 @@ class ShaderFractal
 
 		void SetRoots(const Vector2* roots, int num);
 
+		void SetA(Vector2);
+
 		void SetColorBanding(bool);
 
 		bool SupportsPower() const;
 		bool SupportsC() const;
 
 		int GetNumSettableRoots() const;
+
+		bool SupportsA() const;
 
 		bool SupportsColorBanding() const;
 

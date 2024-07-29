@@ -12,6 +12,7 @@
 #include "raymath.h"
 
 #include "Fractal.h"
+#include "ComplexNumbers/ComplexFloat.h"
 #include "UI/UIUtils.h"
 
 const char* fractalEquations[NUM_FRACTAL_TYPES] =
@@ -22,7 +23,7 @@ const char* fractalEquations[NUM_FRACTAL_TYPES] =
 	"z ^ n + c",
 	"z ^ n + c",
 	"(Re(z) - Im(z) i) ^ n + c",
-	"z - (P(z)/P'(z))"
+	"z - a * (P(z) / P'(z))"
 };
 
 FractalParameters fractalParameters = FractalParameters();
@@ -194,29 +195,34 @@ void ChangeFractal(FractalType fractalType)
 
 void ResetFractalParameters()
 {
+	//position
 	fractalParameters.position = Vector2{ 0.0f, 0.0f };
 	shaderFractal.SetPosition(fractalParameters.position);
 
+	//zoom
 	fractalParameters.zoom = 1.0f;
 	shaderFractal.SetZoom(fractalParameters.zoom);
 
+	//max iterations
 	fractalParameters.maxIterations = 300;
 	shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 
+	//c
 	fractalParameters.c = Vector2{ 0.0f, 0.0f };
 
 	if (shaderFractal.SupportsC())
 		shaderFractal.SetC(fractalParameters.c);
 
+	//powers
 	if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
 		fractalParameters.power = 3.0f;
 	else
 		fractalParameters.power = 2.0f;
 
-
 	if (shaderFractal.SupportsPower())
 		shaderFractal.SetPower(fractalParameters.power);
 
+	//roots
 	if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
 	{
 		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
@@ -227,6 +233,12 @@ void ResetFractalParameters()
 
 	if (shaderFractal.GetNumSettableRoots() > 0)
 		shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
+
+	//a
+	fractalParameters.a = Vector2{ 1.0f, 0.0f };
+
+	if (shaderFractal.SupportsA())
+		shaderFractal.SetA(fractalParameters.a);
 }
 
 void UpdateFractal()
@@ -639,10 +651,33 @@ void UpdateDrawUI()
 			statY += STAT_FONT_SIZE;
 		}
 
+		if (shaderFractal.SupportsA())
+		{
+			DrawText(TextFormat("a = %f + %f i", fractalParameters.a.x, fractalParameters.a.y), 10, statY, STAT_FONT_SIZE, WHITE);
+			statY += STAT_FONT_SIZE;
+		}
+
 		for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
 		{
 			DrawText(TextFormat("r%i = %f + %f i", i + 1, fractalParameters.roots[i].x, fractalParameters.roots[i].y), 10, statY, STAT_FONT_SIZE, WHITE);
 			statY += STAT_FONT_SIZE;
+		}
+
+		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+		{
+			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+
+			//P(z)
+			{
+				ComplexFloat secondDegreeFactor = -root1 - root2 - root3;
+				ComplexFloat firstDegreeFactor = (root1 * root2) + (root2 * root3) + (root1 * root3);
+				ComplexFloat constant = -(root1 * root2 * root3);
+
+				DrawText(TextFormat("P(z) ~= z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
+				statY += STAT_FONT_SIZE;
+			}
 		}
 	}
 
@@ -702,9 +737,34 @@ void UpdateDrawDraggableDots()
 		DrawText("c", (int)cScreenPosition.x + 4, (int)cScreenPosition.y - 4 - 24, 24, WHITE);
 	}
 
+	if (shaderFractal.SupportsA())
+	{
+		Vector2 aScreenPosition = GetFractalToScreenPosition(fractalParameters.a);
+
+		bool dotPressed = IsCirclePressed(aScreenPosition, DRAGGABLE_DOT_RADIUS);
+
+		//Start drag
+		if (dotPressed && !isDraggingDot)
+		{
+			isDraggingDot = true;
+			draggingDotId = 1;
+		}
+
+		//Update drag
+		if (draggingDotId == 1 && isDraggingDot)
+		{
+			aScreenPosition = GetMousePosition();
+			fractalParameters.a = GetScreenToFractalPosition(aScreenPosition);
+			shaderFractal.SetA(fractalParameters.a);
+		}
+
+		DrawDraggableDot(aScreenPosition, DRAGGABLE_DOT_RADIUS, PINK, BLACK, IsCircleHovered(aScreenPosition, 6.0f), draggingDotId == 1);
+		DrawText("a", (int)aScreenPosition.x + 4, (int)aScreenPosition.y - 4 - 24, 24, WHITE);
+	}
+
 	for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
 	{
-		int id = 1 + i;
+		int id = 1 + i + 1;
 
 		Vector2 rootScreenPosition = GetFractalToScreenPosition(fractalParameters.roots[i]);
 
