@@ -145,6 +145,6 @@ void main()
     {
         float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(2.0);
 
-        finalColor = hsva2rgba(vec4(mod((complexIterations + 1 - nu) * 15.0, 360.0), 1.0, 1.0, 1.0));
+        finalColor = hsva2rgba(vec4(mod((complexIterations + 1 - nu) * 3.0, 360.0), 1.0, 1.0, 1.0));
     }
 } 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <array>
 
 #include "raylib.h"
@@ -53,8 +52,8 @@ struct FractalParameters
 
 		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
 		roots[0] = Vector2{ 1.0f, 0.0f };
-		roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
-		roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
+		roots[1] = Vector2{ -0.5f, 0.866025f };
+		roots[2] = Vector2{ -0.5f, -0.866025f };
 
 		a = Vector2{ 1.0f, 0.0f };
 

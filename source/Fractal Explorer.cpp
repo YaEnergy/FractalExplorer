@@ -226,9 +226,12 @@ void ResetFractalParameters()
 	if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
 	{
 		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
-		fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
+		fractalParameters.roots[0] = Vector2{1.0f, 0.0f};
 		fractalParameters.roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
 		fractalParameters.roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
+		/*fractalParameters.roots[0] = Vector2{0.0f, 1.0f};
+		fractalParameters.roots[1] = Vector2{ 0.0f, -1.0f };
+		fractalParameters.roots[2] = Vector2{ -1.5f, 0.0f };*/
 	}
 
 	if (shaderFractal.GetNumSettableRoots() > 0)
@@ -379,7 +382,7 @@ void UpdateFractalCamera()
 	}
 
 	//Update shader fractal position if necessary
-	if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN) || IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN) || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !isDraggingDot))
 		shaderFractal.SetPosition(fractalParameters.position);
 
 	//Camera zooming using keys
@@ -560,7 +563,7 @@ void DrawFractalGridAxises()
 
 	for (int incrementY = 0; incrementY < numIncrementsY; incrementY++)
 	{
-		float y = minFractalPosition.y - fmod(minFractalPosition.y, increment) + increment * incrementY;
+		float y = minFractalPosition.y - fmod(minFractalPosition.y, increment) + increment * (incrementY - 1);
 
 		//don't draw 0, due to floating point imprecision we can't check if y is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
 		if (abs(y) < increment / 2.0f)
