@@ -515,7 +515,8 @@ void DrawFractalGridAxises()
 	}
 	else
 	{
-		while (increment < minMaxDifference / 15.0f)
+		//Increment can so small that if added to position, it adds 0 instead due to floating point imprecision, keep increasing zoom level if that happens
+		while (increment < minMaxDifference / 15.0f || maxFractalPosition.x + increment == maxFractalPosition.x || maxFractalPosition.y + increment == maxFractalPosition.y)
 		{
 			zoomLevel++;
 
@@ -534,8 +535,13 @@ void DrawFractalGridAxises()
 	DrawText("0", fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding, numberFontSize, WHITE);
 
 	//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
-	for (float x = minFractalPosition.x - fmod(minFractalPosition.x, increment); x <= maxFractalPosition.x + increment; x += increment)
+
+	int numIncrementsX = (int)(((maxFractalPosition.x) - (minFractalPosition.x - fmod(minFractalPosition.x, increment) - increment)) / increment) + 2;
+
+	for (int incrementX = 0; incrementX < numIncrementsX; incrementX++)
 	{
+		float x = minFractalPosition.x - fmod(minFractalPosition.x, increment) + increment * (incrementX - 1);
+
 		//don't draw 0, due to floating point imprecision we can't check if x is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
 		if (abs(x) < increment / 2.0f)
 			continue;
@@ -549,8 +555,13 @@ void DrawFractalGridAxises()
 	}
 
 	//Start at multiple of increment closest to min fractal y and draw markers until max fractal y
-	for (float y = minFractalPosition.y - fmod(minFractalPosition.y, increment); y <= maxFractalPosition.y + increment; y += increment)
+
+	int numIncrementsY = (int)(((maxFractalPosition.y) - (minFractalPosition.y - fmod(minFractalPosition.y, increment) - increment)) / increment) + 2;
+
+	for (int incrementY = 0; incrementY < numIncrementsY; incrementY++)
 	{
+		float y = minFractalPosition.y - fmod(minFractalPosition.y, increment) + increment * incrementY;
+
 		//don't draw 0, due to floating point imprecision we can't check if y is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
 		if (abs(y) < increment / 2.0f)
 			continue;
@@ -595,8 +606,6 @@ void DrawFractalGridAxises()
 	);
 
 }
-
-
 
 void UpdateDrawUI()
 {
@@ -796,6 +805,5 @@ void UpdateDrawDraggableDots()
 		draggingDotId = -1;
 	}
 }
-
 
 #pragma endregion
