@@ -30,6 +30,8 @@ FractalParameters fractalParameters = FractalParameters();
 ShaderFractal shaderFractal;
 bool showDebugInfo = false;
 
+float gridIncrement = 1.0f;
+
 //Delta times
 float zoomDeltaTime = 0.0f;
 
@@ -62,6 +64,7 @@ void UpdateFractalCamera();
 #pragma region UI functions
 float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier = 0.1f);
 
+Vector2 SnapToGrid(const Vector2&);
 void DrawFractalGrid();
 
 //Immediate-Mode UI
@@ -453,6 +456,14 @@ float GetFontSizeForWidth(Font font, const char* text, float width, float spacin
 	return BASE_FONT_SIZE / MeasureTextEx(font, text, BASE_FONT_SIZE, BASE_FONT_SIZE * spacingMultiplier).x * width;
 }
 
+Vector2 SnapToGrid(const Vector2& position)
+{
+	float snapX = fmod(position.x, gridIncrement) >= gridIncrement / 2.0f ? position.x - fmod(position.x, gridIncrement) + gridIncrement : position.x - fmod(position.x, gridIncrement);
+	float snapY = fmod(position.y, gridIncrement) >= gridIncrement / 2.0f ? position.y - fmod(position.y, gridIncrement) + gridIncrement : position.y - fmod(position.y, gridIncrement);
+
+	return Vector2{snapX, snapY};
+}
+
 void DrawFractalGrid()
 {
 	const float GRID_LINE_THICKNESS = 2.0f;
@@ -541,6 +552,9 @@ void DrawFractalGrid()
 			increment = pow(10.0f, (float)(zoomLevel / 3)) * defaultIncrement;
 		}
 	}
+
+	//update grid increment
+	gridIncrement = increment;
 
 	std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : zoomLevel / -3) + "f";
 
@@ -756,6 +770,8 @@ void UpdateDrawDraggableDots()
 {
 	const float DRAGGABLE_DOT_RADIUS = 6.0f;
 
+	const float SNAP_RADIUS_PIXELS = 20.0f;
+
 	if (shaderFractal.SupportsC())
 	{
 		Vector2 cScreenPosition = GetFractalToScreenPosition(fractalParameters.c);
@@ -773,7 +789,18 @@ void UpdateDrawDraggableDots()
 		if (draggingDotId == 0 && isDraggingDot)
 		{
 			cScreenPosition = GetMousePosition();
-			fractalParameters.c = GetScreenToFractalPosition(cScreenPosition);
+
+			Vector2 newC = GetScreenToFractalPosition(cScreenPosition);
+			Vector2 snapC = SnapToGrid(newC);
+
+			//If close to grid intersection, snap to it
+			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapC), cScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			{
+				newC = snapC;
+				cScreenPosition = GetFractalToScreenPosition(newC);
+			}
+
+			fractalParameters.c = newC;
 			shaderFractal.SetC(fractalParameters.c);
 		}
 
@@ -798,7 +825,18 @@ void UpdateDrawDraggableDots()
 		if (draggingDotId == 1 && isDraggingDot)
 		{
 			aScreenPosition = GetMousePosition();
-			fractalParameters.a = GetScreenToFractalPosition(aScreenPosition);
+
+			Vector2 newA = GetScreenToFractalPosition(aScreenPosition);
+			Vector2 snapA = SnapToGrid(newA);
+
+			//If close to grid intersection, snap to it
+			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapA), aScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			{
+				newA = snapA;
+				aScreenPosition = GetFractalToScreenPosition(newA);
+			}
+
+			fractalParameters.a = newA;
 			shaderFractal.SetA(fractalParameters.a);
 		}
 
@@ -825,7 +863,18 @@ void UpdateDrawDraggableDots()
 		if (draggingDotId == id && isDraggingDot)
 		{
 			rootScreenPosition = GetMousePosition();
-			fractalParameters.roots[i] = GetScreenToFractalPosition(rootScreenPosition);
+
+			Vector2 newRoot = GetScreenToFractalPosition(rootScreenPosition);
+			Vector2 snapRoot = SnapToGrid(newRoot);
+
+			//If close to grid intersection, snap to it
+			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapRoot), rootScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			{
+				newRoot = snapRoot;
+				rootScreenPosition = GetFractalToScreenPosition(newRoot);
+			}
+
+			fractalParameters.roots[i] = newRoot;
 			shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
 		}
 
