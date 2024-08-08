@@ -42,7 +42,7 @@ set(
     "source/ComplexNumbers/ComplexFloat.cpp"
   "source/Fractal.cpp"  
   "source/UI/UIUtils.cpp"
- "source/UI/GridUtils.cpp")
+ "source/UI/GridUtils.cpp" "source/Resources.cpp")
 
 set(
 	INCLUDE_DIRECTORIES 

@@ -1,6 +1,6 @@
-#include <cmath>
-
 #include "UI/GridUtils.h"
+
+#include <cmath>
 
 float GetClosestMultipleOf(float val, float factor)
 {

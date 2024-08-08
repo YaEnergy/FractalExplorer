@@ -11,6 +11,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include "Resources.h"
 #include "Fractal.h"
 #include "ComplexNumbers/ComplexFloat.h"
 #include "UI/UIUtils.h"
@@ -40,11 +41,6 @@ float zoomDeltaTime = 0.0f;
 //Dots
 bool isDraggingDot = false;
 int draggingDotId = -1;
-
-//Assets
-//TODO: Create an resource manager
-Font mainFontSemibold;
-Font mainFontRegular;
 
 void UpdateDrawFrame();
 
@@ -95,9 +91,7 @@ int main()
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	SetExitKey(KEY_NULL);
 
-	//Load font
-	mainFontSemibold = LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 64, NULL, 0); //NULL & 0 for loading default character set
-	mainFontRegular = LoadFontEx("assets/fonts/open-sans/OpenSans-Regular.ttf", 64, NULL, 0); //NULL & 0 for loading default character set
+	LoadResources();
 
 	//Set up icon
 	Image windowIcon = LoadImage("assets/fractalExplorerIcon.png");
@@ -125,6 +119,7 @@ int main()
 	}
 
 	//Deinit
+	UnloadResources();
 	UnloadFractalRenderTexture();
 	shaderFractal.Unload();
 
@@ -441,6 +436,8 @@ void DrawFractalGrid()
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
+	Font mainFontSemibold = GetFont("mainFontSemibold");
+
 	Vector2 fractalCenterScreenPosition = GetFractalToScreenPosition(Vector2Zero());
 
 	//Vertical grid line is on screen
@@ -727,7 +724,7 @@ void UpdateDrawUI()
 		}
 	}
 
-	//Font mainFont = GetFontDefault();
+	Font mainFontSemibold = GetFont("mainFontSemibold");
 	Color mainBackgroundColor = DARKGRAY;
 	const float FONT_SPACING_MULTIPLIER = 0.1f;
 
