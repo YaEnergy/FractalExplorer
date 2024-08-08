@@ -9,3 +9,13 @@ bool IsCirclePressed(Vector2 position, float radius)
 {
 	return IsCircleHovered(position, radius) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
+
+bool IsRectangleHovered(Rectangle rectangle)
+{
+	return CheckCollisionPointRec(GetMousePosition(), rectangle);
+}
+
+bool IsRectanglePressed(Rectangle rectangle)
+{
+	return IsRectangleHovered(rectangle) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+}
