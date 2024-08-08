@@ -14,6 +14,7 @@
 #include "Fractal.h"
 #include "ComplexNumbers/ComplexFloat.h"
 #include "UI/UIUtils.h"
+#include "UI/GridUtils.h"
 
 const char* fractalEquations[NUM_FRACTAL_TYPES] =
 {
@@ -65,7 +66,6 @@ void UpdateFractalCamera();
 #pragma region UI functions
 float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier = 0.1f);
 
-Vector2 SnapToGrid(const Vector2&);
 void DrawFractalGrid();
 
 void UpdateZoomLevel();
@@ -433,14 +433,6 @@ float GetFontSizeForWidth(Font font, const char* text, float width, float spacin
 	return BASE_FONT_SIZE / MeasureTextEx(font, text, BASE_FONT_SIZE, BASE_FONT_SIZE * spacingMultiplier).x * width;
 }
 
-Vector2 SnapToGrid(const Vector2& position)
-{
-	float snapX = fmod(position.x, gridIncrement) >= gridIncrement / 2.0f ? position.x - fmod(position.x, gridIncrement) + gridIncrement : position.x - fmod(position.x, gridIncrement);
-	float snapY = fmod(position.y, gridIncrement) >= gridIncrement / 2.0f ? position.y - fmod(position.y, gridIncrement) + gridIncrement : position.y - fmod(position.y, gridIncrement);
-
-	return Vector2{snapX, snapY};
-}
-
 void DrawFractalGrid()
 {
 	const float GRID_LINE_THICKNESS = 2.0f;
@@ -482,11 +474,11 @@ void DrawFractalGrid()
 
 	//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
 
-	int numIncrementsX = (int)(((maxFractalPosition.x) - (minFractalPosition.x - fmod(minFractalPosition.x, gridIncrement) - gridIncrement)) / gridIncrement) + 2;
+	int numIncrementsX = (int)((GetClosestLargerMultipleOf(maxFractalPosition.x, gridIncrement) - GetClosestSmallerMultipleOf(minFractalPosition.x, gridIncrement)) / gridIncrement) + 2;
 
 	for (int incrementX = 0; incrementX < numIncrementsX; incrementX++)
 	{
-		float x = minFractalPosition.x - fmod(minFractalPosition.x, gridIncrement) + gridIncrement * (incrementX - 1);
+		float x = GetClosestSmallerMultipleOf(minFractalPosition.x, gridIncrement) + gridIncrement * (incrementX - 1);
 
 		//don't draw 0, due to floating point imprecision we can't check if x is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
 		if (abs(x) < gridIncrement / 2.0f)
@@ -511,11 +503,11 @@ void DrawFractalGrid()
 
 	//Start at multiple of increment closest to min fractal y and draw markers until max fractal y
 
-	int numIncrementsY = (int)(((maxFractalPosition.y) - (minFractalPosition.y - fmod(minFractalPosition.y, gridIncrement) - gridIncrement)) / gridIncrement) + 2;
+	int numIncrementsY = (int)((GetClosestLargerMultipleOf(maxFractalPosition.y, gridIncrement) - GetClosestSmallerMultipleOf(minFractalPosition.y, gridIncrement)) / gridIncrement) + 2;
 
 	for (int incrementY = 0; incrementY < numIncrementsY; incrementY++)
 	{
-		float y = minFractalPosition.y - fmod(minFractalPosition.y, gridIncrement) + gridIncrement * (incrementY - 1);
+		float y = GetClosestSmallerMultipleOf(minFractalPosition.y, gridIncrement) + gridIncrement * (incrementY - 1);
 
 		//don't draw 0, due to floating point imprecision we can't check if y is equal to 0.0f, increment divided by 2.0f so the first increment after 0.0 is drawn
 		if (abs(y) < gridIncrement / 2.0f)
@@ -787,7 +779,7 @@ void UpdateDrawDraggableDots()
 			cScreenPosition = GetMousePosition();
 
 			Vector2 newC = GetScreenToFractalPosition(cScreenPosition);
-			Vector2 snapC = SnapToGrid(newC);
+			Vector2 snapC = SnapTo2DGrid(newC, gridIncrement);
 
 			//If close to grid intersection, snap to it
 			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapC), cScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
@@ -823,7 +815,7 @@ void UpdateDrawDraggableDots()
 			aScreenPosition = GetMousePosition();
 
 			Vector2 newA = GetScreenToFractalPosition(aScreenPosition);
-			Vector2 snapA = SnapToGrid(newA);
+			Vector2 snapA = SnapTo2DGrid(newA, gridIncrement);
 
 			//If close to grid intersection, snap to it
 			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapA), aScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
@@ -861,7 +853,7 @@ void UpdateDrawDraggableDots()
 			rootScreenPosition = GetMousePosition();
 
 			Vector2 newRoot = GetScreenToFractalPosition(rootScreenPosition);
-			Vector2 snapRoot = SnapToGrid(newRoot);
+			Vector2 snapRoot = SnapTo2DGrid(newRoot, gridIncrement);
 
 			//If close to grid intersection, snap to it
 			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapRoot), rootScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
