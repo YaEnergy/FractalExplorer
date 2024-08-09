@@ -145,7 +145,7 @@ ShaderFractal LoadShaderFractal(FractalType);
 
 //Drawing
 
-void SaveShaderFractalToImage(const ShaderFractal& shaderFractal);
+void SaveShaderFractalToImage(const ShaderFractal& shaderFractal, const char* fileName);
 
 
 

@@ -37,6 +37,7 @@ float gridIncrement = 5.0f;
 
 //Delta times
 float zoomDeltaTime = 0.0f;
+float screenshotDeltaTime = 5.0f;
 
 //Dots
 bool isDraggingDot = false;
@@ -57,6 +58,8 @@ void ResetFractalParameters();
 void UpdateFractal();
 void UpdateFractalControls();
 void UpdateFractalCamera();
+
+void TakeFractalScreenshot();
 #pragma endregion
 
 #pragma region UI functions
@@ -68,6 +71,8 @@ void UpdateZoomLevel();
 
 //Immediate-Mode UI
 void UpdateDrawUI();
+
+void UpdateDrawFractalSelectionPanel();
 
 void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
 
@@ -152,7 +157,7 @@ void Update()
 		showDebugInfo = !showDebugInfo;
 
 	if (IsKeyPressed(KEY_J))
-		SaveShaderFractalToImage(shaderFractal);
+		TakeFractalScreenshot();
 }
 
 #pragma region Fractal function implementations
@@ -412,6 +417,48 @@ void UpdateFractalCamera()
 		UpdateZoomLevel();
 	}
 }
+
+void TakeFractalScreenshot()
+{
+	//TODO: Web modifications
+
+	//Fractal_Screenshots directory
+	std::filesystem::path fractalScreenshotsPath = std::filesystem::current_path().append("Fractal_Screenshots");
+
+	std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
+	if (!std::filesystem::exists(fractalScreenshotsPath))
+	{
+		bool success = std::filesystem::create_directories(fractalScreenshotsPath);
+
+		if (!success)
+		{
+			std::cout << "Failed to create fractal screenshots directory!" << std::endl;
+			return;
+		}
+		else
+		{
+			std::cout << "Created fractal screenshots directory!" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Fractal screenshots directory exists!" << std::endl;
+	}
+
+	std::cout << fractalScreenshotsPath.string() << std::endl;
+
+	//Get first unused screenshot number
+	int num = 1;
+
+	while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
+		num++;
+
+	SaveShaderFractalToImage(shaderFractal, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
+
+	screenshotDeltaTime = 0.0f;
+
+	//TODO: play screenshot sfx here
+}
 #pragma endregion
 
 #pragma region UI function implementations
@@ -646,6 +693,8 @@ void UpdateDrawUI()
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
+	float deltaTime = GetFrameTime();
+
 	if (showDebugInfo)
 	{
 		DrawFractalGrid();
@@ -724,61 +773,93 @@ void UpdateDrawUI()
 		}
 	}
 
+	UpdateDrawFractalSelectionPanel();
+
+	//Screenshot flash
+	screenshotDeltaTime += deltaTime;
+
+	if (screenshotDeltaTime <= 0.5f)
+		DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
+}
+
+void UpdateDrawFractalSelectionPanel()
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
 	Font mainFontSemibold = GetFont("mainFontSemibold");
 	Color mainBackgroundColor = DARKGRAY;
 	const float FONT_SPACING_MULTIPLIER = 0.1f;
 
 	float screenRatio = std::min((float)screenWidth / (float)DESIGN_WIDTH, (float)screenHeight / (float)DESIGN_HEIGHT);
 
-	//Fractal selection panel
-	{
-		float fractalSelectionHeight = 32.0f * screenRatio;
-		Rectangle fractalSelectionRect = Rectangle{ (float)screenWidth * 0.25f, (float)screenHeight - fractalSelectionHeight * 1.5f, (float)screenWidth * 0.5f, fractalSelectionHeight };
-	
-		DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, ColorAlpha(mainBackgroundColor, 0.4f));
-		
-		const char* fractalName = GetFractalName(fractalParameters.type);
-		float fractalNameFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, fractalName, (fractalSelectionRect.width - fractalSelectionRect.height * 2.0f) * 0.8f, FONT_SPACING_MULTIPLIER), fractalSelectionHeight * 0.8f);
-		Vector2 fractalNameTextSize = MeasureTextEx(mainFontSemibold, fractalName, fractalNameFontSize, fractalNameFontSize / 10.0f);
-		DrawTextEx(mainFontSemibold, fractalName, Vector2{ fractalSelectionRect.x + fractalSelectionRect.width / 2.0f - fractalNameTextSize.x / 2.0f, fractalSelectionRect.y + fractalSelectionRect.height * 0.5f - fractalNameTextSize.y * 0.5f }, fractalNameFontSize, fractalNameFontSize / 10.0f, WHITE);
-		
-		//Previous fractal button
-		Rectangle prevButtonRect = Rectangle{ fractalSelectionRect.x, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
-		Color prevButtonColor = mainBackgroundColor;
+	//Main rect
 
-		if (IsRectangleHovered(prevButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-			prevButtonColor = RAYWHITE;
-		else if(IsRectangleHovered(prevButtonRect))
-			prevButtonColor = LIGHTGRAY;
-		
-		DrawRectangleRec(prevButtonRect, ColorAlpha(prevButtonColor, 0.6f));
+	float fractalSelectionHeight = 32.0f * screenRatio;
+	Rectangle fractalSelectionRect = Rectangle{ (float)screenWidth * 0.25f, (float)screenHeight - fractalSelectionHeight * 1.5f, (float)screenWidth * 0.5f, fractalSelectionHeight };
 
-		float prevButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, "<", prevButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), prevButtonRect.height * 0.8f);
-		Vector2 prevButtonTextSize = MeasureTextEx(mainFontSemibold, "<", prevButtonFontSize, prevButtonFontSize / 10.0f);
-		DrawTextEx(mainFontSemibold, "<", Vector2{ prevButtonRect.x + (prevButtonRect.width - prevButtonTextSize.x) * 0.5f, prevButtonRect.y + (prevButtonRect.height - prevButtonTextSize.y) * 0.5f }, prevButtonFontSize, prevButtonFontSize / 10.0f, WHITE);
-		
-		if (IsRectanglePressed(prevButtonRect))
-			ChangeFractal((FractalType)(Wrap((int)fractalParameters.type - 1, 0, NUM_FRACTAL_TYPES)));
-		
-		//Next fractal button
-		Rectangle nextButtonRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.width - fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
-		Color nextButtonColor = mainBackgroundColor;
+	DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, ColorAlpha(mainBackgroundColor, 0.4f));
 
-		if (IsRectangleHovered(nextButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-			nextButtonColor = RAYWHITE;
-		else if (IsRectangleHovered(nextButtonRect))
-			nextButtonColor = LIGHTGRAY;
+	//Fractal name
 
-		DrawRectangleRec(nextButtonRect, ColorAlpha(nextButtonColor, 0.6f));
+	const char* fractalName = GetFractalName(fractalParameters.type);
+	float fractalNameFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, fractalName, (fractalSelectionRect.width - fractalSelectionRect.height * 2.0f) * 0.8f, FONT_SPACING_MULTIPLIER), fractalSelectionHeight * 0.8f);
+	Vector2 fractalNameTextSize = MeasureTextEx(mainFontSemibold, fractalName, fractalNameFontSize, fractalNameFontSize / 10.0f);
+	DrawTextEx(mainFontSemibold, fractalName, Vector2{ fractalSelectionRect.x + fractalSelectionRect.width / 2.0f - fractalNameTextSize.x / 2.0f, fractalSelectionRect.y + fractalSelectionRect.height * 0.5f - fractalNameTextSize.y * 0.5f }, fractalNameFontSize, fractalNameFontSize / 10.0f, WHITE);
 
-		float nextButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, ">", nextButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), nextButtonRect.height * 0.8f);
-		Vector2 nextButtonTextSize = MeasureTextEx(mainFontSemibold, ">", nextButtonFontSize, nextButtonFontSize / 10.0f);
-		DrawTextEx(mainFontSemibold, ">", Vector2{ nextButtonRect.x + (nextButtonRect.width - nextButtonTextSize.x) * 0.5f, nextButtonRect.y + (nextButtonRect.height - nextButtonTextSize.y) * 0.5f }, nextButtonFontSize, nextButtonFontSize / 10.0f, WHITE);
+	//Previous fractal button
 
-		if (IsRectanglePressed(nextButtonRect))
-			ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
-	}
+	Rectangle prevButtonRect = Rectangle{ fractalSelectionRect.x, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
+	Color prevButtonColor = mainBackgroundColor;
 
+	if (IsRectangleHovered(prevButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		prevButtonColor = RAYWHITE;
+	else if (IsRectangleHovered(prevButtonRect))
+		prevButtonColor = LIGHTGRAY;
+
+	DrawRectangleRec(prevButtonRect, ColorAlpha(prevButtonColor, 0.6f));
+
+	float prevButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, "<", prevButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), prevButtonRect.height * 0.8f);
+	Vector2 prevButtonTextSize = MeasureTextEx(mainFontSemibold, "<", prevButtonFontSize, prevButtonFontSize / 10.0f);
+	DrawTextEx(mainFontSemibold, "<", Vector2{ prevButtonRect.x + (prevButtonRect.width - prevButtonTextSize.x) * 0.5f, prevButtonRect.y + (prevButtonRect.height - prevButtonTextSize.y) * 0.5f }, prevButtonFontSize, prevButtonFontSize / 10.0f, WHITE);
+
+	if (IsRectanglePressed(prevButtonRect))
+		ChangeFractal((FractalType)(Wrap((int)fractalParameters.type - 1, 0, NUM_FRACTAL_TYPES)));
+
+	//Next fractal button
+
+	Rectangle nextButtonRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.width - fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
+	Color nextButtonColor = mainBackgroundColor;
+
+	if (IsRectangleHovered(nextButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		nextButtonColor = RAYWHITE;
+	else if (IsRectangleHovered(nextButtonRect))
+		nextButtonColor = LIGHTGRAY;
+
+	DrawRectangleRec(nextButtonRect, ColorAlpha(nextButtonColor, 0.6f));
+
+	float nextButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, ">", nextButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), nextButtonRect.height * 0.8f);
+	Vector2 nextButtonTextSize = MeasureTextEx(mainFontSemibold, ">", nextButtonFontSize, nextButtonFontSize / 10.0f);
+	DrawTextEx(mainFontSemibold, ">", Vector2{ nextButtonRect.x + (nextButtonRect.width - nextButtonTextSize.x) * 0.5f, nextButtonRect.y + (nextButtonRect.height - nextButtonTextSize.y) * 0.5f }, nextButtonFontSize, nextButtonFontSize / 10.0f, WHITE);
+
+	if (IsRectanglePressed(nextButtonRect))
+		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
+
+	//Screenshot button
+
+	Rectangle screenshotButtonRect = Rectangle{ fractalSelectionRect.x, fractalSelectionRect.y - fractalSelectionRect.height, fractalSelectionRect.height, fractalSelectionRect.height };
+	Color screenshotButtonColor = WHITE;
+
+	if (IsRectangleHovered(screenshotButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		screenshotButtonColor = DARKGRAY;
+	else if (IsRectangleHovered(screenshotButtonRect))
+		screenshotButtonColor = LIGHTGRAY;
+
+	Texture& screenshotButtonTexture = GetTexture("icon_screenshot");
+	DrawTexturePro(screenshotButtonTexture, Rectangle{ 0.0f, 0.0f, (float)screenshotButtonTexture.width, (float)screenshotButtonTexture.height }, screenshotButtonRect, Vector2Zero(), 0.0f, screenshotButtonColor);
+
+	if (IsRectanglePressed(screenshotButtonRect))
+		TakeFractalScreenshot();
 }
 
 void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)

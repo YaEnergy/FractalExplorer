@@ -197,35 +197,8 @@ void ShaderFractal::Draw(Rectangle destination) const
 	EndShaderMode();
 }
 
-void SaveShaderFractalToImage(const ShaderFractal& shaderFractal)
+void SaveShaderFractalToImage(const ShaderFractal& shaderFractal, const char* fileName)
 {
-	//TODO: Web modifications
-
-	//Fractal_Screenshots directory
-	std::filesystem::path fractalScreenshotsPath = std::filesystem::current_path().append("Fractal_Screenshots");
-
-	std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
-	if (!std::filesystem::exists(fractalScreenshotsPath))
-	{
-		bool success = std::filesystem::create_directories(fractalScreenshotsPath);
-
-		if (!success)
-		{
-			std::cout << "Failed to create fractal screenshots directory!" << std::endl;
-			return;
-		}
-		else
-		{
-			std::cout << "Created fractal screenshots directory!" << std::endl;
-		}
-	}
-	else
-	{
-		std::cout << "Fractal screenshots directory exists!" << std::endl;
-	}
-
-	std::cout << fractalScreenshotsPath.string() << std::endl;
-
 	//Fractal render
 	RenderTexture2D fractalImageRender = LoadRenderTexture(fractalRenderTexture.texture.width, fractalRenderTexture.texture.height);
 
@@ -242,13 +215,7 @@ void SaveShaderFractalToImage(const ShaderFractal& shaderFractal)
 	//render textures are flipped
 	ImageFlipVertical(&fractalImage);
 
-	//Save & Export
-	int num = 1;
-
-	while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
-		num++;
-
-	ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
+	ExportImage(fractalImage, fileName);
 
 	//Unload
 	UnloadRenderTexture(fractalImageRender);
