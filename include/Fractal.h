@@ -5,9 +5,9 @@
 #include "raylib.h"
 
 //Not including FRACTAL_UNKNOWN: not a fractal
-const int NUM_FRACTAL_TYPES = 7;
+const int NUM_FRACTAL_TYPES = 8;
 
-const int NUM_MAX_ROOTS = 3;
+const int NUM_MAX_ROOTS = 4;
 
 enum FractalType
 {
@@ -18,7 +18,8 @@ enum FractalType
 	FRACTAL_JULIA = 3,
 	FRACTAL_MULTIBROT = 4,
 	FRACTAL_MULTICORN = 5,
-	FRACTAL_NEWTON_3DEG = 6
+	FRACTAL_NEWTON_3DEG = 6,
+	FRACTAL_NEWTON_4DEG = 7
 };
 
 struct FractalParameters
@@ -50,10 +51,8 @@ struct FractalParameters
 
 		c = Vector2{ 0.0f, 0.0f };
 
-		//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
-		roots[0] = Vector2{ 1.0f, 0.0f };
-		roots[1] = Vector2{ -0.5f, 0.866025f };
-		roots[2] = Vector2{ -0.5f, -0.866025f };
+		roots = std::array<Vector2, NUM_MAX_ROOTS>();
+		roots.fill(Vector2{ 0.0f, 0.0f });
 
 		a = Vector2{ 1.0f, 0.0f };
 

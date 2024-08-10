@@ -2,7 +2,7 @@
 
 #define PI 3.1415926535897932384626433
 
-#define NUM_ROOTS 3
+#define NUM_ROOTS 4
 
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -18,19 +18,21 @@ uniform float zoom = 1.0;
 
 uniform int colorBanding = 0;
 
-//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
+//Default roots are the roots to P(z) = z^4 - 1
 uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
 (
     vec2(1.0, 0.0), 
-    vec2(-0.5, sqrt(3.0) / 2.0), 
-    vec2(-0.5, -sqrt(3.0) / 2.0) 
+    vec2(-1.0, 0.0), 
+    vec2(0.0, 1.0),
+    vec2(0.0, -1.0)
 );
 
 const vec4[NUM_ROOTS] ROOT_COLORS = vec4[NUM_ROOTS]
 (
     vec4(1.0, 0.2, 0.2, 1.0), // RED
     vec4(0.2, 1.0, 0.2, 1.0), // GREEN
-    vec4(0.2, 0.2, 1.0, 1.0) // BLUE
+    vec4(0.2, 0.2, 1.0, 1.0), // BLUE
+    vec4(1.0, 1.0, 0.2, 1.0)  // YELLOW
 );
 
 uniform vec2 a = vec2(1.0, 0.0);
@@ -139,38 +141,44 @@ vec4 hsva2rgba(vec4 hsva)
     return vec4(rgb.x, rgb.y, rgb.z, hsva.w);
 }
 
-//Third-degree polynomial function for complex numbers (az^3 + bz^2 + cz + d)
-vec2 ThirdDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
+//Fourth-degree polynomial function for complex numbers (az^4 + bz^3 + cz^2 + dz + e)
+vec2 FourthDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e)
 {
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
+    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
 
-    //az^3
-    vec2 thirdDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(z, z), z));
+    //az^4
+    vec2 fourthDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z));
 
-    //bz^2
-    vec2 secondDegree = ComplexMultiply(b, ComplexMultiply(z, z));
+    //bz^3
+    vec2 thirdDegree = ComplexMultiply(b, ComplexMultiply(ComplexMultiply(z, z), z));
 
-    //cz
-    vec2 firstDegree = ComplexMultiply(c, z);
+    //cz^2
+    vec2 secondDegree = ComplexMultiply(c, ComplexMultiply(z, z));
+
+    //dz
+    vec2 firstDegree = ComplexMultiply(d, z);
+
+    //add together with constant e
+    return fourthDegree + thirdDegree + secondDegree + firstDegree + e;
+}
+
+//Derivative of a fourth-degree polynomial function (4az^3 + 3bz^2 + 2cz + d)
+vec2 FourthDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
+{
+    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
+    //Power rule => P'(z) = 4az^3 + 3bz^2 + 2cz + d
+
+    //4az^3
+    vec2 thirdDegree = ComplexMultiply(4 * a, ComplexMultiply(ComplexMultiply(z, z), z));
+
+    //3bz^2
+    vec2 secondDegree = ComplexMultiply(3 * b, ComplexMultiply(z, z));
+
+    //2cz
+    vec2 firstDegree = ComplexMultiply(2 * c, z);
 
     //add together with constant d
     return thirdDegree + secondDegree + firstDegree + d;
-}
-
-//Derivative of a third-degree polynomial function (3az^2 + 2bz + c)
-vec2 ThirdDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c)
-{
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
-    //Power rule => P'(z) = 3az^2 + 2bz + c
-
-    //3az^2
-    vec2 secondDegree = ComplexMultiply(3 * a, ComplexMultiply(z, z));
-
-    //2bz
-    vec2 firstDegree = ComplexMultiply(2 * b, z);
-
-    //add together with constant c
-    return secondDegree + firstDegree + c;  //3 * ComplexMultiply(z, z);
 }
 
 
@@ -180,15 +188,15 @@ void main()
     //next z = z - (P(z) / P'(z))
     //until root or max iterations is reached (no root)
 
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
-    //Power rule => P'(z) = 3az^2 + 2bz + c
+    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
+    //Power rule => P'(z) = 4az^3 + 3bz^2 + 2cz + d
 
-    //(x-a)(x-b)(x-c)
-    //(x^2 - (b+a)x + ab)(x - c)
-    //(x^3 - (b+a)x^2 + abx - cx^2 + (b+a)cx - abc)
-    //(x^3 - (b+a+c)x^2 + abx + (b+a)cx - abc)
-    //(x^3 - (b+a+c)x^2 + (ab + (b+a)c)x - abc)
-    //(x^3 - (b+a+c)x^2 + (ab + bc + ac)x - abc)
+    //worked this out on paper
+    //tried to avoid as many complex number multiplications as I could, as they're more expensive
+    //and this is quite the expensive shader
+
+    //P(z) = x^4 - (a + b + c + d)x^3 + (cb + ac + ab + ad + db + cd)x^2 - (dcb + acd + abd + abc)x + abcd
+    //P(z) = x^4 - (a + b + c + d)x^3 + (a(b+c+d) + b(d+c) + cd)x^2 - (cd(a+b) + ab(c+d))x + abcd
 
     //https://en.wikipedia.org/wiki/Polynomial#Calculus thanks Wikipedia
     //https://en.wikipedia.org/wiki/Power_rule 
@@ -197,17 +205,20 @@ void main()
     float tolerance = 0.35;//0.000001; //TODO: tweak 0.35
     //it seems this I suck at this
 
-    //third degree factor: 1
-    vec2 thirdDegreeFactor = vec2(1.0, 0.0);
+    //fourth degree factor: 1
+    vec2 fourthDegreeFactor = vec2(1.0, 0.0);
 
-    //second degree factor: -(b+a+c) = -b - a - c
-    vec2 secondDegreeFactor = -roots[0] - roots[1] - roots[2];
+    //third degree factor: - (a + b + c + d) = -a - b - c - d
+    vec2 thirdDegreeFactor = -roots[0] - roots[1] - roots[2] - roots[3];
 
-    //first degree factor: ab + bc + ac
-    vec2 firstDegreeFactor = ComplexMultiply(roots[0], roots[1]) + ComplexMultiply(roots[1], roots[2]) + ComplexMultiply(roots[0], roots[2]);
+    //second degree factor: (cb + ac + ab + ad + db + cd) = (a(b+c+d) + b(d+c) + cd)
+    vec2 secondDegreeFactor = ComplexMultiply(roots[0], roots[1] + roots[2] + roots[3]) + ComplexMultiply(roots[1], roots[2] + roots[3]) + ComplexMultiply(roots[2], roots[3]);
 
-    //constant: -abc
-    vec2 constant = -(ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2]));
+    //first degree factor: - (dcb + acd + abd + abc) = -cd(a+b) - ab(c+d)
+    vec2 firstDegreeFactor = -ComplexMultiply(ComplexMultiply(roots[2], roots[3]), roots[0] + roots[1]) - ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2] + roots[3]);
+
+    //constant: abcd
+    vec2 constant = ComplexMultiply(ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2]), roots[3]);
 
     //https://en.wikipedia.org/wiki/Newton_fractal
 
@@ -218,8 +229,8 @@ void main()
     for (int iteration = 0; iteration < maxIterations; iteration++)
     {
         z -= ComplexMultiply(a, ComplexDivide(
-            ThirdDegreePolynomial(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
-            ThirdDegreePolynomialDerivative(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
+            FourthDegreePolynomial(z, fourthDegreeFactor, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
+            FourthDegreePolynomialDerivative(z, fourthDegreeFactor, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
             ));
 
         //check if we are near any roots

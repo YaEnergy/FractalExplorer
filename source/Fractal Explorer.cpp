@@ -251,6 +251,14 @@ void ResetFractalParameters()
 		fractalParameters.roots[1] = Vector2{ 0.0f, -1.0f };
 		fractalParameters.roots[2] = Vector2{ -1.5f, 0.0f };*/
 	}
+	else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
+	{
+		//Default roots are the roots to P(z) = z^4 - 1
+		fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
+		fractalParameters.roots[1] = Vector2{ -1.0f, 0.0f };
+		fractalParameters.roots[2] = Vector2{ 0.0f, 1.0f };
+		fractalParameters.roots[3] = Vector2{ 0.0f, -1.0f };
+	}
 
 	if (shaderFractal.GetNumSettableRoots() > 0)
 		shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
@@ -770,6 +778,24 @@ void UpdateDrawUI()
 				ComplexFloat constant = -(root1 * root2 * root3);
 
 				DrawText(TextFormat("P(z) ~= z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
+				statY += STAT_FONT_SIZE;
+			}
+		}
+		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
+		{
+			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+			ComplexFloat root4 = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
+
+			//P(z)
+			{
+				ComplexFloat thirdDegreeFactor = -root1 - root2 - root3 - root4;
+				ComplexFloat secondDegreeFactor = root1 * (root2 + root3 + root4) + root2 * (root3 + root4) + root3 * root4;
+				ComplexFloat firstDegreeFactor = -root3 * root4 * (root1 + root2) - root1 * root2 * (root3 + root4);
+				ComplexFloat constant = root1 * root2 * root3 * root4;
+
+				DrawText(TextFormat("P(z) ~= z^4 + (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
 				statY += STAT_FONT_SIZE;
 			}
 		}
