@@ -17,6 +17,8 @@
 #include "UI/UIUtils.h"
 #include "UI/GridUtils.h"
 
+const float FONT_SPACING_MULTIPLIER = 1.0f / 15.0f;
+
 const char* fractalEquations[NUM_FRACTAL_TYPES] =
 {
 	"z ^ 2 + c",
@@ -533,14 +535,14 @@ void DrawFractalGrid()
 		DrawLineEx(Vector2{ fractalScreenPosition.x, 0.0f }, Vector2{ fractalScreenPosition.x, (float)screenHeight }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 		DrawLineEx(Vector2{fractalScreenPosition.x, fractalCenterScreenPosition.y - markerLength / 2.0f}, Vector2{ fractalScreenPosition.x, fractalCenterScreenPosition.y + markerLength / 2.0f }, GRID_LINE_THICKNESS, WHITE);
 		
-		float numberLength = MeasureTextEx(mainFontSemibold, TextFormat(formatString.c_str(), x), numberFontSize, numberFontSize / 20.0f).x; //MeasureText(TextFormat(formatString.c_str(), x), numberFontSize);
+		float numberLength = MeasureTextEx(mainFontSemibold, TextFormat(formatString.c_str(), x), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
 
 		DrawTextEx(
 			mainFontSemibold, 
 			TextFormat(formatString.c_str(), x), 
 			Vector2{ fractalScreenPosition.x - numberLength / 2.0f, fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding },
 			numberFontSize, 
-			numberFontSize / 20.0f, 
+			numberFontSize * FONT_SPACING_MULTIPLIER, 
 			WHITE
 		);
 	}
@@ -562,14 +564,14 @@ void DrawFractalGrid()
 		DrawLineEx(Vector2{ 0.0f, fractalScreenPosition.y }, Vector2{ (float)screenWidth, fractalScreenPosition.y }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 		DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
 	
-		float numberLength = MeasureTextEx(mainFontSemibold, TextFormat((formatString + "i").c_str(), y), numberFontSize, numberFontSize / 20.0f).x;
+		float numberLength = MeasureTextEx(mainFontSemibold, TextFormat((formatString + "i").c_str(), y), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
 
 		DrawTextEx(
 			mainFontSemibold,
 			TextFormat((formatString + "i").c_str(), y),
 			Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding - numberLength, fractalScreenPosition.y - numberFontSize / 2.0f },
 			numberFontSize,
-			numberFontSize / 20.0f,
+			numberFontSize * FONT_SPACING_MULTIPLIER,
 			WHITE
 		);
 	}
@@ -582,7 +584,7 @@ void DrawFractalGrid()
 	float letterFontSize = 24.0f;
 	float letterPadding = 10.0f;
 
-	Vector2 letterXSize = MeasureTextEx(mainFontSemibold, "x >", letterFontSize, letterFontSize * 0.1f);
+	Vector2 letterXSize = MeasureTextEx(mainFontSemibold, "x >", letterFontSize, letterFontSize * FONT_SPACING_MULTIPLIER);
 	DrawTextEx(
 		mainFontSemibold,
 		"x >",
@@ -596,14 +598,14 @@ void DrawFractalGrid()
 			)
 		},
 		letterFontSize,
-		letterFontSize * 0.1f,
+		letterFontSize * FONT_SPACING_MULTIPLIER,
 		WHITE
 	);
 
-	Vector2 letterYSize = MeasureTextEx(mainFontSemibold, "y /\\", letterFontSize, letterFontSize * 0.1f);
+	Vector2 letterYSize = MeasureTextEx(mainFontSemibold, "y ^", letterFontSize, letterFontSize * FONT_SPACING_MULTIPLIER);
 	DrawTextEx(
 		mainFontSemibold,
-		"y /\\",
+		"y ^",
 		Vector2
 		{
 			std::clamp(
@@ -614,7 +616,7 @@ void DrawFractalGrid()
 			letterPadding
 		},
 		letterFontSize,
-		letterFontSize * 0.1f,
+		letterFontSize * FONT_SPACING_MULTIPLIER,
 		WHITE
 	);
 
@@ -789,7 +791,6 @@ void UpdateDrawFractalSelectionPanel()
 
 	Font mainFontSemibold = GetFont("mainFontSemibold");
 	Color mainBackgroundColor = DARKGRAY;
-	const float FONT_SPACING_MULTIPLIER = 0.1f;
 
 	float screenRatio = std::min((float)screenWidth / (float)DESIGN_WIDTH, (float)screenHeight / (float)DESIGN_HEIGHT);
 
@@ -804,8 +805,8 @@ void UpdateDrawFractalSelectionPanel()
 
 	const char* fractalName = GetFractalName(fractalParameters.type);
 	float fractalNameFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, fractalName, (fractalSelectionRect.width - fractalSelectionRect.height * 2.0f) * 0.8f, FONT_SPACING_MULTIPLIER), fractalSelectionHeight * 0.8f);
-	Vector2 fractalNameTextSize = MeasureTextEx(mainFontSemibold, fractalName, fractalNameFontSize, fractalNameFontSize / 10.0f);
-	DrawTextEx(mainFontSemibold, fractalName, Vector2{ fractalSelectionRect.x + fractalSelectionRect.width / 2.0f - fractalNameTextSize.x / 2.0f, fractalSelectionRect.y + fractalSelectionRect.height * 0.5f - fractalNameTextSize.y * 0.5f }, fractalNameFontSize, fractalNameFontSize / 10.0f, WHITE);
+	Vector2 fractalNameTextSize = MeasureTextEx(mainFontSemibold, fractalName, fractalNameFontSize, fractalNameFontSize * FONT_SPACING_MULTIPLIER);
+	DrawTextEx(mainFontSemibold, fractalName, Vector2{ fractalSelectionRect.x + fractalSelectionRect.width / 2.0f - fractalNameTextSize.x / 2.0f, fractalSelectionRect.y + fractalSelectionRect.height * 0.5f - fractalNameTextSize.y * 0.5f }, fractalNameFontSize, fractalNameFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 
 	//Previous fractal button
 
@@ -820,8 +821,8 @@ void UpdateDrawFractalSelectionPanel()
 	DrawRectangleRec(prevButtonRect, ColorAlpha(prevButtonColor, 0.6f));
 
 	float prevButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, "<", prevButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), prevButtonRect.height * 0.8f);
-	Vector2 prevButtonTextSize = MeasureTextEx(mainFontSemibold, "<", prevButtonFontSize, prevButtonFontSize / 10.0f);
-	DrawTextEx(mainFontSemibold, "<", Vector2{ prevButtonRect.x + (prevButtonRect.width - prevButtonTextSize.x) * 0.5f, prevButtonRect.y + (prevButtonRect.height - prevButtonTextSize.y) * 0.5f }, prevButtonFontSize, prevButtonFontSize / 10.0f, WHITE);
+	Vector2 prevButtonTextSize = MeasureTextEx(mainFontSemibold, "<", prevButtonFontSize, prevButtonFontSize * FONT_SPACING_MULTIPLIER);
+	DrawTextEx(mainFontSemibold, "<", Vector2{ prevButtonRect.x + (prevButtonRect.width - prevButtonTextSize.x) * 0.5f, prevButtonRect.y + (prevButtonRect.height - prevButtonTextSize.y) * 0.5f }, prevButtonFontSize, prevButtonFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 
 	if (IsRectanglePressed(prevButtonRect))
 		ChangeFractal((FractalType)(Wrap((int)fractalParameters.type - 1, 0, NUM_FRACTAL_TYPES)));
@@ -839,8 +840,8 @@ void UpdateDrawFractalSelectionPanel()
 	DrawRectangleRec(nextButtonRect, ColorAlpha(nextButtonColor, 0.6f));
 
 	float nextButtonFontSize = std::min(GetFontSizeForWidth(mainFontSemibold, ">", nextButtonRect.width * 0.8f, FONT_SPACING_MULTIPLIER), nextButtonRect.height * 0.8f);
-	Vector2 nextButtonTextSize = MeasureTextEx(mainFontSemibold, ">", nextButtonFontSize, nextButtonFontSize / 10.0f);
-	DrawTextEx(mainFontSemibold, ">", Vector2{ nextButtonRect.x + (nextButtonRect.width - nextButtonTextSize.x) * 0.5f, nextButtonRect.y + (nextButtonRect.height - nextButtonTextSize.y) * 0.5f }, nextButtonFontSize, nextButtonFontSize / 10.0f, WHITE);
+	Vector2 nextButtonTextSize = MeasureTextEx(mainFontSemibold, ">", nextButtonFontSize, nextButtonFontSize * FONT_SPACING_MULTIPLIER);
+	DrawTextEx(mainFontSemibold, ">", Vector2{ nextButtonRect.x + (nextButtonRect.width - nextButtonTextSize.x) * 0.5f, nextButtonRect.y + (nextButtonRect.height - nextButtonTextSize.y) * 0.5f }, nextButtonFontSize, nextButtonFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 
 	if (IsRectanglePressed(nextButtonRect))
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
@@ -873,6 +874,11 @@ void UpdateDrawDraggableDots()
 	const float DRAGGABLE_DOT_RADIUS = 6.0f;
 
 	const float SNAP_RADIUS_PIXELS = 20.0f;
+
+	const float LABEL_FONT_SIZE = 32.0f;
+	const Vector2 LABEL_OFFSET = Vector2{ 4.0f, -4.0f };
+
+	Font& mainFontSemibold = GetFont("mainFontSemibold");
 
 	if (shaderFractal.SupportsC())
 	{
@@ -907,7 +913,7 @@ void UpdateDrawDraggableDots()
 		}
 
 		DrawDraggableDot(cScreenPosition, DRAGGABLE_DOT_RADIUS, WHITE, BLACK, IsCircleHovered(cScreenPosition, 6.0f), draggingDotId == 0);
-		DrawText("c", (int)cScreenPosition.x + 4, (int)cScreenPosition.y - 4 - 24, 24, WHITE);
+		DrawTextEx(mainFontSemibold, "c", Vector2Add(Vector2{ cScreenPosition.x, cScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 	}
 
 	if (shaderFractal.SupportsA())
@@ -943,7 +949,7 @@ void UpdateDrawDraggableDots()
 		}
 
 		DrawDraggableDot(aScreenPosition, DRAGGABLE_DOT_RADIUS, PINK, BLACK, IsCircleHovered(aScreenPosition, 6.0f), draggingDotId == 1);
-		DrawText("a", (int)aScreenPosition.x + 4, (int)aScreenPosition.y - 4 - 24, 24, WHITE);
+		DrawTextEx(mainFontSemibold, "a", Vector2Add(Vector2{ aScreenPosition.x, aScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 	}
 
 	for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
@@ -981,7 +987,7 @@ void UpdateDrawDraggableDots()
 		}
 
 		DrawDraggableDot(rootScreenPosition, DRAGGABLE_DOT_RADIUS, ColorFromHSV(120.0f * i, 1.0f, 1.0f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
-		DrawText(TextFormat("r%i", i + 1), (int)rootScreenPosition.x + 4, (int)rootScreenPosition.y - 4 - 24, 24, WHITE);
+		DrawTextEx(mainFontSemibold, TextFormat("r%i", i + 1), Vector2Add(Vector2{ rootScreenPosition.x, rootScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 	}
 
 	//End drag
