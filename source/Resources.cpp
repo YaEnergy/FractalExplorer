@@ -12,6 +12,8 @@ void LoadResources()
 {
 	//Load textures
 	textures.emplace("icon_screenshot", LoadTexture("assets/icons/icon_screenshot.png"));
+	textures.emplace("icon_colorbanding_on", LoadTexture("assets/icons/icon_colorbanding_on.png"));
+	textures.emplace("icon_colorbanding_off", LoadTexture("assets/icons/icon_colorbanding_off.png"));
 
 	//Load fonts
 	fonts.emplace("mainFontSemibold", LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 64, NULL, 0)); //NULL & 0 for loading default character set

@@ -19,3 +19,15 @@ bool IsRectanglePressed(Rectangle rectangle)
 {
 	return IsRectangleHovered(rectangle) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
+
+void DrawTextureButton(Texture texture, Rectangle dest, Color idleColor, Color hoverColor, Color pressColor)
+{
+	Color color = idleColor;
+
+	if (IsRectangleHovered(dest) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		color = pressColor;
+	else if (IsRectangleHovered(dest))
+		color = hoverColor;
+
+	DrawTexturePro(texture, Rectangle{ 0.0f, 0.0f, (float)texture.width, (float)texture.height }, dest, Vector2 {0.0f, 0.0f}, 0.0f, color);
+}

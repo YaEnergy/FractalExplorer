@@ -268,6 +268,13 @@ void ResetFractalParameters()
 
 	if (shaderFractal.SupportsA())
 		shaderFractal.SetA(fractalParameters.a);
+
+	//Color banding
+
+	fractalParameters.colorBanding = false;
+
+	if (shaderFractal.SupportsColorBanding())
+		shaderFractal.SetColorBanding(fractalParameters.colorBanding);
 }
 
 void UpdateFractal()
@@ -872,21 +879,39 @@ void UpdateDrawFractalSelectionPanel()
 	if (IsRectanglePressed(nextButtonRect))
 		ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
 
+	//Top rect
+	Rectangle buttonPanelRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y - fractalSelectionRect.height, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height };
+
+	DrawRectangleRec(buttonPanelRect, ColorAlpha(mainBackgroundColor, 0.2f));
+
+	int buttonIndex = 0;
+
 	//Screenshot button
 
-	Rectangle screenshotButtonRect = Rectangle{ fractalSelectionRect.x, fractalSelectionRect.y - fractalSelectionRect.height, fractalSelectionRect.height, fractalSelectionRect.height };
-	Color screenshotButtonColor = WHITE;
+	Rectangle screenshotButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+	
+	DrawTextureButton(GetTexture("icon_screenshot"), screenshotButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
 
-	if (IsRectangleHovered(screenshotButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-		screenshotButtonColor = DARKGRAY;
-	else if (IsRectangleHovered(screenshotButtonRect))
-		screenshotButtonColor = LIGHTGRAY;
-
-	Texture& screenshotButtonTexture = GetTexture("icon_screenshot");
-	DrawTexturePro(screenshotButtonTexture, Rectangle{ 0.0f, 0.0f, (float)screenshotButtonTexture.width, (float)screenshotButtonTexture.height }, screenshotButtonRect, Vector2Zero(), 0.0f, screenshotButtonColor);
+	buttonIndex++;
 
 	if (IsRectanglePressed(screenshotButtonRect))
 		TakeFractalScreenshot();
+
+	//Color banding button (if supported)
+	if (shaderFractal.SupportsColorBanding())
+	{
+		Rectangle colorBandingButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+		
+		DrawTextureButton(fractalParameters.colorBanding ? GetTexture("icon_colorbanding_on") : GetTexture("icon_colorbanding_off"), colorBandingButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectanglePressed(colorBandingButtonRect))
+		{
+			fractalParameters.colorBanding = !fractalParameters.colorBanding;
+			shaderFractal.SetColorBanding(fractalParameters.colorBanding);
+		}
+	}
 }
 
 void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
