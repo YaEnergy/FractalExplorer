@@ -912,6 +912,36 @@ void UpdateDrawFractalSelectionPanel()
 			shaderFractal.SetColorBanding(fractalParameters.colorBanding);
 		}
 	}
+
+	//Power buttons (if supported)
+	if (shaderFractal.SupportsPower())
+	{
+		//Subtract
+		Rectangle powerSubtractButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+
+		DrawTextureButton(GetTexture("icon_power_subtract"), powerSubtractButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectangleHovered(powerSubtractButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		{
+			fractalParameters.power -= GetFrameTime();
+			shaderFractal.SetPower(fractalParameters.power);
+		}
+
+		//Add
+		Rectangle powerAddButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+
+		DrawTextureButton(GetTexture("icon_power_add"), powerAddButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectangleHovered(powerAddButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		{
+			fractalParameters.power += GetFrameTime();
+			shaderFractal.SetPower(fractalParameters.power);
+		}
+	}
 }
 
 void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
