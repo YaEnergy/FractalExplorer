@@ -45,6 +45,8 @@ float screenshotDeltaTime = 5.0f;
 bool isDraggingDot = false;
 int draggingDotId = -1;
 
+bool cursorOnUI = false;
+
 void UpdateDrawFrame();
 
 void Update();
@@ -374,8 +376,8 @@ void UpdateFractalCamera()
 	else if (IsKeyDown(KEY_DOWN))
 		fractalParameters.position.y -= movementSpeed * deltaTime / fractalParameters.zoom;
 
-	//Camera panning using mouse, if not dragging dot
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !isDraggingDot)
+	//Camera panning using mouse, if not on ui
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !cursorOnUI)
 	{
 		Vector2 mouseDelta = GetMouseDelta();
 
@@ -712,11 +714,16 @@ void UpdateDrawUI()
 
 	float deltaTime = GetFrameTime();
 
+	cursorOnUI = false;
+
 	if (showDebugInfo)
 	{
 		DrawFractalGrid();
 
 		UpdateDrawDraggableDots();
+
+		if (isDraggingDot)
+			cursorOnUI = true;
 
 		const int STAT_FONT_SIZE = 24;
 		int statY = 10;
@@ -834,6 +841,9 @@ void UpdateDrawFractalSelectionPanel()
 
 	DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, ColorAlpha(mainBackgroundColor, 0.4f));
 
+	if (IsRectangleHovered(fractalSelectionRect))
+		cursorOnUI = true;
+
 	//Fractal name
 
 	const char* fractalName = GetFractalName(fractalParameters.type);
@@ -883,6 +893,9 @@ void UpdateDrawFractalSelectionPanel()
 	Rectangle buttonPanelRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y - fractalSelectionRect.height, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height };
 
 	DrawRectangleRec(buttonPanelRect, ColorAlpha(mainBackgroundColor, 0.2f));
+
+	if (IsRectangleHovered(buttonPanelRect))
+		cursorOnUI = true;
 
 	int buttonIndex = 0;
 

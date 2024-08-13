@@ -203,8 +203,8 @@ void main()
     //second degree factor: -(b+a+c) = -b - a - c
     vec2 secondDegreeFactor = -roots[0] - roots[1] - roots[2];
 
-    //first degree factor: ab + bc + ac
-    vec2 firstDegreeFactor = ComplexMultiply(roots[0], roots[1]) + ComplexMultiply(roots[1], roots[2]) + ComplexMultiply(roots[0], roots[2]);
+    //first degree factor: ab + bc + ac = a(b+c) + bc, reduce amount of ComplexMultiply calls
+    vec2 firstDegreeFactor = ComplexMultiply(roots[0], roots[1] + roots[2]) + ComplexMultiply(roots[1], roots[2]);
 
     //constant: -abc
     vec2 constant = -(ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2]));
