@@ -18,6 +18,7 @@ void LoadResources()
 
 	textures.emplace("icon_power_add", LoadTexture("assets/icons/icon_power_add.png"));
 	textures.emplace("icon_power_subtract", LoadTexture("assets/icons/icon_power_subtract.png"));
+	textures.emplace("icon_power_floor", LoadTexture("assets/icons/icon_power_floor.png"));
 
 	//Load fonts
 	fonts.emplace("mainFontSemibold", LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 64, NULL, 0)); //NULL & 0 for loading default character set

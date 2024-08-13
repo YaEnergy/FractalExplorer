@@ -941,6 +941,19 @@ void UpdateDrawFractalSelectionPanel()
 			fractalParameters.power += GetFrameTime();
 			shaderFractal.SetPower(fractalParameters.power);
 		}
+
+		//Floor
+		Rectangle powerFloorButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+
+		DrawTextureButton(GetTexture("icon_power_floor"), powerFloorButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectanglePressed(powerFloorButtonRect))
+		{
+			fractalParameters.power = floor(fractalParameters.power);
+			shaderFractal.SetPower(fractalParameters.power);
+		}
 	}
 }
 
