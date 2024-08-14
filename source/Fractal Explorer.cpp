@@ -47,6 +47,8 @@ int draggingDotId = -1;
 
 bool cursorOnUI = false;
 
+bool flipYAxis = false;
+
 void UpdateDrawFrame();
 
 void Update();
@@ -146,7 +148,7 @@ void UpdateDrawFrame()
 	{
 		ClearBackground(BLACK);
 
-		shaderFractal.Draw(Rectangle{ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() });
+		shaderFractal.Draw(Rectangle{ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()}, false, flipYAxis);
 
 		UpdateDrawUI();
 	}
@@ -176,7 +178,7 @@ Vector2 GetScreenToFractalPosition(Vector2 screenPosition)
 
 	Vector2 fractalPosition = Vector2{
 		(fragTexCoord.x + normalizedScreenOffset.x) / (widthStretch * fractalParameters.zoom) + fractalParameters.position.x,
-		(fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom + fractalParameters.position.y
+		flipYAxis ? (fragTexCoord.y + normalizedScreenOffset.y) / fractalParameters.zoom + fractalParameters.position.y : (fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom + fractalParameters.position.y
 	};
 
 	return Vector2{ fractalPosition.x, fractalPosition.y };
@@ -191,8 +193,8 @@ Vector2 GetFractalToScreenPosition(Vector2 fractalPosition)
 	float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
 
 	Vector2 screenPosition = Vector2{
-		((fractalPosition.x - fractalParameters.position.x) * widthStretch * fractalParameters.zoom - normalizedScreenOffset.x) * (float)screenWidth,
-		(-(fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
+		((fractalPosition.x - fractalParameters.position.x) * widthStretch * fractalParameters.zoom - normalizedScreenOffset.x)* (float)screenWidth,
+		flipYAxis ? ((fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight : (-(fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
 	};
 
 	return screenPosition;
@@ -210,6 +212,8 @@ void ChangeFractal(FractalType fractalType)
 	shaderFractal.SetWidthStretch(widthStretch);
 
 	ResetFractalParameters();
+
+	flipYAxis = fractalType == FRACTAL_BURNING_SHIP;
 }
 
 void ResetFractalParameters()
@@ -372,9 +376,9 @@ void UpdateFractalCamera()
 		fractalParameters.position.x += movementSpeed * deltaTime / fractalParameters.zoom;
 
 	if (IsKeyDown(KEY_UP))
-		fractalParameters.position.y += movementSpeed * deltaTime / fractalParameters.zoom;
+		fractalParameters.position.y += (flipYAxis ? -movementSpeed : movementSpeed) * deltaTime / fractalParameters.zoom;
 	else if (IsKeyDown(KEY_DOWN))
-		fractalParameters.position.y -= movementSpeed * deltaTime / fractalParameters.zoom;
+		fractalParameters.position.y -= (flipYAxis ? -movementSpeed : movementSpeed) * deltaTime / fractalParameters.zoom;
 
 	//Camera panning using mouse, if not on ui
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !cursorOnUI)
@@ -383,7 +387,7 @@ void UpdateFractalCamera()
 
 		//fractal fits screen height
 		fractalParameters.position.x -= mouseDelta.x / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
-		fractalParameters.position.y += mouseDelta.y / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
+		fractalParameters.position.y += (flipYAxis ? -mouseDelta.y : mouseDelta.y) / (float)GetFractalRenderTextureHeight() / fractalParameters.zoom;
 	}
 
 	//Update shader fractal position if necessary
@@ -472,7 +476,11 @@ void TakeFractalScreenshot()
 	while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
 		num++;
 
-	SaveShaderFractalToImage(shaderFractal, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
+	Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
+
+	ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
+	
+	UnloadImage(fractalImage);
 
 	screenshotDeltaTime = 0.0f;
 
@@ -520,11 +528,19 @@ void DrawFractalGrid()
 
 	// Axis number markers
 
-	//Bottom left of the screen has the smallest x & y
+	//Bottom left of the screen has the smallest x & y (if y unflipped)
 	Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight});
 
-	//Top right of the screen has the largest x & y
+	//Top right of the screen has the largest x & y (if y unflipped)
 	Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{(float)screenWidth, 0.0f});
+
+	//switch min & max y if flipping y axis
+	if (flipYAxis)
+	{
+		float tempY = minFractalPosition.y;
+		minFractalPosition.y = maxFractalPosition.y;
+		maxFractalPosition.y = tempY;
+	}
 
 	float markerLength = 20.0f;
 	float numberFontSize = 20.0f;

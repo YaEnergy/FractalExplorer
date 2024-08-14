@@ -187,22 +187,23 @@ void ShaderFractal::Unload()
 #pragma endregion
 
 #pragma region Drawing
-void ShaderFractal::Draw(Rectangle destination) const
+void ShaderFractal::Draw(Rectangle destination, bool flipX, bool flipY) const
 {
 	int renderWidth = GetRenderWidth();
 	int renderHeight = GetRenderHeight();
 
 	BeginShaderMode(fractalShader);
 	{
-		//Fractal is drawn flipped because of flipped render texture
-		Rectangle fractalSource = { 0.0f, 0.0f, (float)fractalRenderTexture.texture.width, -(float)fractalRenderTexture.texture.height };
+		//Fractal is drawn flipped because of flipped render texture, so the vertically flipped version is actually the correct side up
+		//if flipY is true it will be flipped again
+		Rectangle fractalSource = { 0.0f, 0.0f, flipX ? -(float)fractalRenderTexture.texture.width : (float)fractalRenderTexture.texture.width, flipY ? (float)fractalRenderTexture.texture.height : -(float)fractalRenderTexture.texture.height };
 
 		DrawTexturePro(fractalRenderTexture.texture, fractalSource, destination, { 0.0f, 0.0f }, 0.0f, WHITE);
 	}
 	EndShaderMode();
 }
 
-void SaveShaderFractalToImage(const ShaderFractal& shaderFractal, const char* fileName)
+Image ShaderFractal::GenImage(bool flipX, bool flipY) const
 {
 	//Fractal render
 	RenderTexture2D fractalImageRender = LoadRenderTexture(fractalRenderTexture.texture.width, fractalRenderTexture.texture.height);
@@ -211,19 +212,16 @@ void SaveShaderFractalToImage(const ShaderFractal& shaderFractal, const char* fi
 	{
 		ClearBackground(BLACK);
 
-		shaderFractal.Draw(Rectangle{0.0f, 0.0f, (float)fractalImageRender.texture.width, (float)fractalImageRender.texture.height});
+		//render textures are flipped, y is flipped again
+		Draw(Rectangle{ 0.0f, 0.0f, (float)fractalImageRender.texture.width, (float)fractalImageRender.texture.height }, flipX, !flipY);
 	}
 	EndTextureMode();
 
 	Image fractalImage = LoadImageFromTexture(fractalImageRender.texture);
 
-	//render textures are flipped
-	ImageFlipVertical(&fractalImage);
-
-	ExportImage(fractalImage, fileName);
-
 	//Unload
 	UnloadRenderTexture(fractalImageRender);
-	UnloadImage(fractalImage);
+
+	return fractalImage;
 }
 #pragma endregion

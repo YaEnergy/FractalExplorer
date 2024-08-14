@@ -123,7 +123,9 @@ class ShaderFractal
 
 		bool SupportsColorBanding() const;
 
-		void Draw(Rectangle destination) const;
+		void Draw(Rectangle destination, bool flipX, bool flipY) const;
+
+		Image GenImage(bool flipX, bool flipY) const;
 
 		void Unload();
 
@@ -141,10 +143,4 @@ class ShaderFractal
 };
 
 ShaderFractal LoadShaderFractal(FractalType);
-
-//Drawing
-
-void SaveShaderFractalToImage(const ShaderFractal& shaderFractal, const char* fileName);
-
-
 
