@@ -996,7 +996,7 @@ void UpdateDrawDraggableDots()
 {
 	const float DRAGGABLE_DOT_RADIUS = 6.0f;
 
-	const float SNAP_RADIUS_PIXELS = 20.0f;
+	const float SNAP_PIXELS = 8.0f;
 
 	const float LABEL_FONT_SIZE = 32.0f;
 	const Vector2 LABEL_OFFSET = Vector2{ 4.0f, -4.0f };
@@ -1025,10 +1025,19 @@ void UpdateDrawDraggableDots()
 			Vector2 snapC = SnapTo2DGrid(newC, gridIncrement);
 
 			//If close to grid intersection, snap to it
-			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapC), cScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			Vector2 screenSnapC = GetFractalToScreenPosition(snapC);
+			Vector2 screenDifC = Vector2Subtract(screenSnapC, cScreenPosition);
+
+			if (abs(screenDifC.x) < SNAP_PIXELS)
 			{
-				newC = snapC;
-				cScreenPosition = GetFractalToScreenPosition(newC);
+				newC.x = snapC.x;
+				cScreenPosition.x = screenSnapC.x;
+			}
+
+			if (abs(screenDifC.y) < SNAP_PIXELS)
+			{
+				newC.y = snapC.y;
+				cScreenPosition.y = screenSnapC.y;
 			}
 
 			fractalParameters.c = newC;
@@ -1061,10 +1070,19 @@ void UpdateDrawDraggableDots()
 			Vector2 snapA = SnapTo2DGrid(newA, gridIncrement);
 
 			//If close to grid intersection, snap to it
-			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapA), aScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			Vector2 screenSnapA = GetFractalToScreenPosition(snapA);
+			Vector2 screenDifA = Vector2Subtract(screenSnapA, aScreenPosition);
+
+			if (abs(screenDifA.x) < SNAP_PIXELS)
 			{
-				newA = snapA;
-				aScreenPosition = GetFractalToScreenPosition(newA);
+				newA.x = snapA.x;
+				aScreenPosition.x = screenSnapA.x;
+			}
+
+			if (abs(screenDifA.y) < SNAP_PIXELS)
+			{
+				newA.y = snapA.y;
+				aScreenPosition.y = screenSnapA.y;
 			}
 
 			fractalParameters.a = newA;
@@ -1099,10 +1117,19 @@ void UpdateDrawDraggableDots()
 			Vector2 snapRoot = SnapTo2DGrid(newRoot, gridIncrement);
 
 			//If close to grid intersection, snap to it
-			if (Vector2LengthSqr(Vector2Subtract(GetFractalToScreenPosition(snapRoot), rootScreenPosition)) <= SNAP_RADIUS_PIXELS * SNAP_RADIUS_PIXELS)
+			Vector2 screenSnapRoot = GetFractalToScreenPosition(snapRoot);
+			Vector2 screenDifRoot = Vector2Subtract(screenSnapRoot, rootScreenPosition);
+
+			if (abs(screenDifRoot.x) < SNAP_PIXELS)
 			{
-				newRoot = snapRoot;
-				rootScreenPosition = GetFractalToScreenPosition(newRoot);
+				newRoot.x = snapRoot.x;
+				rootScreenPosition.x = screenSnapRoot.x;
+			}
+
+			if (abs(screenDifRoot.y) < SNAP_PIXELS)
+			{
+				newRoot.y = snapRoot.y;
+				rootScreenPosition.y = screenSnapRoot.y;
 			}
 
 			fractalParameters.roots[i] = newRoot;
