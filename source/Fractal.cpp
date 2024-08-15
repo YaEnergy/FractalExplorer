@@ -1,8 +1,5 @@
 #include "Fractal.h"
 
-#include <iostream>
-#include <filesystem>
-
 #include "raylib.h"
 #include "raymath.h"
 

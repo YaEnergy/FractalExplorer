@@ -36,13 +36,15 @@ endif()
 # Main
 set(
 	SOURCES 
+    "source/main.cpp"
 	"source/Fractal Explorer.cpp"
-    "source/Fractals/Mandelbrot.cpp" 
+    "source/Resources.cpp"
     "source/ComplexNumbers/ComplexDouble.cpp" 
     "source/ComplexNumbers/ComplexFloat.cpp"
-  "source/Fractal.cpp"  
-  "source/UI/UIUtils.cpp"
- "source/UI/GridUtils.cpp" "source/Resources.cpp")
+    "source/Fractal.cpp"  
+    "source/UI/UIUtils.cpp"
+    "source/UI/GridUtils.cpp" 
+)
 
 set(
 	INCLUDE_DIRECTORIES 

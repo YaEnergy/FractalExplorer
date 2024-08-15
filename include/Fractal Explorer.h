@@ -5,8 +5,6 @@
 
 #include <iostream>
 
-#include "raylib.h"
-
 // TODO: Reference additional headers your program requires here.
 
 #if defined(PLATFORM_DESKTOP)
@@ -21,3 +19,12 @@ int main();
 
 const int DESIGN_WIDTH = 800;
 const int DESIGN_HEIGHT = 480;
+
+namespace Explorer
+{
+	void Init();
+
+	void Deinit();
+
+	void UpdateDrawFrame();
+}

@@ -1,5 +1,7 @@
 #include "UI/UIUtils.h"
 
+#include "raylib.h"
+
 bool IsCircleHovered(Vector2 position, float radius)
 {
 	return CheckCollisionPointCircle(GetMousePosition(), position, radius);
@@ -30,4 +32,10 @@ void DrawTextureButton(Texture texture, Rectangle dest, Color idleColor, Color h
 		color = hoverColor;
 
 	DrawTexturePro(texture, Rectangle{ 0.0f, 0.0f, (float)texture.width, (float)texture.height }, dest, Vector2 {0.0f, 0.0f}, 0.0f, color);
+}
+
+float GetFontSizeForWidth(Font font, const char* text, float width, float spacingMultiplier)
+{
+	const float BASE_FONT_SIZE = 16.0f;
+	return BASE_FONT_SIZE / MeasureTextEx(font, text, BASE_FONT_SIZE, BASE_FONT_SIZE * spacingMultiplier).x * width;
 }

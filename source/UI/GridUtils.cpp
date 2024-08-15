@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "raylib.h"
+
 float GetClosestMultipleOf(float val, float factor)
 {
 	return fmod(val, factor) >= factor / 2.0f ? val - fmod(val, factor) + factor : val - fmod(val, factor);
