@@ -17,6 +17,9 @@ namespace Resources
 		//Load textures
 		textures.emplace("icon_screenshot", LoadTexture("assets/icons/icon_screenshot.png"));
 
+		textures.emplace("icon_grid_on", LoadTexture("assets/icons/icon_grid_on.png"));
+		textures.emplace("icon_grid_off", LoadTexture("assets/icons/icon_grid_off.png"));
+
 		textures.emplace("icon_colorbanding_on", LoadTexture("assets/icons/icon_colorbanding_on.png"));
 		textures.emplace("icon_colorbanding_off", LoadTexture("assets/icons/icon_colorbanding_off.png"));
 

@@ -50,6 +50,7 @@ namespace Explorer
 	bool cursorOnUI = false;
 
 	bool flipYAxis = false;
+	bool showGrid = true;
 
 	void Update();
 
@@ -684,7 +685,7 @@ namespace Explorer
 
 		cursorOnUI = false;
 
-		if (showDebugInfo)
+		if (showGrid)
 		{
 			DrawFractalGrid();
 
@@ -692,7 +693,18 @@ namespace Explorer
 
 			if (isDraggingDot)
 				cursorOnUI = true;
+		}
 
+		UpdateDrawFractalSelectionPanel();
+
+		//Screenshot flash
+		screenshotDeltaTime += deltaTime;
+
+		if (screenshotDeltaTime <= 0.5f)
+			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
+		
+		if (showDebugInfo)
+		{
 			const int STAT_FONT_SIZE = 24;
 			int statY = 10;
 
@@ -782,14 +794,6 @@ namespace Explorer
 				}
 			}
 		}
-
-		UpdateDrawFractalSelectionPanel();
-
-		//Screenshot flash
-		screenshotDeltaTime += deltaTime;
-
-		if (screenshotDeltaTime <= 0.5f)
-			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
 	}
 
 	void UpdateDrawFractalSelectionPanel()
@@ -877,6 +881,17 @@ namespace Explorer
 
 		if (IsRectanglePressed(screenshotButtonRect))
 			TakeFractalScreenshot();
+
+		//Grid visibility button
+
+		Rectangle gridVisButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+
+		DrawTextureButton(showGrid ? Resources::GetTexture("icon_grid_on") : Resources::GetTexture("icon_grid_off"), gridVisButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectanglePressed(gridVisButtonRect))
+			showGrid = !showGrid;
 
 		//Color banding button (if supported)
 		if (shaderFractal.SupportsColorBanding())
