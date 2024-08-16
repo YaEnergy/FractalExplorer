@@ -2,7 +2,7 @@
 
 #define PI 3.1415926535897932384626433
 
-#define NUM_ROOTS 3
+#define NUM_ROOTS 5
 
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -18,19 +18,13 @@ uniform float zoom = 1.0;
 
 uniform int colorBanding = 0;
 
-//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
 uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
 (
     vec2(1.0, 0.0), 
-    vec2(-0.5, sqrt(3.0) / 2.0), 
-    vec2(-0.5, -sqrt(3.0) / 2.0) 
-);
-
-const vec4[NUM_ROOTS] ROOT_COLORS = vec4[NUM_ROOTS]
-(
-    vec4(1.0, 0.2, 0.2, 1.0), // RED
-    vec4(0.2, 1.0, 0.2, 1.0), // GREEN
-    vec4(0.2, 0.2, 1.0, 1.0) // BLUE
+    vec2(-1.0, 0.0), 
+    vec2(0.0, 1.0),
+    vec2(0.0, -1.0),
+    vec2(0.0, -2.0)
 );
 
 uniform vec2 a = vec2(1.0, 0.0);
@@ -95,38 +89,50 @@ vec2 ComplexPow(vec2 z, float power)
     return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
-//Third-degree polynomial function for complex numbers (az^3 + bz^2 + cz + d)
-vec2 ThirdDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
+//Fifth-degree polynomial function for complex numbers (az^5 + bz^4 + cz^3 + dz^2 + ez + f)
+vec2 FifthDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e, vec2 f)
 {
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
+    //P(z) = az^5 + bz^4 + cz^3 + dz^2 + ez + f (fourth-degree polynomial, due to having 5 roots)
 
-    //az^3
-    vec2 thirdDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(z, z), z));
+    //az^5
+    vec2 fifthDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z), z));
 
-    //bz^2
-    vec2 secondDegree = ComplexMultiply(b, ComplexMultiply(z, z));
+    //bz^4
+    vec2 fourthDegree = ComplexMultiply(b, ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z));
 
-    //cz
-    vec2 firstDegree = ComplexMultiply(c, z);
+    //cz^3
+    vec2 thirdDegree = ComplexMultiply(c, ComplexMultiply(ComplexMultiply(z, z), z));
 
-    //add together with constant d
-    return thirdDegree + secondDegree + firstDegree + d;
+    //dz^2
+    vec2 secondDegree = ComplexMultiply(d, ComplexMultiply(z, z));
+
+    //ez
+    vec2 firstDegree = ComplexMultiply(e, z);
+
+    //add together with constant f
+    return fifthDegree + fourthDegree + thirdDegree + secondDegree + firstDegree + f;
 }
 
-//Derivative of a third-degree polynomial function (3az^2 + 2bz + c)
-vec2 ThirdDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c)
+//Derivative of a fifth-degree polynomial function (5az^4 + 4bz^3 + 3cz^2 + 2dz + e)
+vec2 FifthDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e)
 {
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
-    //Power rule => P'(z) = 3az^2 + 2bz + c
+    //P(z) = az^5 + bz^4 + cz^3 + dz^2 + ez + f (fifth-degree polynomial, due to having 5 roots)
+    //Power rule => P'(z) = 5az^4 + 4bz^3 + 3cz^2 + 2dz + e
 
-    //3az^2
-    vec2 secondDegree = ComplexMultiply(3 * a, ComplexMultiply(z, z));
+    //5az^4
+    vec2 fourthDegree = ComplexMultiply(5 * a, ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z));
 
-    //2bz
-    vec2 firstDegree = ComplexMultiply(2 * b, z);
+    //4bz^3
+    vec2 thirdDegree = ComplexMultiply(4 * b, ComplexMultiply(ComplexMultiply(z, z), z));
 
-    //add together with constant c
-    return secondDegree + firstDegree + c;  //3 * ComplexMultiply(z, z);
+    //3cz^2
+    vec2 secondDegree = ComplexMultiply(3 * c, ComplexMultiply(z, z));
+
+    //2dz
+    vec2 firstDegree = ComplexMultiply(2 * d, z);
+
+    //add together with constant e
+    return fourthDegree + thirdDegree + secondDegree + firstDegree + e;
 }
 
 vec3 hsv2rgb(vec3 hsv)
@@ -173,22 +179,20 @@ vec4 hsva2rgba(vec4 hsva)
     return vec4(rgb.x, rgb.y, rgb.z, hsva.w);
 }
 
-
 void main()
 {
     //Newton fractal:
     //next z = z - (P(z) / P'(z))
     //until root or max iterations is reached (no root)
 
-    //P(z) = az^3 + bz^2 + cz + d (third-degree polynomial, due to having 3 roots)
-    //Power rule => P'(z) = 3az^2 + 2bz + c
+    //P(z) = az^5 + bz^4 + cz^3 + dz^2 + ez + f (fifth-degree polynomial, due to having 5 roots)
+    //Power rule => P'(z) = 5az^4 + 4bz^3 + 3cz^2 + 2dz + e
 
-    //(x-a)(x-b)(x-c)
-    //(x^2 - (b+a)x + ab)(x - c)
-    //(x^3 - (b+a)x^2 + abx - cx^2 + (b+a)cx - abc)
-    //(x^3 - (b+a+c)x^2 + abx + (b+a)cx - abc)
-    //(x^3 - (b+a+c)x^2 + (ab + (b+a)c)x - abc)
-    //(x^3 - (b+a+c)x^2 + (ab + bc + ac)x - abc)
+    //worked this out on paper
+    //tried to avoid as many complex number multiplications as I could, as they're more expensive
+    //and this is quite the expensive shader
+
+    //P(z) = x^5 - (a + b + c + d + e)x^4 + (a(b+c+d+e) + b(c+d+e) + c(d+e) + de)x^3 - (c*d*(b+a+e) + a*b*(c+d+e) + b*e*(c+d) + a*e*(c + d))x^2 + (cde(a+b) + ab(de + c(d+e)))x - abcde
 
     //https://en.wikipedia.org/wiki/Polynomial#Calculus thanks Wikipedia
     //https://en.wikipedia.org/wiki/Power_rule 
@@ -197,17 +201,23 @@ void main()
     float tolerance = 0.35;//0.000001; //TODO: tweak 0.35
     //it seems this I suck at this
 
-    //third degree factor: 1
-    vec2 thirdDegreeFactor = vec2(1.0, 0.0);
+    //fifth degree factor: 1
+    vec2 fifthDegreeFactor = vec2(1.0, 0.0);
 
-    //second degree factor: -(b+a+c) = -b - a - c
-    vec2 secondDegreeFactor = -roots[0] - roots[1] - roots[2];
+    //fourth degree factor: - (a + b + c + d + e) = -a - b - c - d - e
+    vec2 fourthDegreeFactor = -roots[0] - roots[1] - roots[2] - roots[3] - roots[4];
 
-    //first degree factor: ab + bc + ac = a(b+c) + bc, reduce amount of ComplexMultiply calls
-    vec2 firstDegreeFactor = ComplexMultiply(roots[0], roots[1] + roots[2]) + ComplexMultiply(roots[1], roots[2]);
+    //third degree factor: (a(b+c+d+e) + b(c+d+e) + c(d+e) + de)
+    vec2 thirdDegreeFactor = ComplexMultiply(roots[0], roots[1] + roots[2] + roots[3] + roots[4]) + ComplexMultiply(roots[1], roots[2] + roots[3] + roots[4]) + ComplexMultiply(roots[2], roots[3] + roots[4]) + ComplexMultiply(roots[3], roots[4]);
 
-    //constant: -abc
-    vec2 constant = -(ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2]));
+    //second degree factor: -c*d*(b+a+e) - a*b*(c+d+e) - b*e*(c+d) - a*e*(c + d)
+    vec2 secondDegreeFactor = -ComplexMultiply(ComplexMultiply(roots[2], roots[3]), roots[0] + roots[1] + roots[4]) - ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2] + roots[3] + roots[4]) - ComplexMultiply(ComplexMultiply(roots[1], roots[4]), roots[2] + roots[3]) - ComplexMultiply(ComplexMultiply(roots[0], roots[4]), roots[2] + roots[3]);
+
+    //first degree factor: cde(a+b) + ab(de + c(d+e))
+    vec2 firstDegreeFactor = ComplexMultiply(ComplexMultiply(ComplexMultiply(roots[2], roots[3]), roots[4]), roots[0] + roots[1]) + ComplexMultiply(ComplexMultiply(roots[0], roots[1]), ComplexMultiply(roots[3], roots[4]) + ComplexMultiply(roots[2], roots[3] + roots[4]));
+
+    //constant: -abcde
+    vec2 constant = -ComplexMultiply(ComplexMultiply(ComplexMultiply(ComplexMultiply(roots[0], roots[1]), roots[2]), roots[3]), roots[4]);
 
     //https://en.wikipedia.org/wiki/Newton_fractal
 
@@ -218,8 +228,8 @@ void main()
     for (int iteration = 0; iteration < maxIterations; iteration++)
     {
         z -= ComplexMultiply(a, ComplexDivide(
-            ThirdDegreePolynomial(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
-            ThirdDegreePolynomialDerivative(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
+            FifthDegreePolynomial(z, fifthDegreeFactor, fourthDegreeFactor, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
+            FifthDegreePolynomialDerivative(z, fifthDegreeFactor, fourthDegreeFactor, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
             ));
 
         //check if we are near any roots

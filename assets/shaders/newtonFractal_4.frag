@@ -27,14 +27,6 @@ uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
     vec2(0.0, -1.0)
 );
 
-const vec4[NUM_ROOTS] ROOT_COLORS = vec4[NUM_ROOTS]
-(
-    vec4(1.0, 0.2, 0.2, 1.0), // RED
-    vec4(0.2, 1.0, 0.2, 1.0), // GREEN
-    vec4(0.2, 0.2, 1.0, 1.0), // BLUE
-    vec4(1.0, 1.0, 0.2, 1.0)  // YELLOW
-);
-
 uniform vec2 a = vec2(1.0, 0.0);
 
 out vec4 finalColor;
@@ -97,6 +89,46 @@ vec2 ComplexPow(vec2 z, float power)
     return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
+//Fourth-degree polynomial function for complex numbers (az^4 + bz^3 + cz^2 + dz + e)
+vec2 FourthDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e)
+{
+    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
+
+    //az^4
+    vec2 fourthDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z));
+
+    //bz^3
+    vec2 thirdDegree = ComplexMultiply(b, ComplexMultiply(ComplexMultiply(z, z), z));
+
+    //cz^2
+    vec2 secondDegree = ComplexMultiply(c, ComplexMultiply(z, z));
+
+    //dz
+    vec2 firstDegree = ComplexMultiply(d, z);
+
+    //add together with constant e
+    return fourthDegree + thirdDegree + secondDegree + firstDegree + e;
+}
+
+//Derivative of a fourth-degree polynomial function (4az^3 + 3bz^2 + 2cz + d)
+vec2 FourthDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
+{
+    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
+    //Power rule => P'(z) = 4az^3 + 3bz^2 + 2cz + d
+
+    //4az^3
+    vec2 thirdDegree = ComplexMultiply(4 * a, ComplexMultiply(ComplexMultiply(z, z), z));
+
+    //3bz^2
+    vec2 secondDegree = ComplexMultiply(3 * b, ComplexMultiply(z, z));
+
+    //2cz
+    vec2 firstDegree = ComplexMultiply(2 * c, z);
+
+    //add together with constant d
+    return thirdDegree + secondDegree + firstDegree + d;
+}
+
 vec3 hsv2rgb(vec3 hsv)
 {
     //ref https://www.rapidtables.com/convert/color/hsv-to-rgb.html
@@ -140,47 +172,6 @@ vec4 hsva2rgba(vec4 hsva)
 
     return vec4(rgb.x, rgb.y, rgb.z, hsva.w);
 }
-
-//Fourth-degree polynomial function for complex numbers (az^4 + bz^3 + cz^2 + dz + e)
-vec2 FourthDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e)
-{
-    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
-
-    //az^4
-    vec2 fourthDegree = ComplexMultiply(a, ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z));
-
-    //bz^3
-    vec2 thirdDegree = ComplexMultiply(b, ComplexMultiply(ComplexMultiply(z, z), z));
-
-    //cz^2
-    vec2 secondDegree = ComplexMultiply(c, ComplexMultiply(z, z));
-
-    //dz
-    vec2 firstDegree = ComplexMultiply(d, z);
-
-    //add together with constant e
-    return fourthDegree + thirdDegree + secondDegree + firstDegree + e;
-}
-
-//Derivative of a fourth-degree polynomial function (4az^3 + 3bz^2 + 2cz + d)
-vec2 FourthDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
-{
-    //P(z) = az^4 + bz^3 + cz^2 + dz + e (fourth-degree polynomial, due to having 4 roots)
-    //Power rule => P'(z) = 4az^3 + 3bz^2 + 2cz + d
-
-    //4az^3
-    vec2 thirdDegree = ComplexMultiply(4 * a, ComplexMultiply(ComplexMultiply(z, z), z));
-
-    //3bz^2
-    vec2 secondDegree = ComplexMultiply(3 * b, ComplexMultiply(z, z));
-
-    //2cz
-    vec2 firstDegree = ComplexMultiply(2 * c, z);
-
-    //add together with constant d
-    return thirdDegree + secondDegree + firstDegree + d;
-}
-
 
 void main()
 {
@@ -242,8 +233,7 @@ void main()
             //if root found within tolerance range
             if (abs(dif.x) < tolerance && abs(dif.y) < tolerance)
             {
-                float ab = (float(iteration) / float(maxIterations)) * 0.6 + 0.4;
-                finalColor = ROOT_COLORS[i];//vec4(vec3(ab), 1.0);//vec4(ROOT_COLORS[i].x * ab, ROOT_COLORS[i].y * ab, ROOT_COLORS[i].z * ab, ROOT_COLORS[i].w);
+                finalColor = hsva2rgba(vec4(float(i) * (360.0 / float(NUM_ROOTS)), 1.0, 1.0, 1.0));
                 rootFound = true;
                 break;
             }
@@ -273,6 +263,6 @@ void main()
             }
         }
 
-        finalColor = ROOT_COLORS[rootIndex] * 0.8;
+        finalColor = hsva2rgba(vec4(float(rootIndex) * (360.0 / float(NUM_ROOTS)), 1.0, 0.6, 1.0));
     }
 } 

@@ -11,7 +11,8 @@ const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
 	"assets/shaders/multibrotFractal.frag",
 	"assets/shaders/multicornFractal.frag",
 	"assets/shaders/newtonFractal_3.frag",
-	"assets/shaders/newtonFractal_4.frag"
+	"assets/shaders/newtonFractal_4.frag",
+	"assets/shaders/newtonFractal_5.frag"
 };
 
 RenderTexture fractalRenderTexture;
@@ -36,6 +37,8 @@ const char* GetFractalName(FractalType fractalType)
 			return "Newton Fractal - 3rd-degree polynomial";
 		case FRACTAL_NEWTON_4DEG:
 			return "Newton Fractal - 4th-degree polynomial";
+		case FRACTAL_NEWTON_5DEG:
+			return "Newton Fractal - 5th-degree polynomial";
 		default: //Or FRACTAL_UNKNOWN
 			return "UNKNOWN FRACTAL";
 	}
@@ -161,6 +164,8 @@ int ShaderFractal::GetNumSettableRoots() const
 			return 3;
 		case FRACTAL_NEWTON_4DEG:
 			return 4;
+		case FRACTAL_NEWTON_5DEG:
+			return 5;
 		default:
 			return 0;
 	}
@@ -168,12 +173,12 @@ int ShaderFractal::GetNumSettableRoots() const
 
 bool ShaderFractal::SupportsA() const
 {
-	return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG;
+	return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG || type == FRACTAL_NEWTON_5DEG;
 }
 
 bool ShaderFractal::SupportsColorBanding() const
 {
-	return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG;
+	return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG && type != FRACTAL_NEWTON_5DEG;
 }
 
 

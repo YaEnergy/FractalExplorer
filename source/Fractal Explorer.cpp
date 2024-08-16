@@ -29,6 +29,8 @@ namespace Explorer
 		"z ^ n + c",
 		"z ^ n + c",
 		"(Re(z) - Im(z) i) ^ n + c",
+		"z - a * (P(z) / P'(z))",
+		"z - a * (P(z) / P'(z))",
 		"z - a * (P(z) / P'(z))"
 	};
 
@@ -229,6 +231,15 @@ namespace Explorer
 			fractalParameters.roots[1] = Vector2{ -1.0f, 0.0f };
 			fractalParameters.roots[2] = Vector2{ 0.0f, 1.0f };
 			fractalParameters.roots[3] = Vector2{ 0.0f, -1.0f };
+		}
+		else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
+		{
+			//Default roots are the roots to P(z) = z^5 - 1
+			fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
+			fractalParameters.roots[1] = Vector2{ (-1.0f + sqrt(5.0f)) / 4.0f, sqrt(10.0f + 2 * sqrt(5.0f)) / 4.0f };
+			fractalParameters.roots[2] = Vector2{ (-1.0f + sqrt(5.0f)) / 4.0f, -sqrt(10.0f + 2 * sqrt(5.0f)) / 4.0f };
+			fractalParameters.roots[3] = Vector2{ (-1.0f - sqrt(5.0f)) / 4.0f, sqrt(10.0f - 2 * sqrt(5.0f)) / 4.0f };
+			fractalParameters.roots[4] = Vector2{ (-1.0f - sqrt(5.0f)) / 4.0f, -sqrt(10.0f - 2 * sqrt(5.0f)) / 4.0f };
 		}
 
 		if (shaderFractal.GetNumSettableRoots() > 0)
@@ -793,6 +804,26 @@ namespace Explorer
 					statY += STAT_FONT_SIZE;
 				}
 			}
+			else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
+			{
+				ComplexFloat a = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+				ComplexFloat b = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+				ComplexFloat c = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+				ComplexFloat d = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
+				ComplexFloat e = ComplexFloat(fractalParameters.roots[4].x, fractalParameters.roots[4].y);
+
+				//P(z)
+				{
+					ComplexFloat fourthDegreeFactor = -a - b - c - d - e;
+					ComplexFloat thirdDegreeFactor = a * (b + c + d + e) + b * (c + d + e) + c * (d + e) + d * e;
+					ComplexFloat secondDegreeFactor = -c * d * (b + a + e) - a * b * (c + d + e) - b * e * (c + d) - a * e * (c + d);
+					ComplexFloat firstDegreeFactor = c * d * e * (a + b) + a * b * (d * e + c * (d + e));
+					ComplexFloat constant = -a * b * c * d * e;
+
+					DrawText(TextFormat("P(z) ~= z^5 + (%.02f + %.02f i)z^4 + (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
+					statY += STAT_FONT_SIZE;
+				}
+			}
 		}
 	}
 
@@ -1103,7 +1134,7 @@ namespace Explorer
 				shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
 			}
 
-			DrawDraggableDot(rootScreenPosition, DRAGGABLE_DOT_RADIUS, ColorFromHSV(120.0f * i, 1.0f, 1.0f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
+			DrawDraggableDot(rootScreenPosition, DRAGGABLE_DOT_RADIUS, ColorFromHSV(i * (360.0f / shaderFractal.GetNumSettableRoots()), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
 			DrawTextEx(mainFontSemibold, TextFormat("r%i", i + 1), Vector2Add(Vector2{ rootScreenPosition.x, rootScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
