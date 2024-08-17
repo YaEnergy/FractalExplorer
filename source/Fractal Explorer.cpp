@@ -36,23 +36,30 @@ namespace Explorer
 
 	FractalParameters fractalParameters = FractalParameters();
 	ShaderFractal shaderFractal;
-	bool showDebugInfo = false;
-
-	int zoomLevel = 0;
-	float gridIncrement = 5.0f;
 
 	//Delta times
+
 	float zoomDeltaTime = 0.0f;
 	float screenshotDeltaTime = 5.0f;
 
 	//Dots
+
 	bool isDraggingDot = false;
 	int draggingDotId = -1;
 
+	//UI
+
 	bool cursorOnUI = false;
+
+	//true if a currently active press started on the ui
+	bool activePressStartedOnUI = false;
 
 	bool flipYAxis = false;
 	bool showGrid = true;
+	bool showDebugInfo = false;
+
+	int zoomLevel = 0;
+	float gridIncrement = 5.0f;
 
 	void Update();
 
@@ -80,6 +87,8 @@ namespace Explorer
 	void UpdateDrawUI();
 
 	void UpdateDrawFractalSelectionPanel();
+
+	void DrawInfoPanel();
 
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
 
@@ -357,7 +366,7 @@ namespace Explorer
 			fractalParameters.position.y -= (flipYAxis ? -movementSpeed : movementSpeed) * deltaTime / fractalParameters.zoom;
 
 		//Camera panning using mouse, if not on ui
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !cursorOnUI)
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !activePressStartedOnUI)
 		{
 			Vector2 mouseDelta = GetMouseDelta();
 
@@ -703,7 +712,10 @@ namespace Explorer
 			UpdateDrawDraggableDots();
 
 			if (isDraggingDot)
+			{
 				cursorOnUI = true;
+				activePressStartedOnUI = true;
+			}
 		}
 
 		UpdateDrawFractalSelectionPanel();
@@ -825,6 +837,9 @@ namespace Explorer
 				}
 			}
 		}
+
+		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
+			activePressStartedOnUI = false;
 	}
 
 	void UpdateDrawFractalSelectionPanel()
@@ -846,6 +861,9 @@ namespace Explorer
 
 		if (IsRectangleHovered(fractalSelectionRect))
 			cursorOnUI = true;
+
+		if (IsRectanglePressed(fractalSelectionRect))
+			activePressStartedOnUI = true;
 
 		//Fractal name
 
@@ -900,6 +918,9 @@ namespace Explorer
 		if (IsRectangleHovered(buttonPanelRect))
 			cursorOnUI = true;
 
+		if (IsRectanglePressed(buttonPanelRect))
+			activePressStartedOnUI = true;
+
 		int buttonIndex = 0;
 
 		//Screenshot button
@@ -950,7 +971,7 @@ namespace Explorer
 
 			buttonIndex++;
 
-			if (IsRectangleHovered(powerSubtractButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+			if (IsRectangleHovered(powerSubtractButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
 			{
 				fractalParameters.power -= GetFrameTime();
 				shaderFractal.SetPower(fractalParameters.power);
@@ -963,7 +984,7 @@ namespace Explorer
 
 			buttonIndex++;
 
-			if (IsRectangleHovered(powerAddButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+			if (IsRectangleHovered(powerAddButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
 			{
 				fractalParameters.power += GetFrameTime();
 				shaderFractal.SetPower(fractalParameters.power);
@@ -982,6 +1003,17 @@ namespace Explorer
 				shaderFractal.SetPower(fractalParameters.power);
 			}
 		}
+	}
+
+	void DrawInfoPanel()
+	{
+		const int STAT_FONT_SIZE = 24;
+
+		int screenWidth = GetScreenWidth();
+		int screenHeight = GetScreenHeight();
+
+		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+		Color mainBackgroundColor = DARKGRAY;
 	}
 
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
@@ -1143,6 +1175,7 @@ namespace Explorer
 		{
 			isDraggingDot = false;
 			draggingDotId = -1;
+			activePressStartedOnUI = false;
 		}
 	}
 
