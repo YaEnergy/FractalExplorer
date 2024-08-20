@@ -1029,6 +1029,7 @@ namespace Explorer
 		const float SNAP_PIXELS = 8.0f;
 
 		const float LABEL_FONT_SIZE = 32.0f;
+		const float VALUE_FONT_SIZE = 24.0f;
 		const Vector2 LABEL_OFFSET = Vector2{ 4.0f, -4.0f };
 
 		Font& mainFontSemibold = Resources::GetFont("mainFontSemibold");
@@ -1076,6 +1077,9 @@ namespace Explorer
 
 			DrawDraggableDot(cScreenPosition, DRAGGABLE_DOT_RADIUS, WHITE, BLACK, IsCircleHovered(cScreenPosition, 6.0f), draggingDotId == 0);
 			DrawTextEx(mainFontSemibold, "c", Vector2Add(Vector2{ cScreenPosition.x, cScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+		
+			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.c.x, fractalParameters.c.y), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER);
+			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.c.x, fractalParameters.c.y), Vector2Add(Vector2{ cScreenPosition.x - valueLabelSize.x / 2.0f, cScreenPosition.y - LABEL_FONT_SIZE - valueLabelSize.y }, LABEL_OFFSET), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
 		if (shaderFractal.SupportsA())
@@ -1121,6 +1125,9 @@ namespace Explorer
 
 			DrawDraggableDot(aScreenPosition, DRAGGABLE_DOT_RADIUS, PINK, BLACK, IsCircleHovered(aScreenPosition, 6.0f), draggingDotId == 1);
 			DrawTextEx(mainFontSemibold, "a", Vector2Add(Vector2{ aScreenPosition.x, aScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+		
+			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.a.x, fractalParameters.a.y), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER);
+			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.a.x, fractalParameters.a.y), Vector2Add(Vector2{ aScreenPosition.x - valueLabelSize.x / 2.0f, aScreenPosition.y - LABEL_FONT_SIZE - valueLabelSize.y }, LABEL_OFFSET), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
 		for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
@@ -1168,6 +1175,9 @@ namespace Explorer
 
 			DrawDraggableDot(rootScreenPosition, DRAGGABLE_DOT_RADIUS, ColorFromHSV(i * (360.0f / shaderFractal.GetNumSettableRoots()), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
 			DrawTextEx(mainFontSemibold, TextFormat("r%i", i + 1), Vector2Add(Vector2{ rootScreenPosition.x, rootScreenPosition.y - LABEL_FONT_SIZE }, LABEL_OFFSET), LABEL_FONT_SIZE, LABEL_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+			
+			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.roots[i].x, fractalParameters.roots[i].y), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER);
+			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.roots[i].x, fractalParameters.roots[i].y), Vector2Add(Vector2{ rootScreenPosition.x - valueLabelSize.x / 2.0f, rootScreenPosition.y - LABEL_FONT_SIZE - valueLabelSize.y }, LABEL_OFFSET), VALUE_FONT_SIZE, VALUE_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
 		//End drag
