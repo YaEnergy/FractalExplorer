@@ -523,6 +523,13 @@ namespace Explorer
 
 		//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
 
+		//don't let the x-axis marker increment numbers go offscreen
+		float incrementXPosY = std::clamp(
+			fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding,
+			numberPadding,
+			std::max((float)screenHeight - numberFontSize - numberPadding, numberPadding)
+		);
+
 		int numIncrementsX = (int)((GetClosestLargerMultipleOf(maxFractalPosition.x, gridIncrement) - GetClosestSmallerMultipleOf(minFractalPosition.x, gridIncrement)) / gridIncrement) + 2;
 
 		for (int incrementX = 0; incrementX < numIncrementsX; incrementX++)
@@ -543,7 +550,7 @@ namespace Explorer
 			DrawTextEx(
 				mainFontSemibold,
 				TextFormat("%g", x),
-				Vector2{ fractalScreenPosition.x - numberLength / 2.0f, fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding },
+				Vector2{ fractalScreenPosition.x - numberLength / 2.0f, incrementXPosY },
 				numberFontSize, 
 				numberFontSize * FONT_SPACING_MULTIPLIER, 
 				WHITE
@@ -551,6 +558,13 @@ namespace Explorer
 		}
 
 		//Start at multiple of increment closest to min fractal y and draw markers until max fractal y
+
+		//don't let the y-axis marker increment numbers go offscreen
+		float incrementYPosX = std::clamp(
+			fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding,
+			numberPadding,
+			std::max((float)screenWidth - numberPadding, numberPadding)
+		);
 
 		int numIncrementsY = (int)((GetClosestLargerMultipleOf(maxFractalPosition.y, gridIncrement) - GetClosestSmallerMultipleOf(minFractalPosition.y, gridIncrement)) / gridIncrement) + 2;
 
@@ -572,7 +586,7 @@ namespace Explorer
 			DrawTextEx(
 				mainFontSemibold,
 				TextFormat("%gi", y),
-				Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding - numberLength, fractalScreenPosition.y - numberFontSize / 2.0f },
+				Vector2{ std::max(incrementYPosX - numberLength, numberPadding), fractalScreenPosition.y - numberFontSize / 2.0f },
 				numberFontSize,
 				numberFontSize * FONT_SPACING_MULTIPLIER,
 				WHITE
