@@ -58,7 +58,6 @@ namespace Explorer
 	bool showGrid = true;
 	bool showDebugInfo = false;
 
-	int zoomLevel = 0;
 	float gridIncrement = 5.0f;
 
 	void Update();
@@ -81,7 +80,7 @@ namespace Explorer
 	#pragma region UI functions
 	void DrawFractalGrid();
 
-	void UpdateZoomLevel();
+	void UpdateGridIncrement();
 
 	//Immediate-Mode UI
 	void UpdateDrawUI();
@@ -201,7 +200,7 @@ namespace Explorer
 		//zoom
 		fractalParameters.zoom = 1.0f;
 		shaderFractal.SetZoom(fractalParameters.zoom);
-		UpdateZoomLevel();
+		UpdateGridIncrement();
 
 		//max iterations
 		fractalParameters.maxIterations = 300;
@@ -418,11 +417,11 @@ namespace Explorer
 		//min & max zoom
 		fractalParameters.zoom = std::clamp(fractalParameters.zoom, 1.0f / 100000.0f, pow(10.0f, 10.0f));
 
-		//Update shader fractal zoom & zoomLevel if necessary
+		//Update shader fractal zoom & grid increment if necessary
 		if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
 		{
 			shaderFractal.SetZoom(fractalParameters.zoom);
-			UpdateZoomLevel();
+			UpdateGridIncrement();
 		}
 	}
 
@@ -467,7 +466,7 @@ namespace Explorer
 	
 		UnloadImage(fractalImage);
 
-		screenshotDeltaTime = 0.0f;
+		screenshotDeltaTime = -GetFrameTime();
 
 		//TODO: play screenshot sfx here
 	}
@@ -519,8 +518,6 @@ namespace Explorer
 		float numberFontSize = 20.0f;
 		float numberPadding = 5.0f;
 
-		std::string formatString = "%.0" + std::to_string(zoomLevel > 0 ? 0 : zoomLevel / -3) + "f";
-
 		//0 at center
 		DrawTextEx(mainFontSemibold, "0", Vector2{fractalCenterScreenPosition.x + numberPadding, fractalCenterScreenPosition.y + numberPadding}, numberFontSize, numberFontSize / 10.0f ,WHITE);
 
@@ -541,11 +538,11 @@ namespace Explorer
 			DrawLineEx(Vector2{ fractalScreenPosition.x, 0.0f }, Vector2{ fractalScreenPosition.x, (float)screenHeight }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 			DrawLineEx(Vector2{fractalScreenPosition.x, fractalCenterScreenPosition.y - markerLength / 2.0f}, Vector2{ fractalScreenPosition.x, fractalCenterScreenPosition.y + markerLength / 2.0f }, GRID_LINE_THICKNESS, WHITE);
 		
-			float numberLength = MeasureTextEx(mainFontSemibold, TextFormat(formatString.c_str(), x), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
+			float numberLength = MeasureTextEx(mainFontSemibold, TextFormat("%g", x), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
 
 			DrawTextEx(
-				mainFontSemibold, 
-				TextFormat(formatString.c_str(), x), 
+				mainFontSemibold,
+				TextFormat("%g", x),
 				Vector2{ fractalScreenPosition.x - numberLength / 2.0f, fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding },
 				numberFontSize, 
 				numberFontSize * FONT_SPACING_MULTIPLIER, 
@@ -570,11 +567,11 @@ namespace Explorer
 			DrawLineEx(Vector2{ 0.0f, fractalScreenPosition.y }, Vector2{ (float)screenWidth, fractalScreenPosition.y }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 			DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
 	
-			float numberLength = MeasureTextEx(mainFontSemibold, TextFormat((formatString + "i").c_str(), y), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
+			float numberLength = MeasureTextEx(mainFontSemibold, TextFormat("%gi", y), numberFontSize, numberFontSize * FONT_SPACING_MULTIPLIER).x;
 
 			DrawTextEx(
 				mainFontSemibold,
-				TextFormat((formatString + "i").c_str(), y),
+				TextFormat("%gi", y),
 				Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding - numberLength, fractalScreenPosition.y - numberFontSize / 2.0f },
 				numberFontSize,
 				numberFontSize * FONT_SPACING_MULTIPLIER,
@@ -628,7 +625,7 @@ namespace Explorer
 
 	}
 
-	void UpdateZoomLevel()
+	void UpdateGridIncrement()
 	{
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
@@ -641,9 +638,9 @@ namespace Explorer
 
 		float minMaxDifference = std::max(maxFractalPosition.x - minFractalPosition.x, maxFractalPosition.y - minFractalPosition.y);
 
+		int zoomLevel = 0;
 		int defaultIncrement = 5;
 
-		zoomLevel = 0;
 		gridIncrement = (float)defaultIncrement;
 
 		if (gridIncrement >= minMaxDifference / 15.0f)
@@ -718,6 +715,7 @@ namespace Explorer
 			}
 		}
 
+		DrawInfoPanel();
 		UpdateDrawFractalSelectionPanel();
 
 		//Screenshot flash
@@ -725,118 +723,6 @@ namespace Explorer
 
 		if (screenshotDeltaTime <= 0.5f)
 			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
-		
-		if (showDebugInfo)
-		{
-			const int STAT_FONT_SIZE = 24;
-			int statY = 10;
-
-			DrawFPS(10, 10);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(TextFormat("Position : %f, %f", fractalParameters.position.x, fractalParameters.position.y), 10, statY, STAT_FONT_SIZE, GREEN);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(TextFormat("Zoom: %f", fractalParameters.zoom), 10, statY, STAT_FONT_SIZE, GREEN);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(TextFormat("Max iterations: %i", fractalParameters.maxIterations), 10, statY, STAT_FONT_SIZE, GREEN);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(TextFormat("Screen size: %ix%i", screenWidth, screenHeight), 10, statY, STAT_FONT_SIZE, GREEN);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(TextFormat("Pixels: %i", screenWidth * screenHeight), 10, statY, STAT_FONT_SIZE, GREEN);
-			statY += STAT_FONT_SIZE;
-
-			DrawText(GetFractalName(fractalParameters.type), 10, statY, STAT_FONT_SIZE, WHITE);
-			statY += STAT_FONT_SIZE;
-
-			if (shaderFractal.SupportsPower())
-			{
-				DrawText(TextFormat("Pow : %f", fractalParameters.power), 10, statY, STAT_FONT_SIZE, WHITE);
-				statY += STAT_FONT_SIZE;
-			}
-
-			if (shaderFractal.SupportsC())
-			{
-				DrawText(TextFormat("c = %f + %f i", fractalParameters.c.x, fractalParameters.c.y), 10, statY, STAT_FONT_SIZE, WHITE);
-				statY += STAT_FONT_SIZE;
-			}
-
-			if (shaderFractal.SupportsColorBanding())
-			{
-				DrawText(TextFormat("Color banding?: %s", (fractalParameters.colorBanding ? "Yes" : "Reduced")), 10, statY, STAT_FONT_SIZE, WHITE);
-				statY += STAT_FONT_SIZE;
-			}
-
-			if (shaderFractal.SupportsA())
-			{
-				DrawText(TextFormat("a = %f + %f i", fractalParameters.a.x, fractalParameters.a.y), 10, statY, STAT_FONT_SIZE, WHITE);
-				statY += STAT_FONT_SIZE;
-			}
-
-			for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
-			{
-				DrawText(TextFormat("r%i = %f + %f i", i + 1, fractalParameters.roots[i].x, fractalParameters.roots[i].y), 10, statY, STAT_FONT_SIZE, WHITE);
-				statY += STAT_FONT_SIZE;
-			}
-
-			if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
-			{
-				ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-				ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-				ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-
-				//P(z)
-				{
-					ComplexFloat secondDegreeFactor = -root1 - root2 - root3;
-					ComplexFloat firstDegreeFactor = (root1 * root2) + (root2 * root3) + (root1 * root3);
-					ComplexFloat constant = -(root1 * root2 * root3);
-
-					DrawText(TextFormat("P(z) ~= z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
-					statY += STAT_FONT_SIZE;
-				}
-			}
-			else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
-			{
-				ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-				ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-				ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-				ComplexFloat root4 = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
-
-				//P(z)
-				{
-					ComplexFloat thirdDegreeFactor = -root1 - root2 - root3 - root4;
-					ComplexFloat secondDegreeFactor = root1 * (root2 + root3 + root4) + root2 * (root3 + root4) + root3 * root4;
-					ComplexFloat firstDegreeFactor = -root3 * root4 * (root1 + root2) - root1 * root2 * (root3 + root4);
-					ComplexFloat constant = root1 * root2 * root3 * root4;
-
-					DrawText(TextFormat("P(z) ~= z^4 + (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
-					statY += STAT_FONT_SIZE;
-				}
-			}
-			else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
-			{
-				ComplexFloat a = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-				ComplexFloat b = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-				ComplexFloat c = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-				ComplexFloat d = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
-				ComplexFloat e = ComplexFloat(fractalParameters.roots[4].x, fractalParameters.roots[4].y);
-
-				//P(z)
-				{
-					ComplexFloat fourthDegreeFactor = -a - b - c - d - e;
-					ComplexFloat thirdDegreeFactor = a * (b + c + d + e) + b * (c + d + e) + c * (d + e) + d * e;
-					ComplexFloat secondDegreeFactor = -c * d * (b + a + e) - a * b * (c + d + e) - b * e * (c + d) - a * e * (c + d);
-					ComplexFloat firstDegreeFactor = c * d * e * (a + b) + a * b * (d * e + c * (d + e));
-					ComplexFloat constant = -a * b * c * d * e;
-
-					DrawText(TextFormat("P(z) ~= z^5 + (%.02f + %.02f i)z^4 + (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z + (%.02f + %.02f i)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), 10, statY, STAT_FONT_SIZE, WHITE);
-					statY += STAT_FONT_SIZE;
-				}
-			}
-		}
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
 			activePressStartedOnUI = false;
@@ -1007,13 +893,135 @@ namespace Explorer
 
 	void DrawInfoPanel()
 	{
-		const int STAT_FONT_SIZE = 24;
+		const float STAT_FONT_SIZE = 24.0f;
 
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
 
 		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
 		Color mainBackgroundColor = DARKGRAY;
+
+		//Info panel rectangle
+		//TODO: Finish info panel rectangle background
+
+		/*float infoPanelHeight = STAT_FONT_SIZE * 4.0f + 20.0f;
+
+		if (shaderFractal.SupportsPower())
+			infoPanelHeight += STAT_FONT_SIZE;
+
+		if (shaderFractal.SupportsC())
+			infoPanelHeight += STAT_FONT_SIZE;
+
+		if (shaderFractal.SupportsA())
+			infoPanelHeight += STAT_FONT_SIZE;
+
+		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+			infoPanelHeight += STAT_FONT_SIZE * 2.0f;
+		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG || fractalParameters.type == FRACTAL_NEWTON_5DEG)
+			infoPanelHeight += STAT_FONT_SIZE * 3.0f;
+
+		Rectangle infoPanelRect = Rectangle{ 0.0f, 0.0f, 200.0f, infoPanelHeight };
+
+		DrawRectangleRec(infoPanelRect, ColorAlpha(mainBackgroundColor, 0.6f));
+
+		if (IsRectangleHovered(infoPanelRect))
+			cursorOnUI = true;
+
+		if (IsRectanglePressed(infoPanelRect))
+			activePressStartedOnUI = true;*/
+
+		//info stats
+
+		Vector2 statPosition = Vector2{ 10, 10 };
+
+		int fps = GetFPS();
+		DrawTextEx(mainFontSemibold, TextFormat("FPS: %i", fps), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, fps < 20 ? RED : WHITE);
+		statPosition.y += STAT_FONT_SIZE;
+
+		DrawTextEx(mainFontSemibold, TextFormat("Position: x%g, y%g", fractalParameters.position.x, fractalParameters.position.y), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+		statPosition.y += STAT_FONT_SIZE;
+		
+		DrawTextEx(mainFontSemibold, TextFormat("Zoom: %g", fractalParameters.zoom), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+		statPosition.y += STAT_FONT_SIZE;
+
+		DrawTextEx(mainFontSemibold, TextFormat("Max iterations: %i", fractalParameters.maxIterations), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+		statPosition.y += STAT_FONT_SIZE;
+
+		if (shaderFractal.SupportsPower())
+		{
+			DrawTextEx(mainFontSemibold, TextFormat("Pow: %g", fractalParameters.power), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+			statPosition.y += STAT_FONT_SIZE;
+		}
+
+		if (shaderFractal.SupportsC())
+		{
+			DrawTextEx(mainFontSemibold, TextFormat("c = %g%+gi", fractalParameters.c.x, fractalParameters.c.y), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+			statPosition.y += STAT_FONT_SIZE;
+		}
+
+		if (shaderFractal.SupportsA())
+		{
+			DrawTextEx(mainFontSemibold, TextFormat("a = %g%+gi", fractalParameters.a.x, fractalParameters.a.y), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+			statPosition.y += STAT_FONT_SIZE;
+		}
+
+		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+		{
+			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+
+			//P(z)
+			{
+				ComplexFloat secondDegreeFactor = -root1 - root2 - root3;
+				ComplexFloat firstDegreeFactor = (root1 * root2) + (root2 * root3) + (root1 * root3);
+				ComplexFloat constant = -(root1 * root2 * root3);
+
+				SetTextLineSpacing((int)STAT_FONT_SIZE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^3 + (%.02f + %.02f i)z^2\n+ (%.02f + %.02f i)z + (%.02f + %.02f i)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				statPosition.y += STAT_FONT_SIZE;
+			}
+		}
+		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
+		{
+			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+			ComplexFloat root4 = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
+
+			//P(z)
+			{
+				ComplexFloat thirdDegreeFactor = -root1 - root2 - root3 - root4;
+				ComplexFloat secondDegreeFactor = root1 * (root2 + root3 + root4) + root2 * (root3 + root4) + root3 * root4;
+				ComplexFloat firstDegreeFactor = -root3 * root4 * (root1 + root2) - root1 * root2 * (root3 + root4);
+				ComplexFloat constant = root1 * root2 * root3 * root4;
+
+				SetTextLineSpacing((int)STAT_FONT_SIZE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^4 + (%.02f + %.02f i)z^3\n+ (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z\n+ (%.02f + %.02f i)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				statPosition.y += STAT_FONT_SIZE;
+			}
+		}
+		else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
+		{
+			ComplexFloat a = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat b = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+			ComplexFloat c = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
+			ComplexFloat d = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
+			ComplexFloat e = ComplexFloat(fractalParameters.roots[4].x, fractalParameters.roots[4].y);
+
+			//P(z)
+			{
+				ComplexFloat fourthDegreeFactor = -a - b - c - d - e;
+				ComplexFloat thirdDegreeFactor = a * (b + c + d + e) + b * (c + d + e) + c * (d + e) + d * e;
+				ComplexFloat secondDegreeFactor = -c * d * (b + a + e) - a * b * (c + d + e) - b * e * (c + d) - a * e * (c + d);
+				ComplexFloat firstDegreeFactor = c * d * e * (a + b) + a * b * (d * e + c * (d + e));
+				ComplexFloat constant = -a * b * c * d * e;
+
+				SetTextLineSpacing((int)STAT_FONT_SIZE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^5 + (%.02f + %.02f i)z^4\n+ (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2\n+ (%.02f + %.02f i)z + (%.02f + %.02f i)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				statPosition.y += STAT_FONT_SIZE;
+			}
+		}
 	}
 
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
