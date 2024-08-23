@@ -17,6 +17,7 @@ int main()
 	InitWindow(DESIGN_WIDTH, DESIGN_HEIGHT, "Complex Fractal Explorer");
 	InitAudioDevice();
 
+	SetWindowMinSize(80, 48);
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	SetExitKey(KEY_NULL);
 

@@ -173,7 +173,6 @@ vec4 hsva2rgba(vec4 hsva)
     return vec4(rgb.x, rgb.y, rgb.z, hsva.w);
 }
 
-
 void main()
 {
     //Newton fractal:
@@ -194,7 +193,7 @@ void main()
     //https://en.wikipedia.org/wiki/Power_rule 
 
     //due to floating imprecision, we might not perfectly land at a root
-    float tolerance = 0.35;//0.000001; //TODO: tweak 0.35
+    float tolerance = 0.35;
     //it seems this I suck at this
 
     //third degree factor: 1
@@ -212,55 +211,32 @@ void main()
     //https://en.wikipedia.org/wiki/Newton_fractal
 
     vec2 z = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
-
-    bool rootFound = false;
-
+    
     for (int iteration = 0; iteration < maxIterations; iteration++)
     {
-        z -= ComplexMultiply(a, ComplexDivide(
+        vec2 rz = ComplexMultiply(a, ComplexDivide(
             ThirdDegreePolynomial(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
             ThirdDegreePolynomialDerivative(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
             ));
 
-        //check if we are near any roots
-        //if found, break and set the finalColor to that root's color
-        for (int i = 0; i < NUM_ROOTS; i++)
-        {
-            vec2 dif = z - roots[i];
+        z -= rz;
 
-            //if root found within tolerance range
-            if (abs(dif.x) < tolerance && abs(dif.y) < tolerance)
+        //check if we are near any roots, we can check this by checking if we the distance that we'll be moving is smaller than our tolerance
+        //if so, set the finalColor to a root's color thats within tolerance range and return if we find it
+        if (abs(rz.x) <= tolerance && abs(rz.y) <= tolerance)
+        {
+            for (int i = 0; i < NUM_ROOTS; i++)
             {
-                finalColor = hsva2rgba(vec4(float(i) * (360.0 / float(NUM_ROOTS)), 1.0, 1.0, 1.0));
-                rootFound = true;
-                break;
+                vec2 dif = roots[i] - z;
+                if (abs(dif.x) <= tolerance && abs(dif.y) <= tolerance)
+                {
+                    finalColor = hsva2rgba(vec4(float(i) * (360.0 / float(NUM_ROOTS)), 1.0, 1.0, 1.0));
+                    return;
+                }
             }
         }
-
-        if (rootFound)
-            break;
     }
 
-    //no root found
-    if (!rootFound)
-    {
-        //finalColor = vec4(0.0, 0.0, 0.0, 1.0);
-
-        //get closest root rn
-        float minDistanceSquared = 0.0;
-        int rootIndex = -1;
-
-        for (int i = 0; i < NUM_ROOTS; i++)
-        {
-            vec2 dif = z - roots[i];
-
-            if (dif.x * dif.x + dif.y * dif.y <= minDistanceSquared || rootIndex == -1)
-            {
-                minDistanceSquared = dif.x * dif.x + dif.y * dif.y;
-                rootIndex = i;
-            }
-        }
-
-        finalColor = hsva2rgba(vec4(float(rootIndex) * (360.0 / float(NUM_ROOTS)), 1.0, 0.6, 1.0));
-    }
+    //no root found, set finalcolor to black
+    finalColor = vec4(0.0, 0.0, 0.0, 1.0);
 } 
