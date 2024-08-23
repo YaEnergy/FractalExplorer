@@ -133,11 +133,31 @@ void main()
     int complexIterations = 0;
     vec2 z = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
 
-    while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+    //if power is a whole number & above 0 (excluding 0), multiply the complex number by itself that many times instead of using ComplexPow, it's less expensive
+    if (mod(power, 1.0) == 0.0 && power > 0.0)
     {
-        z = ComplexPow(z, power) + c;
+        while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+        {
+            vec2 newZ = z;
+
+            for (int i = 1; i < int(power); i++)
+            {
+                newZ = ComplexMultiply(newZ, z);
+            }
+
+            z = newZ + c;
         
-        complexIterations++;
+            complexIterations++;
+        }
+    }
+    else
+    {
+        while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+        {
+            z = ComplexPow(z, power) + c;
+        
+            complexIterations++;
+        }
     }
 
     if (complexIterations == maxIterations)
