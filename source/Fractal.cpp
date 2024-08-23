@@ -10,7 +10,9 @@ const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
 	"assets/shaders/juliaFractal.frag",
 	"assets/shaders/newtonFractal_3.frag",
 	"assets/shaders/newtonFractal_4.frag",
-	"assets/shaders/newtonFractal_5.frag"
+	"assets/shaders/newtonFractal_5.frag",
+	"assets/shaders/polynomialFractal_2.frag",
+	"assets/shaders/polynomialFractal_3.frag"
 };
 
 RenderTexture fractalRenderTexture;
@@ -33,6 +35,10 @@ const char* GetFractalName(FractalType fractalType)
 			return "Newton Fractal - 4th-degree polynomial";
 		case FRACTAL_NEWTON_5DEG:
 			return "Newton Fractal - 5th-degree polynomial";
+		case FRACTAL_POLYNOMIAL_2DEG:
+			return "P(z)+c, deg(P)=2";
+		case FRACTAL_POLYNOMIAL_3DEG:
+			return "P(z)+c, deg(P)=3";
 		default: //Or FRACTAL_UNKNOWN
 			return "UNKNOWN FRACTAL";
 	}
@@ -154,6 +160,10 @@ int ShaderFractal::GetNumSettableRoots() const
 {
 	switch (type)
 	{
+		case FRACTAL_POLYNOMIAL_2DEG:
+			return 2;
+		case FRACTAL_POLYNOMIAL_3DEG:
+			return 3;
 		case FRACTAL_NEWTON_3DEG:
 			return 3;
 		case FRACTAL_NEWTON_4DEG:

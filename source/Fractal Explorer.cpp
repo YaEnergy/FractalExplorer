@@ -217,7 +217,13 @@ namespace Explorer
 			shaderFractal.SetPower(fractalParameters.power);
 
 		//roots
-		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+		if (fractalParameters.type == FRACTAL_POLYNOMIAL_2DEG)
+		{
+			//Defaults roots are the roots to P(z) = z^2 - 1
+			fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
+			fractalParameters.roots[1] = Vector2{ -1.0f, 0.0f };
+		}
+		else if (fractalParameters.type == FRACTAL_NEWTON_3DEG || fractalParameters.type == FRACTAL_POLYNOMIAL_3DEG)
 		{
 			//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
 			fractalParameters.roots[0] = Vector2{1.0f, 0.0f};
@@ -974,7 +980,24 @@ namespace Explorer
 			statPosition.y += STAT_FONT_SIZE;
 		}
 
-		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
+		int numRoots = shaderFractal.GetNumSettableRoots();
+
+		if (numRoots == 2)
+		{
+			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
+			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
+
+			//P(z)
+			{
+				ComplexFloat firstDegreeFactor = -root2 - root1;
+				ComplexFloat constant = root1 * root2;
+
+				SetTextLineSpacing((int)STAT_FONT_SIZE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^2 + (%.02f + %.02f i)z\n+ (%.02f + %.02f i)", firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				statPosition.y += STAT_FONT_SIZE;
+			}
+		}
+		else if (numRoots == 3)
 		{
 			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
 			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
@@ -991,7 +1014,7 @@ namespace Explorer
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
-		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
+		else if (numRoots == 4)
 		{
 			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
 			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
@@ -1010,7 +1033,7 @@ namespace Explorer
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
-		else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
+		else if (numRoots == 5)
 		{
 			ComplexFloat a = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
 			ComplexFloat b = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
