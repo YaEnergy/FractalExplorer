@@ -4,12 +4,10 @@
 #include "raymath.h"
 
 const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
-	"assets/shaders/mandelbrotFractal.frag",
-	"assets/shaders/tricornFractal.frag",
-	"assets/shaders/burningShipFractal.frag",
-	"assets/shaders/juliaFractal.frag",
 	"assets/shaders/multibrotFractal.frag",
 	"assets/shaders/multicornFractal.frag",
+	"assets/shaders/burningShipFractal.frag",
+	"assets/shaders/juliaFractal.frag",
 	"assets/shaders/newtonFractal_3.frag",
 	"assets/shaders/newtonFractal_4.frag",
 	"assets/shaders/newtonFractal_5.frag"
@@ -21,18 +19,14 @@ const char* GetFractalName(FractalType fractalType)
 {
 	switch (fractalType)
 	{
-		case FRACTAL_MANDELBROT:
-			return "Mandelbrot Set Fractal";
-		case FRACTAL_TRICORN:
-			return "Tricorn Fractal (Mandelbar)";
+		case FRACTAL_MULTIBROT:
+			return "Mandelbrot (+Multi) Set Fractal";
+		case FRACTAL_MULTICORN:
+			return "Tricorn (+Multi) Fractal";
 		case FRACTAL_BURNING_SHIP:
 			return "Burning Ship Fractal";
 		case FRACTAL_JULIA:
 			return "Julia Set Fractal";
-		case FRACTAL_MULTIBROT:
-			return "Multibrot Set Fractal";
-		case FRACTAL_MULTICORN:
-			return "Multicorn Set Fractal";
 		case FRACTAL_NEWTON_3DEG:
 			return "Newton Fractal - 3rd-degree polynomial";
 		case FRACTAL_NEWTON_4DEG:

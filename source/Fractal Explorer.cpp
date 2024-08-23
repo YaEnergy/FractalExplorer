@@ -23,12 +23,10 @@ namespace Explorer
 
 	const char* fractalEquations[NUM_FRACTAL_TYPES] =
 	{
-		"z ^ 2 + c",
-		"(Re(z) - Im(z) i) ^ 2 + c",
-		"(|Re(z) + |Im (z)| i) ^ 2 + c",
-		"z ^ n + c",
 		"z ^ n + c",
 		"(Re(z) - Im(z) i) ^ n + c",
+		"(|Re(z) + |Im (z)| i) ^ 2 + c",
+		"z ^ n + c",
 		"z - a * (P(z) / P'(z))",
 		"z - a * (P(z) / P'(z))",
 		"z - a * (P(z) / P'(z))"
@@ -99,8 +97,8 @@ namespace Explorer
 		//Fractal set up
 		InitFractalRenderTexture(GetScreenWidth(), GetScreenHeight());
 
-		fractalParameters.type = FRACTAL_MANDELBROT;
-		shaderFractal = LoadShaderFractal(FRACTAL_MANDELBROT);
+		fractalParameters.type = FRACTAL_MULTIBROT;
+		shaderFractal = LoadShaderFractal(FRACTAL_MULTIBROT);
 
 		shaderFractal.SetNormalizedScreenOffset(Vector2{ -0.5f, -0.5f });
 		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
@@ -213,10 +211,7 @@ namespace Explorer
 			shaderFractal.SetC(fractalParameters.c);
 
 		//powers
-		if (fractalParameters.type == FRACTAL_MULTIBROT || fractalParameters.type == FRACTAL_MULTICORN)
-			fractalParameters.power = 3.0f;
-		else
-			fractalParameters.power = 2.0f;
+		fractalParameters.power = 2.0f;
 
 		if (shaderFractal.SupportsPower())
 			shaderFractal.SetPower(fractalParameters.power);
@@ -273,19 +268,19 @@ namespace Explorer
 		int screenHeight = GetScreenHeight();
 
 		if (IsKeyPressed(KEY_ONE))
-			ChangeFractal(FRACTAL_MANDELBROT);
+			ChangeFractal(FRACTAL_MULTIBROT);
 		else if (IsKeyPressed(KEY_TWO))
-			ChangeFractal(FRACTAL_TRICORN);
+			ChangeFractal(FRACTAL_MULTICORN);
 		else if (IsKeyPressed(KEY_THREE))
 			ChangeFractal(FRACTAL_BURNING_SHIP);
 		else if (IsKeyPressed(KEY_FOUR))
 			ChangeFractal(FRACTAL_JULIA);
 		else if (IsKeyPressed(KEY_FIVE))
-			ChangeFractal(FRACTAL_MULTIBROT);
-		else if (IsKeyPressed(KEY_SIX))
-			ChangeFractal(FRACTAL_MULTICORN);
-		else if (IsKeyPressed(KEY_SEVEN))
 			ChangeFractal(FRACTAL_NEWTON_3DEG);
+		else if (IsKeyPressed(KEY_SIX))
+			ChangeFractal(FRACTAL_NEWTON_4DEG);
+		else if (IsKeyPressed(KEY_SEVEN))
+			ChangeFractal(FRACTAL_NEWTON_5DEG);
 
 		if (IsKeyPressed(KEY_T))
 			ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));

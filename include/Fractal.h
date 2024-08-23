@@ -5,22 +5,20 @@
 #include "raylib.h"
 
 //Not including FRACTAL_UNKNOWN: not a fractal
-const int NUM_FRACTAL_TYPES = 9;
+const int NUM_FRACTAL_TYPES = 7;
 
 const int NUM_MAX_ROOTS = 5;
 
 enum FractalType
 {
 	FRACTAL_UNKNOWN = -1,
-	FRACTAL_MANDELBROT = 0,
-	FRACTAL_TRICORN = 1,
+	FRACTAL_MULTIBROT = 0,
+	FRACTAL_MULTICORN = 1,
 	FRACTAL_BURNING_SHIP = 2,
 	FRACTAL_JULIA = 3,
-	FRACTAL_MULTIBROT = 4,
-	FRACTAL_MULTICORN = 5,
-	FRACTAL_NEWTON_3DEG = 6,
-	FRACTAL_NEWTON_4DEG = 7,
-	FRACTAL_NEWTON_5DEG = 8
+	FRACTAL_NEWTON_3DEG = 4,
+	FRACTAL_NEWTON_4DEG = 5,
+	FRACTAL_NEWTON_5DEG = 6
 };
 
 struct FractalParameters
@@ -43,7 +41,7 @@ struct FractalParameters
 
 	FractalParameters()
 	{
-		type = FRACTAL_MANDELBROT;
+		type = FRACTAL_MULTIBROT;
 		position = Vector2{ 0.0f, 0.0f };
 		zoom = 0.0f;
 		maxIterations = 0;
