@@ -993,7 +993,7 @@ namespace Explorer
 				ComplexFloat constant = root1 * root2;
 
 				SetTextLineSpacing((int)STAT_FONT_SIZE);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^2 + (%.02f + %.02f i)z\n+ (%.02f + %.02f i)", firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^2 + (%.03g%+.03gi)z\n+ (%.03g%+.03gi)", firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
@@ -1010,7 +1010,7 @@ namespace Explorer
 				ComplexFloat constant = -(root1 * root2 * root3);
 
 				SetTextLineSpacing((int)STAT_FONT_SIZE);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^3 + (%.02f + %.02f i)z^2\n+ (%.02f + %.02f i)z + (%.02f + %.02f i)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^3 + (%.03g%+.03gi)z^2\n+ (%.03g%+.03gi)z + (%.03g%+.03gi)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
@@ -1029,7 +1029,7 @@ namespace Explorer
 				ComplexFloat constant = root1 * root2 * root3 * root4;
 
 				SetTextLineSpacing((int)STAT_FONT_SIZE);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^4 + (%.02f + %.02f i)z^3\n+ (%.02f + %.02f i)z^2 + (%.02f + %.02f i)z\n+ (%.02f + %.02f i)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^4 + (%.03g%+.03gi)z^3\n+ (%.03g%+.03gi)z^2 + (%.03g%+.03gi)z\n+ (%.03g%+.03gi)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
@@ -1050,7 +1050,7 @@ namespace Explorer
 				ComplexFloat constant = -a * b * c * d * e;
 
 				SetTextLineSpacing((int)STAT_FONT_SIZE);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^5 + (%.02f + %.02f i)z^4\n+ (%.02f + %.02f i)z^3 + (%.02f + %.02f i)z^2\n+ (%.02f + %.02f i)z + (%.02f + %.02f i)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
+				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^5 + (%.03g%+.03gi)z^4\n+ (%.03g%+.03gi)z^3 + (%.03g%+.03gi)z^2\n+ (%.03g%+.03gi)z + (%.03g%+.03gi)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, STAT_FONT_SIZE, STAT_FONT_SIZE * FONT_SPACING_MULTIPLIER, WHITE);
 				statPosition.y += STAT_FONT_SIZE;
 			}
 		}
