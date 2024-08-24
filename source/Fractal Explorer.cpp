@@ -3,6 +3,7 @@
 
 #include "Fractal Explorer.h"
 
+#include <iostream>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -40,8 +41,8 @@ namespace Explorer
 	float zoomDeltaTime = 0.0f;
 	float screenshotDeltaTime = 5.0f;
 
-	const char* errorMessage = "";
-	float errorDeltaTime = 30.0f;
+	std::string exMessage = "";
+	float exDeltaTime = 30.0f;
 
 	//Dots
 
@@ -93,6 +94,8 @@ namespace Explorer
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
 
 	void UpdateDrawDraggableDots();
+
+	void DisplayException(std::exception& ex);
 	#pragma endregion
 
 	void Init()
@@ -471,11 +474,10 @@ namespace Explorer
 			//Export image to file
 			ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
 		}
-		catch(std::exception ex)
+		catch(std::exception& ex)
 		{
 			std::cout << ex.what() << std::endl;
-			errorDeltaTime = 0.0f;
-			errorMessage = ex.what();
+			DisplayException(ex);
 		}
 
 		UnloadImage(fractalImage);
@@ -746,21 +748,21 @@ namespace Explorer
 		DrawInfoPanel();
 		UpdateDrawFractalSelectionPanel();
 
-
 		//Screenshot flash
 		screenshotDeltaTime += deltaTime;
 
 		if (screenshotDeltaTime <= 0.5f)
 			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
 		
-		//error messages
-		errorDeltaTime += deltaTime;
+		//exception messages
+		exDeltaTime += deltaTime;
 
-		if (errorDeltaTime < 15.0f)
+		if (exDeltaTime < 15.0f)
 		{
 			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
-			float errorFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, TextFormat("An error has occurred. Message: %s", errorMessage), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
-			DrawTextEx(mainFontSemibold, TextFormat("An error has occurred. Message: %s", errorMessage), Vector2{ 10.0f, screenHeight - errorFontSize - 10.0f }, errorFontSize, errorFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(MAROON, 1.0f - std::max((errorDeltaTime - 10.0f) / 5.0f, 0.0f)));
+			float errorFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, TextFormat("An error has occurred. Message: %s", exMessage.c_str()), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
+			
+			DrawTextEx(mainFontSemibold, TextFormat("An error has occurred. Message: %s", exMessage.c_str()), Vector2{ 10.0f, screenHeight - errorFontSize - 10.0f }, errorFontSize, errorFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(MAROON, 1.0f - std::max((exDeltaTime - 10.0f) / 5.0f, 0.0f)));
 		}
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
@@ -1253,5 +1255,10 @@ namespace Explorer
 		}
 	}
 
+	void DisplayException(std::exception& ex)
+	{
+		exDeltaTime = 0.0f;
+		exMessage = std::string(ex.what());
+	}
 	#pragma endregion
 }
