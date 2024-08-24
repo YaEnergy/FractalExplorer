@@ -40,6 +40,9 @@ namespace Explorer
 	float zoomDeltaTime = 0.0f;
 	float screenshotDeltaTime = 5.0f;
 
+	const char* errorMessage = "";
+	float errorDeltaTime = 30.0f;
+
 	//Dots
 
 	bool isDraggingDot = false;
@@ -432,39 +435,49 @@ namespace Explorer
 
 		//Fractal_Screenshots directory
 		std::filesystem::path fractalScreenshotsPath = std::filesystem::current_path().append("Fractal_Screenshots");
+		Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
 
-		std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
-		if (!std::filesystem::exists(fractalScreenshotsPath))
+		try
 		{
-			bool success = std::filesystem::create_directories(fractalScreenshotsPath);
-
-			if (!success)
+			//Create fractal screenshots directory if it doesn't exist
+			std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
+			if (!std::filesystem::exists(fractalScreenshotsPath))
 			{
-				std::cout << "Failed to create fractal screenshots directory!" << std::endl;
-				return;
+				bool success = std::filesystem::create_directories(fractalScreenshotsPath);
+
+				if (!success)
+				{
+					std::cout << "Failed to create fractal screenshots directory!" << std::endl;
+					return;
+				}
+				else
+				{
+					std::cout << "Created fractal screenshots directory!" << std::endl;
+				}
 			}
 			else
 			{
-				std::cout << "Created fractal screenshots directory!" << std::endl;
+				std::cout << "Fractal screenshots directory exists!" << std::endl;
 			}
+
+			std::cout << fractalScreenshotsPath.string() << std::endl;
+
+			//Get first unused screenshot number
+			int num = 1;
+
+			while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
+				num++;
+
+			//Export image to file
+			ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
 		}
-		else
+		catch(std::exception ex)
 		{
-			std::cout << "Fractal screenshots directory exists!" << std::endl;
+			std::cout << ex.what() << std::endl;
+			errorDeltaTime = 0.0f;
+			errorMessage = ex.what();
 		}
 
-		std::cout << fractalScreenshotsPath.string() << std::endl;
-
-		//Get first unused screenshot number
-		int num = 1;
-
-		while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
-			num++;
-
-		Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
-
-		ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
-	
 		UnloadImage(fractalImage);
 
 		screenshotDeltaTime = -GetFrameTime();
@@ -733,11 +746,22 @@ namespace Explorer
 		DrawInfoPanel();
 		UpdateDrawFractalSelectionPanel();
 
+
 		//Screenshot flash
 		screenshotDeltaTime += deltaTime;
 
 		if (screenshotDeltaTime <= 0.5f)
 			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
+		
+		//error messages
+		errorDeltaTime += deltaTime;
+
+		if (errorDeltaTime < 15.0f)
+		{
+			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+			float errorFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, TextFormat("An error has occurred. Message: %s", errorMessage), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
+			DrawTextEx(mainFontSemibold, TextFormat("An error has occurred. Message: %s", errorMessage), Vector2{ 10.0f, screenHeight - errorFontSize - 10.0f }, errorFontSize, errorFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(MAROON, 1.0f - std::max((errorDeltaTime - 10.0f) / 5.0f, 0.0f)));
+		}
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
 			activePressStartedOnUI = false;
