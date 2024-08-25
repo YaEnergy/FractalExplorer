@@ -1,3 +1,6 @@
+// main.cpp : Defines the entry point for the application.
+//
+
 #include "raylib.h"
 
 #include "Fractal Explorer.h"
@@ -20,6 +23,10 @@ int main()
 	SetWindowMinSize(80, 48);
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	SetExitKey(KEY_NULL);
+
+	//Linux: using ./ from outside the application directory sets the working directory to outside the application directory
+	//which causes it to attempt loading resources from the incorrect directories, so set working directory to application directory
+	ChangeDirectory(GetApplicationDirectory());
 
 	Resources::Load();
 

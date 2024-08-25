@@ -1,7 +1,4 @@
-﻿// Fractal Explorer.cpp : Defines the entry point for the application.
-//
-
-#include "Fractal Explorer.h"
+﻿#include "Fractal Explorer.h"
 
 #include <iostream>
 #include <cmath>
@@ -198,13 +195,10 @@ namespace Explorer
 		}
 		else if (fractalParameters.type == FRACTAL_NEWTON_3DEG || fractalParameters.type == FRACTAL_POLYNOMIAL_3DEG)
 		{
-			//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
+			//Default roots are the roots to P(z) = z^3 - 1
 			fractalParameters.roots[0] = Vector2{1.0f, 0.0f};
 			fractalParameters.roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
 			fractalParameters.roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
-			/*fractalParameters.roots[0] = Vector2{0.0f, 1.0f};
-			fractalParameters.roots[1] = Vector2{ 0.0f, -1.0f };
-			fractalParameters.roots[2] = Vector2{ -1.5f, 0.0f };*/
 		}
 		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
 		{
@@ -404,7 +398,7 @@ namespace Explorer
 		//TODO: Web modifications
 
 		//Fractal_Screenshots directory
-		std::filesystem::path fractalScreenshotsPath = std::filesystem::current_path().append("Fractal_Screenshots");
+		std::filesystem::path fractalScreenshotsPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots").make_preferred();
 		Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
 
 		try
@@ -432,14 +426,19 @@ namespace Explorer
 
 			std::cout << fractalScreenshotsPath.string() << std::endl;
 
-			//Get first unused screenshot number
+			//Get first unused screenshot number for path
 			int num = 1;
 
-			while (std::filesystem::exists(TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num)))
+			while (std::filesystem::exists(std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots/fractal_screenshot-" + std::to_string(num) + ".png").make_preferred()))
 				num++;
+			
+			std::filesystem::path screenshotPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots/fractal_screenshot-" + std::to_string(num) + ".png").make_preferred();
 
 			//Export image to file
-			ExportImage(fractalImage, TextFormat("%s\\fractal_screenshot-%i.png", fractalScreenshotsPath.string().c_str(), num));
+			bool exportSuccess = ExportImage(fractalImage, screenshotPath.string().c_str());
+
+			if (!exportSuccess)
+				throw std::runtime_error("Failed to export fractal screenshot to " + screenshotPath.string());
 		}
 		catch(std::exception& ex)
 		{
@@ -483,19 +482,8 @@ namespace Explorer
 
 		// Axis number markers
 
-		//Bottom left of the screen has the smallest x & y (if y unflipped)
-		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight}, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-
-		//Top right of the screen has the largest x & y (if y unflipped)
-		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-
-		//switch min & max y if flipping y axis
-		if (flipYAxis)
-		{
-			float tempY = minFractalPosition.y;
-			minFractalPosition.y = maxFractalPosition.y;
-			maxFractalPosition.y = tempY;
-		}
+		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, flipYAxis ? 0.0f : (float)screenHeight }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
+		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, flipYAxis ? (float)screenHeight : 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 		float markerLength = 20.0f;
 		float numberFontSize = 20.0f;
@@ -627,19 +615,8 @@ namespace Explorer
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
 
-		//Bottom left of the screen has the smallest x & y (if y unflipped)
-		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-
-		//Top right of the screen has the largest x & y (if y unflipped)
-		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-
-		//switch min & max y if flipping y axis
-		if (flipYAxis)
-		{
-			float tempY = minFractalPosition.y;
-			minFractalPosition.y = maxFractalPosition.y;
-			maxFractalPosition.y = tempY;
-		}
+		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, flipYAxis ? 0.0f : (float)screenHeight }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
+		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, flipYAxis ? (float)screenHeight : 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 		float minMaxDifference = std::max(maxFractalPosition.x - minFractalPosition.x, maxFractalPosition.y - minFractalPosition.y);
 
