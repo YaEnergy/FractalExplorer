@@ -4,7 +4,7 @@
 
 #include "raylib.h"
 
-namespace Resources
+namespace Explorer::Resources
 {
 	void Load();
 	void Unload();

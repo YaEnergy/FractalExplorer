@@ -1,6 +1,9 @@
-#include "ComplexNumbers/ComplexFloat.h"
-#include "raymath.h"
 #include <cmath>
+
+#include "raylib.h"
+#include "raymath.h"
+
+#include "ComplexNumbers/ComplexFloat.h"
 
 float ComplexFloat::GetMagnitudeSquared() const
 {

@@ -1,6 +1,8 @@
-#include "ComplexNumbers/ComplexDouble.h"
-#include "raymath.h"
 #include <cmath>
+
+#include "raymath.h"
+
+#include "ComplexNumbers/ComplexDouble.h"
 
 double ComplexDouble::GetMagnitudeSquared() const
 {
@@ -19,5 +21,5 @@ double ComplexDouble::GetAngleRadians() const
 
 ComplexDouble ComplexDouble::FromPolarForm(double magnitude, double angleRadians)
 {
-	return { magnitude * cos(angleRadians), magnitude * sin(angleRadians) };
+	return ComplexDouble{ magnitude * cos(angleRadians), magnitude * sin(angleRadians) };
 }

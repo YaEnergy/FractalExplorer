@@ -14,6 +14,28 @@ int WinMain()
 }
 #endif
 
+void DrawLoadingFrame();
+
+void DrawLoadingFrame()
+{
+	BeginDrawing();
+
+	ClearBackground(BLACK);
+
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
+	const int LOADING_FONT_SIZE = 36;
+
+	const char* loadingNameText = "FRACTAL EXPLORER";
+	DrawText(loadingNameText, (screenWidth - MeasureText(loadingNameText, LOADING_FONT_SIZE)) / 2, (screenHeight - LOADING_FONT_SIZE) / 2, LOADING_FONT_SIZE, WHITE);
+
+	const char* loadingText = "LOADING...";
+	DrawText(loadingText, (screenWidth - MeasureText(loadingText, LOADING_FONT_SIZE)) / 2, (screenHeight - LOADING_FONT_SIZE) / 2 + LOADING_FONT_SIZE, LOADING_FONT_SIZE, WHITE);
+
+	EndDrawing();
+}
+
 int main()
 {
 	//Init
@@ -24,11 +46,14 @@ int main()
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	SetExitKey(KEY_NULL);
 
-	//Linux: using ./ from outside the application directory sets the working directory to outside the application directory
-	//which causes it to attempt loading resources from the incorrect directories, so set working directory to application directory
+	DrawLoadingFrame();
+
+	//starting up the program from outside the application directory (ex: with a terminal, works with windows shortcuts) 
+	//sets the working directory to outside the application directory which causes it to attempt loading resources from 
+	//the incorrect directories, so set working directory to application directory
 	ChangeDirectory(GetApplicationDirectory());
 
-	Resources::Load();
+	Explorer::Resources::Load();
 
 	//Set up icon
 	Image windowIcon = LoadImage("assets/fractalExplorerIcon.png");
@@ -46,7 +71,7 @@ int main()
 	}
 
 	//Deinit
-	Resources::Unload();
+	Explorer::Resources::Unload();
 	Explorer::Deinit();
 
 	CloseAudioDevice();

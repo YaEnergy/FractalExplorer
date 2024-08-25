@@ -4,7 +4,7 @@
 
 #include "raylib.h"
 
-namespace Resources
+namespace Explorer::Resources
 {
 	std::unordered_map<std::string, Texture> textures;
 
