@@ -246,8 +246,8 @@ Vector2 GetFractalToRectPosition(Vector2 fractalPosition, Vector2 fractalOffset,
 	float widthStretch = GetWidthStretchForSize(dest.width, dest.height);
 
 	Vector2 screenPosition = Vector2{
-		flipX ? (-(fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width : ((fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width,
-		flipY ? ((fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height : (-(fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height
+		flipX ? dest.x + (-(fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width : dest.x + ((fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width,
+		flipY ? dest.y + ((fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height : dest.y + (-(fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height
 	};
 
 	return screenPosition;
@@ -258,7 +258,7 @@ Vector2 GetRectToFractalPosition(Vector2 screenPosition, Vector2 fractalOffset, 
 	//Fractal is drawn flipped because of flipped render texture, so the vertically flipped version is actually the correct side up
 	//if flipY is true it will be flipped again
 
-	Vector2 fragTexCoord = Vector2{ screenPosition.x / src.width, screenPosition.y / src.height };
+	Vector2 fragTexCoord = Vector2{ (screenPosition.x - src.x) / src.width, (screenPosition.y - src.y) / src.height };
 	float widthStretch = GetWidthStretchForSize(src.width, src.height);
 
 	Vector2 fractalPosition = Vector2{
