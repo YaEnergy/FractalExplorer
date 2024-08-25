@@ -94,7 +94,7 @@ FractalType ShaderFractal::GetFractalType() const
 	return type;
 }
 
-void ShaderFractal::SetNormalizedScreenOffset(Vector2 offset)
+void ShaderFractal::SetNormalizedCenterOffset(Vector2 offset)
 {
 	SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "offset"), &offset, SHADER_UNIFORM_VEC2);
 }
@@ -230,4 +230,75 @@ Image ShaderFractal::GenImage(bool flipX, bool flipY) const
 
 	return fractalImage;
 }
+#pragma endregion
+
+#pragma region Conversion
+float GetWidthStretchForSize(float width, float height)
+{
+	return 1.0f / (width / height);
+}
+
+Vector2 GetFractalToRectPosition(Vector2 fractalPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, Rectangle dest, float zoom, bool flipX, bool flipY)
+{
+	//Fractal is drawn flipped because of flipped render texture, so the vertically flipped version is actually the correct side up
+	//if flipY is true it will be flipped again
+
+	float widthStretch = GetWidthStretchForSize(dest.width, dest.height);
+
+	Vector2 screenPosition = Vector2{
+		flipX ? (-(fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width : ((fractalPosition.x - fractalOffset.x) * widthStretch * zoom - normalizedCenterOffset.x) * dest.width,
+		flipY ? ((fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height : (-(fractalPosition.y - fractalOffset.y) * zoom - normalizedCenterOffset.y) * dest.height
+	};
+
+	return screenPosition;
+}
+
+Vector2 GetRectToFractalPosition(Vector2 screenPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, Rectangle src, float zoom, bool flipX, bool flipY)
+{
+	//Fractal is drawn flipped because of flipped render texture, so the vertically flipped version is actually the correct side up
+	//if flipY is true it will be flipped again
+
+	Vector2 fragTexCoord = Vector2{ screenPosition.x / src.width, screenPosition.y / src.height };
+	float widthStretch = GetWidthStretchForSize(src.width, src.height);
+
+	Vector2 fractalPosition = Vector2{
+		flipX ? (fragTexCoord.x + normalizedCenterOffset.x) / -(widthStretch * zoom) + fractalOffset.x : (fragTexCoord.x + normalizedCenterOffset.x) / (widthStretch * zoom) + fractalOffset.x,
+		flipY ? (fragTexCoord.y + normalizedCenterOffset.y) / zoom + fractalOffset.y : (fragTexCoord.y + normalizedCenterOffset.y) / -zoom + fractalOffset.y
+	};
+
+	return Vector2{ fractalPosition.x, fractalPosition.y };
+}
+
+Vector2 GetScreenToFractalPosition(Vector2 screenPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, float zoom, bool flipX, bool flipY)
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
+	return GetRectToFractalPosition(
+		screenPosition, 
+		fractalOffset, 
+		normalizedCenterOffset, 
+		Rectangle{ 0.0f, 0.0f, (float)screenWidth, (float)screenHeight }, 
+		zoom, 
+		flipX, 
+		flipY
+	);
+}
+
+Vector2 GetFractalToScreenPosition(Vector2 fractalPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, float zoom, bool flipX, bool flipY)
+{
+	int screenWidth = GetScreenWidth();
+	int screenHeight = GetScreenHeight();
+
+	return GetFractalToRectPosition(
+		fractalPosition,
+		fractalOffset,
+		normalizedCenterOffset,
+		Rectangle{ 0.0f, 0.0f, (float)screenWidth, (float)screenHeight },
+		zoom,
+		flipX,
+		flipY
+	);
+}
+
 #pragma endregion

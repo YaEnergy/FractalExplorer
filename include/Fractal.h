@@ -27,6 +27,8 @@ struct FractalParameters
 {
 	FractalType type;
 
+	Vector2 normalizedCenterOffset;
+
 	Vector2 position;
 	float zoom;
 	int maxIterations;
@@ -44,6 +46,7 @@ struct FractalParameters
 	FractalParameters()
 	{
 		type = FRACTAL_MULTIBROT;
+		normalizedCenterOffset = Vector2{ -0.5f, -0.5f };
 		position = Vector2{ 0.0f, 0.0f };
 		zoom = 0.0f;
 		maxIterations = 0;
@@ -60,9 +63,10 @@ struct FractalParameters
 		colorBanding = false;
 	}
 
-	FractalParameters(FractalType type, Vector2 position, float zoom, int maxIterations, float power, Vector2 c, std::array<Vector2, NUM_MAX_ROOTS> roots, Vector2 a, bool colorBanding)
+	FractalParameters(FractalType type, Vector2 position, Vector2 normalizedCenterOffset, float zoom, int maxIterations, float power, Vector2 c, std::array<Vector2, NUM_MAX_ROOTS> roots, Vector2 a, bool colorBanding)
 	{
 		this->type = type;
+		this->normalizedCenterOffset = normalizedCenterOffset;
 		this->position = position;
 		this->zoom = zoom;
 		this->maxIterations = maxIterations;
@@ -99,7 +103,7 @@ class ShaderFractal
 	public:
 		FractalType GetFractalType() const;
 
-		void SetNormalizedScreenOffset(Vector2);
+		void SetNormalizedCenterOffset(Vector2);
 		void SetWidthStretch(float);
 
 		void SetPosition(Vector2);
@@ -144,4 +148,14 @@ class ShaderFractal
 };
 
 ShaderFractal LoadShaderFractal(FractalType);
+
+//Conversions
+
+float GetWidthStretchForSize(float width, float height);
+
+Vector2 GetFractalToRectPosition(Vector2 fractalPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, Rectangle dest, float zoom, bool flipX = false, bool flipY = false);
+Vector2 GetRectToFractalPosition(Vector2 screenPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, Rectangle src, float zoom, bool flipX = false, bool flipY = false);
+
+Vector2 GetScreenToFractalPosition(Vector2 screenPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, float zoom, bool flipX = false, bool flipY = false);
+Vector2 GetFractalToScreenPosition(Vector2 fractalPosition, Vector2 fractalOffset, Vector2 normalizedCenterOffset, float zoom, bool flipX = false, bool flipY = false);
 

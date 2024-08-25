@@ -65,9 +65,6 @@ namespace Explorer
 	void Update();
 
 	#pragma region Fractal functions
-	Vector2 GetScreenToFractalPosition(Vector2 screenPosition);
-	Vector2 GetFractalToScreenPosition(Vector2 fractalPosition);
-
 	void ChangeFractal(FractalType fractalType);
 
 	void ResetFractalParameters();
@@ -100,14 +97,17 @@ namespace Explorer
 
 	void Init()
 	{
+		int screenWidth = GetScreenWidth();
+		int screenHeight = GetScreenHeight();
+
 		//Fractal set up
-		InitFractalRenderTexture(GetScreenWidth(), GetScreenHeight());
+		InitFractalRenderTexture(screenWidth, screenHeight);
 
 		fractalParameters.type = FRACTAL_MULTIBROT;
 		shaderFractal = LoadShaderFractal(FRACTAL_MULTIBROT);
 
-		shaderFractal.SetNormalizedScreenOffset(Vector2{ -0.5f, -0.5f });
-		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+		shaderFractal.SetNormalizedCenterOffset(fractalParameters.normalizedCenterOffset);
+		float widthStretch = GetWidthStretchForSize((float)screenWidth, (float)screenHeight);
 		shaderFractal.SetWidthStretch(widthStretch);
 
 		ResetFractalParameters();
@@ -146,39 +146,6 @@ namespace Explorer
 	}
 
 	#pragma region Fractal function implementations
-	Vector2 GetScreenToFractalPosition(Vector2 screenPosition)
-	{
-		int screenWidth = GetScreenWidth();
-		int screenHeight = GetScreenHeight();
-
-		Vector2 normalizedScreenOffset = Vector2{ -0.5f, -0.5f };
-		Vector2 fragTexCoord = Vector2{ screenPosition.x / (float)screenWidth, screenPosition.y / (float)screenHeight };
-		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
-
-		Vector2 fractalPosition = Vector2{
-			(fragTexCoord.x + normalizedScreenOffset.x) / (widthStretch * fractalParameters.zoom) + fractalParameters.position.x,
-			flipYAxis ? (fragTexCoord.y + normalizedScreenOffset.y) / fractalParameters.zoom + fractalParameters.position.y : (fragTexCoord.y + normalizedScreenOffset.y) / -fractalParameters.zoom + fractalParameters.position.y
-		};
-
-		return Vector2{ fractalPosition.x, fractalPosition.y };
-	}
-
-	Vector2 GetFractalToScreenPosition(Vector2 fractalPosition)
-	{
-		int screenWidth = GetScreenWidth();
-		int screenHeight = GetScreenHeight();
-
-		Vector2 normalizedScreenOffset = Vector2{ -0.5f, -0.5f };
-		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
-
-		Vector2 screenPosition = Vector2{
-			((fractalPosition.x - fractalParameters.position.x) * widthStretch * fractalParameters.zoom - normalizedScreenOffset.x)* (float)screenWidth,
-			flipYAxis ? ((fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight : (-(fractalPosition.y - fractalParameters.position.y) * fractalParameters.zoom - normalizedScreenOffset.y) * (float)screenHeight
-		};
-
-		return screenPosition;
-	}
-
 	void ChangeFractal(FractalType fractalType)
 	{
 		fractalParameters.type = fractalType;
@@ -186,8 +153,8 @@ namespace Explorer
 		shaderFractal.Unload();
 		shaderFractal = LoadShaderFractal(fractalType);
 
-		shaderFractal.SetNormalizedScreenOffset(Vector2{ -0.5f, -0.5f });
-		float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+		shaderFractal.SetNormalizedCenterOffset(fractalParameters.normalizedCenterOffset);
+		float widthStretch = GetWidthStretchForSize((float)GetScreenWidth(), (float)GetScreenHeight());
 		shaderFractal.SetWidthStretch(widthStretch);
 
 		ResetFractalParameters();
@@ -308,7 +275,7 @@ namespace Explorer
 		{
 			SetFractalRenderTextureSize(screenWidth, screenHeight);
 		
-			float widthStretch = 1.0f / ((float)GetScreenWidth() / (float)GetScreenHeight());
+			float widthStretch = GetWidthStretchForSize((float)screenWidth, (float)screenHeight);
 			shaderFractal.SetWidthStretch(widthStretch);
 		}
 
@@ -500,7 +467,7 @@ namespace Explorer
 
 		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
 
-		Vector2 fractalCenterScreenPosition = GetFractalToScreenPosition(Vector2Zero());
+		Vector2 fractalCenterScreenPosition = GetFractalToScreenPosition(Vector2Zero(), fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 		//Vertical grid line is on screen
 		if (fractalCenterScreenPosition.x >= 0.0f || fractalCenterScreenPosition.x <= (float)screenWidth)
@@ -517,10 +484,10 @@ namespace Explorer
 		// Axis number markers
 
 		//Bottom left of the screen has the smallest x & y (if y unflipped)
-		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight});
+		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight}, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 		//Top right of the screen has the largest x & y (if y unflipped)
-		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{(float)screenWidth, 0.0f});
+		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 		//switch min & max y if flipping y axis
 		if (flipYAxis)
@@ -556,7 +523,7 @@ namespace Explorer
 			if (abs(x) < gridIncrement / 2.0f)
 				continue;
 
-			Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ x, 0.0f });
+			Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ x, 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 			DrawLineEx(Vector2{ fractalScreenPosition.x, 0.0f }, Vector2{ fractalScreenPosition.x, (float)screenHeight }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 			DrawLineEx(Vector2{fractalScreenPosition.x, fractalCenterScreenPosition.y - markerLength / 2.0f}, Vector2{ fractalScreenPosition.x, fractalCenterScreenPosition.y + markerLength / 2.0f }, GRID_LINE_THICKNESS, WHITE);
@@ -592,7 +559,7 @@ namespace Explorer
 			if (abs(y) < gridIncrement / 2.0f)
 				continue;
 
-			Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, y });
+			Vector2 fractalScreenPosition = GetFractalToScreenPosition(Vector2{ 0.0f, y }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 		
 			DrawLineEx(Vector2{ 0.0f, fractalScreenPosition.y }, Vector2{ (float)screenWidth, fractalScreenPosition.y }, GRID_LINE_THICKNESS, ColorAlpha(WHITE, GRID_LINE_ALPHA));
 			DrawLineEx(Vector2{ fractalCenterScreenPosition.x - markerLength / 2.0f, fractalScreenPosition.y }, Vector2{ fractalCenterScreenPosition.x + markerLength / 2.0f, fractalScreenPosition.y }, GRID_LINE_THICKNESS, WHITE);
@@ -660,11 +627,19 @@ namespace Explorer
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
 
-		//Bottom left of the screen has the smallest x & y
-		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight });
+		//Bottom left of the screen has the smallest x & y (if y unflipped)
+		Vector2 minFractalPosition = GetScreenToFractalPosition(Vector2{ 0.0f, (float)screenHeight }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
-		//Top right of the screen has the largest x & y
-		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, 0.0f });
+		//Top right of the screen has the largest x & y (if y unflipped)
+		Vector2 maxFractalPosition = GetScreenToFractalPosition(Vector2{ (float)screenWidth, 0.0f }, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
+
+		//switch min & max y if flipping y axis
+		if (flipYAxis)
+		{
+			float tempY = minFractalPosition.y;
+			minFractalPosition.y = maxFractalPosition.y;
+			maxFractalPosition.y = tempY;
+		}
 
 		float minMaxDifference = std::max(maxFractalPosition.x - minFractalPosition.x, maxFractalPosition.y - minFractalPosition.y);
 
@@ -1102,7 +1077,7 @@ namespace Explorer
 
 		if (shaderFractal.SupportsC())
 		{
-			Vector2 cScreenPosition = GetFractalToScreenPosition(fractalParameters.c);
+			Vector2 cScreenPosition = GetFractalToScreenPosition(fractalParameters.c, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 			bool dotPressed = IsCirclePressed(cScreenPosition, DRAGGABLE_DOT_RADIUS);
 
@@ -1118,11 +1093,11 @@ namespace Explorer
 			{
 				cScreenPosition = GetMousePosition();
 
-				Vector2 newC = GetScreenToFractalPosition(cScreenPosition);
+				Vector2 newC = GetScreenToFractalPosition(cScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 snapC = SnapTo2DGrid(newC, gridIncrement);
 
 				//If close to grid intersection, snap to it
-				Vector2 screenSnapC = GetFractalToScreenPosition(snapC);
+				Vector2 screenSnapC = GetFractalToScreenPosition(snapC, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 screenDifC = Vector2Subtract(screenSnapC, cScreenPosition);
 
 				if (abs(screenDifC.x) < SNAP_PIXELS)
@@ -1150,7 +1125,7 @@ namespace Explorer
 
 		if (shaderFractal.SupportsA())
 		{
-			Vector2 aScreenPosition = GetFractalToScreenPosition(fractalParameters.a);
+			Vector2 aScreenPosition = GetFractalToScreenPosition(fractalParameters.a, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 			bool dotPressed = IsCirclePressed(aScreenPosition, DRAGGABLE_DOT_RADIUS);
 
@@ -1166,11 +1141,11 @@ namespace Explorer
 			{
 				aScreenPosition = GetMousePosition();
 
-				Vector2 newA = GetScreenToFractalPosition(aScreenPosition);
+				Vector2 newA = GetScreenToFractalPosition(aScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 snapA = SnapTo2DGrid(newA, gridIncrement);
 
 				//If close to grid intersection, snap to it
-				Vector2 screenSnapA = GetFractalToScreenPosition(snapA);
+				Vector2 screenSnapA = GetFractalToScreenPosition(snapA, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 screenDifA = Vector2Subtract(screenSnapA, aScreenPosition);
 
 				if (abs(screenDifA.x) < SNAP_PIXELS)
@@ -1200,7 +1175,7 @@ namespace Explorer
 		{
 			int id = 1 + i + 1;
 
-			Vector2 rootScreenPosition = GetFractalToScreenPosition(fractalParameters.roots[i]);
+			Vector2 rootScreenPosition = GetFractalToScreenPosition(fractalParameters.roots[i], fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
 			bool dotPressed = IsCirclePressed(rootScreenPosition, DRAGGABLE_DOT_RADIUS);
 
@@ -1216,11 +1191,11 @@ namespace Explorer
 			{
 				rootScreenPosition = GetMousePosition();
 
-				Vector2 newRoot = GetScreenToFractalPosition(rootScreenPosition);
+				Vector2 newRoot = GetScreenToFractalPosition(rootScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 snapRoot = SnapTo2DGrid(newRoot, gridIncrement);
 
 				//If close to grid intersection, snap to it
-				Vector2 screenSnapRoot = GetFractalToScreenPosition(snapRoot);
+				Vector2 screenSnapRoot = GetFractalToScreenPosition(snapRoot, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				Vector2 screenDifRoot = Vector2Subtract(screenSnapRoot, rootScreenPosition);
 
 				if (abs(screenDifRoot.x) < SNAP_PIXELS)
