@@ -55,6 +55,7 @@ namespace Explorer
 
 	bool flipYAxis = false;
 	bool showGrid = true;
+	bool showInfoPanel = false;
 	bool showDebugInfo = false;
 
 	float gridIncrement = 5.0f;
@@ -697,8 +698,11 @@ namespace Explorer
 			}
 		}
 
-		DrawInfoPanel();
+
 		UpdateDrawFractalSelectionPanel();
+		
+		if (showInfoPanel)
+			DrawInfoPanel();
 
 		//Screenshot flash
 		screenshotDeltaTime += deltaTime;
@@ -801,6 +805,16 @@ namespace Explorer
 			activePressStartedOnUI = true;
 
 		int buttonIndex = 0;
+
+		//Info panel visibility
+		Rectangle infoButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
+
+		DrawTextureButton(showInfoPanel ? Resources::GetTexture("icon_info_on") : Resources::GetTexture("icon_info_off"), infoButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+
+		buttonIndex++;
+
+		if (IsRectanglePressed(infoButtonRect))
+			showInfoPanel = !showInfoPanel;
 
 		//Screenshot button
 
