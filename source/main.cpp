@@ -25,15 +25,22 @@ void DrawLoadingFrame()
 	int screenWidth = GetScreenWidth();
 	int screenHeight = GetScreenHeight();
 
-	const int LOADING_FONT_SIZE = 36;
+	const float LOADING_FONT_SIZE = 36.0f;
+	const float LOADING_SPACING_MULTIPLIER = 1.0f / 15.0f;
+
+	Font loadingFont = LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 36, NULL, 0);
 
 	const char* loadingNameText = "FRACTAL EXPLORER";
-	DrawText(loadingNameText, (screenWidth - MeasureText(loadingNameText, LOADING_FONT_SIZE)) / 2, (screenHeight - LOADING_FONT_SIZE) / 2, LOADING_FONT_SIZE, WHITE);
-
+	Vector2 loadingNameSize = MeasureTextEx(loadingFont, loadingNameText, LOADING_FONT_SIZE, LOADING_FONT_SIZE * LOADING_SPACING_MULTIPLIER);
+	DrawTextEx(loadingFont, loadingNameText, Vector2{ ((float)screenWidth - loadingNameSize.x) / 2.0f, ((float)screenHeight - loadingNameSize.y) / 2.0f }, LOADING_FONT_SIZE, LOADING_FONT_SIZE * LOADING_SPACING_MULTIPLIER, WHITE);
+	
 	const char* loadingText = "LOADING...";
-	DrawText(loadingText, (screenWidth - MeasureText(loadingText, LOADING_FONT_SIZE)) / 2, (screenHeight - LOADING_FONT_SIZE) / 2 + LOADING_FONT_SIZE, LOADING_FONT_SIZE, WHITE);
+	Vector2 loadingSize = MeasureTextEx(loadingFont, loadingText, LOADING_FONT_SIZE, LOADING_FONT_SIZE * LOADING_SPACING_MULTIPLIER);
+	DrawTextEx(loadingFont, loadingText, Vector2{ ((float)screenWidth - loadingSize.x) / 2.0f, ((float)screenHeight - loadingSize.y) / 2.0f + loadingNameSize.y }, LOADING_FONT_SIZE, LOADING_FONT_SIZE * LOADING_SPACING_MULTIPLIER, WHITE);
 
 	EndDrawing();
+
+	UnloadFont(loadingFont);
 }
 
 int main()
