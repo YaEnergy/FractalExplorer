@@ -38,8 +38,12 @@ namespace Explorer
 	float zoomDeltaTime = 0.0f;
 	float screenshotDeltaTime = 5.0f;
 
-	std::string exMessage = "";
-	float exDeltaTime = 30.0f;
+	//Notifications
+
+	std::string notificationMessage = "";
+	Color notificationColor = WHITE;
+	float notificationDeltaTime = 30.0f;
+	float notificationTimeSeconds = 0.0f;
 
 	//Dots
 
@@ -89,6 +93,8 @@ namespace Explorer
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
 
 	void UpdateDrawDraggableDots();
+
+	void DisplayNotification(std::string message, float timeSeconds, Color color);
 
 	void DisplayException(std::exception& ex);
 	#pragma endregion
@@ -440,6 +446,8 @@ namespace Explorer
 
 			if (!exportSuccess)
 				throw std::runtime_error("Failed to export fractal screenshot to " + screenshotPath.string());
+
+			DisplayNotification("Exported fractal screenshot to " + screenshotPath.string(), 5.0f, WHITE);
 		}
 		catch(std::exception& ex)
 		{
@@ -710,15 +718,15 @@ namespace Explorer
 		if (screenshotDeltaTime <= 0.5f)
 			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
 		
-		//exception messages
-		exDeltaTime += deltaTime;
+		//notification messages
+		notificationDeltaTime += deltaTime;
 
-		if (exDeltaTime < 15.0f)
+		if (notificationDeltaTime < notificationTimeSeconds)
 		{
 			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
-			float errorFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, TextFormat("An error has occurred. Message: %s", exMessage.c_str()), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
-			
-			DrawTextEx(mainFontSemibold, TextFormat("An error has occurred. Message: %s", exMessage.c_str()), Vector2{ 10.0f, screenHeight - errorFontSize - 10.0f }, errorFontSize, errorFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(MAROON, 1.0f - std::max((exDeltaTime - 10.0f) / 5.0f, 0.0f)));
+			float notificationFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, notificationMessage.c_str(), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
+			float nonFadeTimeSeconds = notificationTimeSeconds - 1.0f;
+			DrawTextEx(mainFontSemibold, notificationMessage.c_str(), Vector2{10.0f, screenHeight - notificationFontSize - 10.0f}, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationColor, 1.0f - std::max(notificationDeltaTime - nonFadeTimeSeconds, 0.0f)));
 		}
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
@@ -1221,10 +1229,18 @@ namespace Explorer
 		}
 	}
 
+	void DisplayNotification(std::string message, float timeSeconds, Color color)
+	{
+		notificationMessage = message;
+		notificationTimeSeconds = timeSeconds;
+		notificationColor = color;
+
+		notificationDeltaTime = 0.0f;
+	}
+
 	void DisplayException(std::exception& ex)
 	{
-		exDeltaTime = 0.0f;
-		exMessage = std::string(ex.what());
+		DisplayNotification("An exception has occured. Message: " + std::string(ex.what()), 15.0f, MAROON);
 	}
 	#pragma endregion
 }
