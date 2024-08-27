@@ -7,6 +7,10 @@
 
 #include "Resources.h"
 
+#ifdef PLATFORM_WEB
+#include <emscripten/emscripten.h>
+#endif
+
 #ifdef WIN32RELEASE
 int WinMain()
 {
@@ -72,10 +76,14 @@ int main()
 
 	//TODO: Emscripten modifications
 
+#ifdef PLATFORM_WEB
+	emscripten_set_main_loop(Explorer::UpdateDrawFrame, 0, 1);
+#else
 	while (!WindowShouldClose())
 	{
 		Explorer::UpdateDrawFrame();
 	}
+#endif
 
 	//Deinit
 	Explorer::Resources::Unload();

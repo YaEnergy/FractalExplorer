@@ -16,6 +16,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # raylib
 set(RAYLIB_VERSION 5.0)
+
+if (${PLATFORM} MATCHES "Web")
+    set(GLSL_VERSION 100)
+    set(GRAPHICS GRAPHICS_API_OPENGL_ES20)
+else()
+    set(GLSL_VERSION 330)
+    set(GRAPHICS GRAPHICS_API_OPENGL_33)
+endif()
+
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
 if (NOT raylib_FOUND) # If there's none, fetch and build raylib
   include(FetchContent)
@@ -75,12 +84,14 @@ target_link_libraries(${PROJECT_NAME} raylib)
 
 # Web Configurations
 if (${PLATFORM} MATCHES "Web")
-
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so that you can directly open it.
     
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--preload-file ./assets --shell-file _deps/raylib-src/src/minshell.html")
+    
+    add_compile_definitions(PLATFORM_WEB)
 endif ()
+
 
 # Checks if OSX and links appropriate frameworks (only required on MacOS)
 if (APPLE)

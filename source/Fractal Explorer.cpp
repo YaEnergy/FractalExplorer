@@ -39,11 +39,6 @@ namespace Explorer
 	float zoomDeltaTime = 0.0f;
 	float screenshotDeltaTime = 5.0f;
 
-	//Notifications
-
-	Notification notificationCurrent;
-	float notificationDeltaTime = 0.0f;
-
 	//Dots
 
 	bool isDraggingDot = false;
@@ -60,6 +55,8 @@ namespace Explorer
 	bool showGrid = true;
 	bool showInfoPanel = false;
 	bool showDebugInfo = false;
+
+	Notification notificationCurrent;
 
 	float gridIncrement = 5.0f;
 
@@ -93,7 +90,7 @@ namespace Explorer
 
 	void UpdateDrawDraggableDots();
 
-	void DisplayNotification(Notification notification);
+	void UpdateDrawNotification();
 	#pragma endregion
 
 	void Init()
@@ -174,8 +171,14 @@ namespace Explorer
 		shaderFractal.SetZoom(fractalParameters.zoom);
 		UpdateGridIncrement();
 
-		//max iterations
-		fractalParameters.maxIterations = 300;
+		//Max iterations
+
+#ifdef PLATFORM_WEB
+		fractalParameters.maxIterations = 128;
+#else //Desktop
+		fractalParameters.maxIterations = 256;
+#endif
+
 		shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 
 		//c
@@ -293,9 +296,19 @@ namespace Explorer
 		if (IsKeyPressed(KEY_KP_ADD))
 		{
 			fractalParameters.maxIterations++;
+
+#ifdef PLATFORM_WEB
+			//Limit max iterations to 300 on web
+			if (fractalParameters.maxIterations > 300)
+			{
+				fractalParameters.maxIterations = 300;
+				notificationCurrent = Notification{ "Reached iteration limit on web version, use the desktop version to add more. (300)", 5.0f, WHITE };
+			}
+#endif
+
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 		}
-		else if (IsKeyPressed(KEY_KP_SUBTRACT))
+		else if (IsKeyPressed(KEY_KP_SUBTRACT) && fractalParameters.maxIterations > 0)
 		{
 			fractalParameters.maxIterations--;
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
@@ -399,14 +412,18 @@ namespace Explorer
 
 	void TakeFractalScreenshot()
 	{
-		//TODO: Web modifications
+		//TODO: Web modifications for fractal screenshot
 
-		//Fractal_Screenshots directory
-		std::filesystem::path fractalScreenshotsPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots").make_preferred();
 		Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
 
 		try
 		{
+#ifdef PLATFORM_WEB
+			notificationCurrent = Notification{ "Exporting fractal screenshots from web hasn't been implemented yet.", 15.0f, MAROON };
+#else //DESKTOP
+			//Fractal_Screenshots directory
+			std::filesystem::path fractalScreenshotsPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots").make_preferred();
+
 			//Create fractal screenshots directory if it doesn't exist
 			std::cout << "Checking if fractal screenshots directory exists..." << std::endl;
 			if (!std::filesystem::exists(fractalScreenshotsPath))
@@ -435,7 +452,7 @@ namespace Explorer
 
 			while (std::filesystem::exists(std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots/fractal_screenshot-" + std::to_string(num) + ".png").make_preferred()))
 				num++;
-			
+
 			std::filesystem::path screenshotPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots/fractal_screenshot-" + std::to_string(num) + ".png").make_preferred();
 
 			//Export image to file
@@ -444,12 +461,13 @@ namespace Explorer
 			if (!exportSuccess)
 				throw std::runtime_error("Failed to export fractal screenshot to " + screenshotPath.string());
 
-			DisplayNotification(Notification{ "Exported fractal screenshot to " + screenshotPath.string(), 5.0f, WHITE });
+			notificationCurrent = Notification{ "Exported fractal screenshot to " + screenshotPath.string(), 5.0f, WHITE };
+#endif
 		}
 		catch(std::exception& ex)
 		{
 			std::cout << ex.what() << std::endl;
-			DisplayNotification(Notification{ ex });
+			notificationCurrent = Notification{ ex };
 		}
 
 		UnloadImage(fractalImage);
@@ -716,14 +734,14 @@ namespace Explorer
 			DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(WHITE, 1.0f - (screenshotDeltaTime / 0.5f) * (screenshotDeltaTime / 0.5f)));
 		
 		//notification messages
-		notificationDeltaTime += deltaTime;
+		notificationCurrent.deltaTime += deltaTime;
 
-		if (notificationDeltaTime < notificationCurrent.timeSeconds)
+		if (notificationCurrent.deltaTime < notificationCurrent.timeSeconds)
 		{
 			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
 			float notificationFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, notificationCurrent.message.c_str(), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
 			float nonFadeTimeSeconds = notificationCurrent.timeSeconds - 1.0f;
-			DrawTextEx(mainFontSemibold, notificationCurrent.message.c_str(), Vector2{10.0f, screenHeight - notificationFontSize - 10.0f}, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, 1.0f - std::max(notificationDeltaTime - nonFadeTimeSeconds, 0.0f)));
+			DrawTextEx(mainFontSemibold, notificationCurrent.message.c_str(), Vector2{10.0f, screenHeight - notificationFontSize - 10.0f}, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, 1.0f - std::max(notificationCurrent.deltaTime - nonFadeTimeSeconds, 0.0f)));
 		}
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
@@ -1226,10 +1244,23 @@ namespace Explorer
 		}
 	}
 
-	void DisplayNotification(Notification notification)
+	void UpdateDrawNotification()
 	{
-		notificationCurrent = notification;
-		notificationDeltaTime = 0.0f;
+		int screenWidth = GetScreenWidth();
+		int screenHeight = GetScreenHeight();
+
+		float deltaTime = GetFrameTime();
+
+		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+
+		notificationCurrent.deltaTime += deltaTime;
+
+		if (notificationCurrent.deltaTime < notificationCurrent.timeSeconds)
+		{
+			float notificationFontSize = std::min(30.0f, GetFontSizeForWidth(mainFontSemibold, notificationCurrent.message.c_str(), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
+			float nonFadeTimeSeconds = notificationCurrent.timeSeconds - 1.0f;
+			DrawTextEx(mainFontSemibold, notificationCurrent.message.c_str(), Vector2{ 10.0f, screenHeight - notificationFontSize - 10.0f }, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, 1.0f - std::max(notificationCurrent.deltaTime - nonFadeTimeSeconds, 0.0f)));
+		}
 	}
 	#pragma endregion
 }

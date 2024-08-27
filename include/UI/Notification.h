@@ -9,6 +9,7 @@ namespace Explorer
 	struct Notification
 	{
 		std::string message = "";
+		float deltaTime = 0.0f;
 		float timeSeconds = 0.0f;
 		Color color = WHITE;
 
