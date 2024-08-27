@@ -150,7 +150,7 @@ vec2 ThirdDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
 
 void main()
 {
-    //next z = z^power + c
+    //next z = P(z) + c
     //until magtinude z > escapeRadius or max iterations is reached
 
      //https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring

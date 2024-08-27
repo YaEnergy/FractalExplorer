@@ -12,12 +12,21 @@ varying vec4 fragColor;
 
 uniform float widthStretch;
 
-uniform vec2 position;
-uniform vec2 offset;
-uniform float zoom;
+uniform float power;
 uniform int maxIterations;
 
+uniform vec2 position;
+uniform vec2 offset;
+
+uniform float zoom;
+
 uniform int colorBanding;
+
+//2-argument arctangent, used to (for example:) get the angle of a complex number
+float atan2(float y, float x)
+{
+    return x > 0.0 ? atan(y / x) : atan(y / x) + PI;
+}
 
 float ComplexAbs(vec2 z)
 {
@@ -29,16 +38,21 @@ float ComplexAbsSquared(vec2 z)
     return z.x * z.x + z.y * z.y;
 }
 
+vec2 ComplexConjugate(vec2 z)
+{
+    return vec2(z.x, -z.y);
+}
+
 //z = a + b
 vec2 ComplexAdd(vec2 a, vec2 b)
 {
     return vec2(a.x + b.x, a.y + b.y);
 }
 
-//z = a * b
-vec2 ComplexMultiply(vec2 a, vec2 b)
+//z^power
+vec2 ComplexPow(vec2 z, float power)
 {
-    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
 vec3 hsv2rgb(vec3 hsv)
@@ -89,7 +103,7 @@ vec4 hsva2rgba(vec4 hsva)
 
 void main()
 {
-    //next z = (abs(z.x) + i * abs(z.y)) * (abs(z.x) + i * abs(z.y)) + c
+    //next z = z ^ n + c
     //until magtinude z > escapeRadius or max iterations is reached
 
     //https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Continuous_(smooth)_coloring
@@ -103,12 +117,11 @@ void main()
         if (i >= maxIterations)
             break;
 
-        vec2 shipZ = vec2(abs(z.x), abs(z.y));
-        z = ComplexAdd(ComplexMultiply(shipZ, shipZ), c);
+        z = ComplexAdd(ComplexPow(ComplexConjugate(z), power), c);
 
         if (ComplexAbsSquared(z) > escapeRadius * escapeRadius)
         {
-            float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(2.0);
+            float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(power);
 
             gl_FragColor = hsva2rgba(vec4(mod((float(i) + 1.0 - nu) * 3.0, 360.0), 1.0, 1.0, 1.0));
             return;

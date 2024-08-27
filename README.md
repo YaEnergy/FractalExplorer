@@ -5,7 +5,8 @@ Made for fun by Kiara :3
 
 Uses emscripten for building to web.
 
-Web uses GLSL v100 shaders, Desktop uses GLSL v330 shaders.
+Web uses GLSL v100 shaders found in assets/shaders/v100, 
+and Desktop uses GLSL v330 shaders found in assets/shaders/v330.
 
 ## Fractals
 
@@ -15,6 +16,15 @@ Web uses GLSL v100 shaders, Desktop uses GLSL v330 shaders.
 - Burning ship
 - Newton fractal (with polynomials of the third-, fourth- and fifth-degree)
 - P(z) + c (with polynomials of the second- and third-degree)
+
+## Desktop vs Web versions
+
+| Difference | Desktop | Web |
+| --- | --- | --- |
+| Max Iterations limit | Infinite | 300 |
+| Default max iterations | 256 | 128 |
+| Shader GLSL version | GLSL v330 core | GLSL v100 |
+| Graphics API used by raylib | OpenGL 3.3 | WebGL 1.0 (OpenGL ES 2.0) |
 
 ## Used libraries
 
