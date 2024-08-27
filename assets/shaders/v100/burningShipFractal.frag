@@ -104,7 +104,7 @@ void main()
             break;
 
         vec2 shipZ = vec2(abs(z.x), abs(z.y));
-        z = ComplexAdd(ComplexMultiply(shipZ, shipZ), c);
+        z = ComplexMultiply(shipZ, shipZ) + c;
 
         if (ComplexAbsSquared(z) > escapeRadius * escapeRadius)
         {

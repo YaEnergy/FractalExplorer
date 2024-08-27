@@ -305,7 +305,7 @@ namespace Explorer
 				notificationCurrent = Notification{ "Reached iteration limit on web version, use the desktop version to add more. (300)", 5.0f, WHITE };
 			}
 #endif
-
+			
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 		}
 		else if (IsKeyPressed(KEY_KP_SUBTRACT) && fractalParameters.maxIterations > 0)

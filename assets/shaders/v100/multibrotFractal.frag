@@ -44,6 +44,12 @@ vec2 ComplexAdd(vec2 a, vec2 b)
     return vec2(a.x + b.x, a.y + b.y);
 }
 
+//z = a * b
+vec2 ComplexMultiply(vec2 a, vec2 b)
+{
+    return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
 //z^power
 vec2 ComplexPow(vec2 z, float power)
 {
@@ -106,13 +112,31 @@ void main()
 
     vec2 c = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
     vec2 z = vec2(0.0, 0.0);
-
+    
     for (int i = 0; i < LIMIT_ITERATIONS; i++)
     {
         if (i >= maxIterations)
             break;
 
-        z = ComplexAdd(ComplexPow(z, power), c);
+        //Why no power for loops for whole exponents (integer power value):
+        //  for loops can only use constant values, so we can't use the power value converted into an integer in our loop.
+        //  for perfomance, power 1, 2, 3, 4 & 5 are the only exceptions where ComplexMultiply will be applied multiple times instead of ComplexPow
+        //  if this was v330, we could use for loops instead for every power value that is an whole number
+        //
+        //I know this looks bad, but it's better than just using ComplexPow
+
+        if (power == 1.0)
+            z = z + c;
+        else if (power == 2.0)
+            z = ComplexMultiply(z, z) + c;
+        else if (power == 3.0)
+            z = ComplexMultiply(ComplexMultiply(z, z), z) + c;
+        else if (power == 4.0)
+            z = ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z) + c;
+        else if (power == 5.0)
+            z = ComplexMultiply(ComplexMultiply(ComplexMultiply(ComplexMultiply(z, z), z), z), z) + c;
+        else
+            z = ComplexPow(z, power) + c;
 
         if (ComplexAbsSquared(z) > escapeRadius * escapeRadius)
         {

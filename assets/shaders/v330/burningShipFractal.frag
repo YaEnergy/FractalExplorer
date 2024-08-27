@@ -133,7 +133,7 @@ void main()
     while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
     {
         vec2 shipZ = vec2(abs(z.x), abs(z.y));
-        z = ComplexAdd(ComplexMultiply(shipZ, shipZ), c);
+        z = ComplexMultiply(shipZ, shipZ) + c;
         complexIterations++;
     }
 

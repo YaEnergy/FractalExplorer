@@ -23,7 +23,7 @@ uniform float zoom;
 
 uniform int colorBanding;
 
-uniform vec2[NUM_ROOTS] roots;
+uniform vec2 roots[NUM_ROOTS];
 
 //2-argument arctangent, used to (for example:) get the angle of a complex number
 float atan2(float y, float x)
