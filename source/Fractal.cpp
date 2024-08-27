@@ -5,16 +5,23 @@
 
 namespace Explorer
 {
-	const char* fragmentShaderFilePaths[NUM_FRACTAL_TYPES] = {
-		"assets/shaders/multibrotFractal.frag",
-		"assets/shaders/multicornFractal.frag",
-		"assets/shaders/burningShipFractal.frag",
-		"assets/shaders/juliaFractal.frag",
-		"assets/shaders/newtonFractal_3.frag",
-		"assets/shaders/newtonFractal_4.frag",
-		"assets/shaders/newtonFractal_5.frag",
-		"assets/shaders/polynomialFractal_2.frag",
-		"assets/shaders/polynomialFractal_3.frag"
+	const char* fractalShaderDirectory =
+#ifdef PLATFORM_WEB 
+		"assets/shaders/v100";
+#else //Desktop
+		"assets/shaders/v330";
+#endif
+
+	const char* fragmentShaderFileNames[NUM_FRACTAL_TYPES] = {
+		"multibrotFractal.frag",
+		"multicornFractal.frag",
+		"burningShipFractal.frag",
+		"juliaFractal.frag",
+		"newtonFractal_3.frag",
+		"newtonFractal_4.frag",
+		"newtonFractal_5.frag",
+		"polynomialFractal_2.frag",
+		"polynomialFractal_3.frag"
 	};
 
 	RenderTexture fractalRenderTexture;
@@ -86,7 +93,7 @@ namespace Explorer
 	#pragma region Shaders
 	ShaderFractal LoadShaderFractal(FractalType type)
 	{
-		Shader fractalShader = LoadShader(NULL, fragmentShaderFilePaths[type]);
+		Shader fractalShader = LoadShader(NULL, TextFormat("%s/%s", fractalShaderDirectory, fragmentShaderFileNames[type]));
 
 		return ShaderFractal(fractalShader, type);
 	}
