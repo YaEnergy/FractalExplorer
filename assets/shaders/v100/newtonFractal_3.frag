@@ -1,39 +1,36 @@
-#version 330 core
+#version 100
+precision highp float;
 
 #define PI 3.1415926535897932384626433
 
 #define NUM_ROOTS 3
 
-in vec2 fragTexCoord;
-in vec4 fragColor;
+//Hard-coded limit
+const int LIMIT_ITERATIONS = 300;
 
-uniform float widthStretch = 1.0;
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
 
-uniform int maxIterations = 20;
+uniform float widthStretch;
 
-uniform vec2 position = vec2(0.0, 0.0);
-uniform vec2 offset = vec2(0.0, 0.0);
+uniform int maxIterations;
 
-uniform float zoom = 1.0;
+uniform vec2 position;
+uniform vec2 offset;
 
-uniform int colorBanding = 0;
+uniform float zoom;
 
-//Default roots are the roots to most known Newton Fractal (P(z) = z^3 - 1)
-uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
-(
-    vec2(1.0, 0.0), 
-    vec2(-0.5, sqrt(3.0) / 2.0), 
-    vec2(-0.5, -sqrt(3.0) / 2.0) 
-);
+uniform int colorBanding;
 
-uniform vec2 a = vec2(1.0, 0.0);
+uniform vec2 roots[NUM_ROOTS];
 
-out vec4 finalColor;
+uniform vec2 a;
 
 //2-argument arctangent, used to (for example:) get the angle of a complex number
 float atan2(float y, float x)
 {
-    return x > 0 ? atan(y / x) : atan(y / x) + PI;
+    return x > 0.0 ? atan(y / x) : atan(y / x) + PI;
 }
 
 float ComplexAbs(vec2 z)
@@ -46,12 +43,7 @@ float ComplexAbsSquared(vec2 z)
     return z.x * z.x + z.y * z.y;
 }
 
-vec2 ComplexConjugate(vec2 z)
-{
-    return vec2(z.x, -z.y);
-}
-
-//z = a + b, add a and b together instead
+//z = a + b
 vec2 ComplexAdd(vec2 a, vec2 b)
 {
     return vec2(a.x + b.x, a.y + b.y);
@@ -82,12 +74,6 @@ vec2 ComplexDivide(vec2 a, vec2 b)
     return vec2( (a.x *  b.x - a.y * b.y) / (b.x * b.x + b.y * b.y), (a.y * b.x - a.x * b.y) / (b.x * b.x + b.y * b.y) );
 }
 
-//z^power
-vec2 ComplexPow(vec2 z, float power)
-{
-    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
-}
-
 //Third-degree polynomial function for complex numbers (az^3 + bz^2 + cz + d)
 vec2 ThirdDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d)
 {
@@ -113,10 +99,10 @@ vec2 ThirdDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c)
     //Power rule => P'(z) = 3az^2 + 2bz + c
 
     //3az^2
-    vec2 secondDegree = ComplexMultiply(3 * a, ComplexMultiply(z, z));
+    vec2 secondDegree = ComplexMultiply(3.0 * a, ComplexMultiply(z, z));
 
     //2bz
-    vec2 firstDegree = ComplexMultiply(2 * b, z);
+    vec2 firstDegree = ComplexMultiply(2.0 * b, z);
 
     //add together with constant c
     return secondDegree + firstDegree + c;
@@ -124,39 +110,41 @@ vec2 ThirdDegreePolynomialDerivative(vec2 z, vec2 a, vec2 b, vec2 c)
 
 vec3 hsv2rgb(vec3 hsv)
 {
-    //ref https://www.rapidtables.com/convert/color/hsv-to-rgb.html
-    float h = hsv.x;
-    float s = hsv.y;
-    float v = hsv.z;
+    //ref https://www.rapidtables.com/convert/color/hsv-to-rgb.html & https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
 
-    float c = s * v;
-    float x = c * (1 - abs(mod(h / 60.0, 2.0) - 1));
-    float m = v - c;
+    float hue = hsv.x;
+    float saturation = hsv.y;
+    float value = hsv.z;
 
-    vec3 cx;
-    switch(int(h / 60.0))
-    {
-        case 0:
-            cx = vec3(c, x, 0);
-            break;
-        case 1:
-            cx = vec3(x, c, 0);
-            break;
-        case 2:
-            cx = vec3(0, c, x);
-            break;
-        case 3:
-            cx = vec3(0, x, c);
-            break;
-        case 4:
-            cx = vec3(x, 0, c);
-            break;
-        case 5:
-            cx = vec3(c, 0, x);
-            break;
-    }
+    float hueAccent = hue / 60.0;
 
-    return vec3(cx.x + m, cx.y + m, cx.z + m);
+    float c = saturation * value;
+    float x = c * (1.0 - abs(mod(hueAccent, 2.0) - 1.0));
+
+    int hueAccentFloor = int(hueAccent);
+    float m = value - c;
+
+    vec3 color = vec3(m, m, m);
+
+    //red
+    if (hueAccentFloor == 0 || hueAccentFloor == 5)
+        color.x += c;
+    else if (hueAccentFloor == 1 || hueAccentFloor == 4)
+        color.x += x;
+
+    //green
+    if (hueAccentFloor == 0 || hueAccentFloor == 3)
+        color.y += x;
+    else if (hueAccentFloor == 1 || hueAccentFloor == 2)
+        color.y += c;
+
+    //blue
+    if (hueAccentFloor == 2 || hueAccentFloor == 5)
+        color.z += x;
+    else if (hueAccentFloor == 3 || hueAccentFloor == 4)
+        color.z += c;
+
+    return color;
 }
 
 vec4 hsva2rgba(vec4 hsva)
@@ -204,10 +192,13 @@ void main()
     //https://en.wikipedia.org/wiki/Newton_fractal
 
     vec2 z = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
-    
-    for (int iteration = 0; iteration < maxIterations; iteration++)
+
+    for (int i = 0; i < LIMIT_ITERATIONS; i++)
     {
-        vec2 rz = ComplexMultiply(a, ComplexDivide(
+        if (i >= maxIterations)
+            break;
+
+         vec2 rz = ComplexMultiply(a, ComplexDivide(
             ThirdDegreePolynomial(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor, constant), 
             ThirdDegreePolynomialDerivative(z, thirdDegreeFactor, secondDegreeFactor, firstDegreeFactor)
             ));
@@ -223,13 +214,13 @@ void main()
                 vec2 dif = roots[i] - z;
                 if (abs(dif.x) <= tolerance && abs(dif.y) <= tolerance)
                 {
-                    finalColor = hsva2rgba(vec4(float(i) * (360.0 / float(NUM_ROOTS)), 1.0, 1.0, 1.0));
+                    gl_FragColor = hsva2rgba(vec4(float(i) * (360.0 / float(NUM_ROOTS)), 1.0, 1.0, 1.0));
                     return;
                 }
             }
         }
     }
-
+    
     //no root found, set finalcolor to black
-    finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 255.0);
 } 
