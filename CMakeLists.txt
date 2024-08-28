@@ -60,8 +60,6 @@ set(
 	"include"
 )
 
-# search for emsdk environment var or something idk yet
-
 if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     #this is to get rid of the console window. Yeah I know, I suck.
 
