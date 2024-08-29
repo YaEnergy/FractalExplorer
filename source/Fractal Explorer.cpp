@@ -1262,22 +1262,40 @@ namespace Explorer
 
 	void UpdateDrawNotification()
 	{
-		int screenWidth = GetScreenWidth();
-		int screenHeight = GetScreenHeight();
-
-		float screenScale = GetScreenScale();
-
 		float deltaTime = GetFrameTime();
-
-		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
 
 		notificationCurrent.deltaTime += deltaTime;
 
 		if (notificationCurrent.deltaTime < notificationCurrent.timeSeconds)
 		{
-			float notificationFontSize = std::min(30.0f * sqrt(screenScale), GetFontSizeForWidth(mainFontSemibold, notificationCurrent.message.c_str(), (float)screenWidth - 20.0f, FONT_SPACING_MULTIPLIER));
-			float nonFadeTimeSeconds = notificationCurrent.timeSeconds - 1.0f;
-			DrawTextEx(mainFontSemibold, notificationCurrent.message.c_str(), Vector2{ 10.0f, screenHeight - notificationFontSize - 10.0f }, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, 1.0f - std::max(notificationCurrent.deltaTime - nonFadeTimeSeconds, 0.0f)));
+			int screenWidth = GetScreenWidth();
+			int screenHeight = GetScreenHeight();
+
+			float screenScale = GetScreenScale();
+			float screenScaleSqrt = sqrt(screenScale);
+
+			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+			Color mainBackgroundColor = DARKGRAY;
+			
+			float alpha = 1.0f - std::max(notificationCurrent.deltaTime - (notificationCurrent.timeSeconds - 1.0f), 0.0f);
+
+			float screenPadding = 10.0f * screenScale;
+			float textPadding = 5.0f * screenScale;
+
+			const char* notificationMessage = notificationCurrent.message.c_str();
+
+			float notificationFontSize = std::min(30.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, notificationMessage, (float)screenWidth - 30.0f * screenScale, FONT_SPACING_MULTIPLIER));
+			Vector2 notificationMessageSize = MeasureTextEx(mainFontSemibold, notificationCurrent.message.c_str(), notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER);
+			Rectangle notificationRect = Rectangle{ screenPadding, screenHeight - notificationMessageSize.y - screenPadding - 2.0f * textPadding, notificationMessageSize.x + 2.0f * textPadding, notificationMessageSize.y + 2.0f * textPadding };
+
+			if (IsRectangleHovered(notificationRect))
+				cursorOnUI = true;
+
+			if (IsRectanglePressed(notificationRect))
+				activePressStartedOnUI = true;
+
+			DrawRectangleRec(notificationRect, ColorAlpha(mainBackgroundColor, 0.6f * alpha));
+			DrawTextEx(mainFontSemibold, notificationMessage, Vector2{ screenPadding + textPadding, screenHeight - notificationMessageSize.y - screenPadding - textPadding }, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, alpha));
 		}
 	}
 	#pragma endregion
