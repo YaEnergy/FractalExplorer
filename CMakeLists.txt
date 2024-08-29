@@ -14,6 +14,12 @@ project ("ComplexFractalExplorer" VERSION 1.0.0)
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Set flags
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Set cmake cxx flags for release")
+    set(CMAKE_CXX_FLAGS "-O2")
+endif()
+
 # raylib
 set(RAYLIB_VERSION 5.0)
 
@@ -76,20 +82,25 @@ if (WIN32)
     target_sources(${PROJECT_NAME} PRIVATE resource.rc)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
-
-target_link_libraries(${PROJECT_NAME} raylib)
-
-# Web Configurations
+#Web configurations
 if (${PLATFORM} MATCHES "Web")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so that you can directly open it.
-    
+
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--preload-file ./assets --shell-file _deps/raylib-src/src/minshell.html")
     
     add_compile_definitions(PLATFORM_WEB)
+
+    set(
+        INCLUDE_DIRECTORIES
+        ${INCLUDE_DIRECTORIES} 
+        # "C:/tools/emsdk/upstream/emscripten/system/include" # To see what I can call in VS 2022
+    )
 endif ()
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
+
+target_link_libraries(${PROJECT_NAME} raylib)
 
 # Checks if OSX and links appropriate frameworks (only required on MacOS)
 if (APPLE)

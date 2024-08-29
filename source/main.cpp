@@ -64,17 +64,15 @@ int main()
 	//the incorrect directories, so set working directory to application directory
 	ChangeDirectory(GetApplicationDirectory());
 
-	Explorer::Resources::Load();
-
 	//Set up icon
 	Image windowIcon = LoadImage("assets/fractalExplorerIcon.png");
 	ImageFormat(&windowIcon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8); //Required for window icon
 	SetWindowIcon(windowIcon);
 	UnloadImage(windowIcon);
 
-	Explorer::Init();
+	Explorer::Resources::Load();
 
-	//TODO: Emscripten modifications
+	Explorer::Init();
 
 #ifdef PLATFORM_WEB
 	emscripten_set_main_loop(Explorer::UpdateDrawFrame, 0, 1);

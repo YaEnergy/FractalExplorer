@@ -6,6 +6,10 @@
 #include <vector>
 #include <filesystem>
 
+#ifdef PLATFORM_WEB
+#include <emscripten/emscripten.h>
+#endif
+
 #include "raylib.h"
 #include "raymath.h"
 
@@ -415,14 +419,21 @@ namespace Explorer
 
 	void TakeFractalScreenshot()
 	{
-		//TODO: Web modifications for fractal screenshot
-
 		Image fractalImage = shaderFractal.GenImage(false, flipYAxis);
 
 		try
 		{
 #ifdef PLATFORM_WEB
-			notificationCurrent = Notification{ "Exporting fractal screenshots from web hasn't been implemented yet.", 15.0f, MAROON };
+			//Export fractalImage to MEMFS
+			bool exportSuccess = ExportImage(fractalImage, "fractal_screenshot.png");
+
+			if (!exportSuccess)
+				throw std::runtime_error("Failed to export fractal screenshot");
+			
+			//Save fractalImage from MEMFS to Disk
+			emscripten_run_script("saveFileFromMEMFSToDisk(\"fractal_screenshot.png\", \"fractal_screenshot.png\")");
+
+			notificationCurrent = Notification{ "Exported fractal screenshot!", 5.0f, WHITE };
 #else //DESKTOP
 			//Fractal_Screenshots directory
 			std::filesystem::path fractalScreenshotsPath = std::filesystem::absolute(GetWorkingDirectory()).append("Fractal_Screenshots").make_preferred();
