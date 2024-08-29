@@ -6,6 +6,11 @@
 
 namespace Explorer
 {
+	float GetScreenScale(float designWidth, float designHeight)
+	{
+		return std::min((float)GetScreenWidth() / designWidth, (float)GetScreenHeight() / designHeight);
+	}
+
 	bool IsCircleHovered(Vector2 position, float radius)
 	{
 		return CheckCollisionPointCircle(GetMousePosition(), position, radius);

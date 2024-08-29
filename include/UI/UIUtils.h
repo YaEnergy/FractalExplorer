@@ -4,6 +4,8 @@
 
 namespace Explorer
 {
+	float GetScreenScale(float designWidth, float designHeight);
+
 	bool IsCircleHovered(Vector2 position, float radius);
 
 	bool IsCirclePressed(Vector2 position, float radius);

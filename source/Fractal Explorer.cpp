@@ -80,7 +80,7 @@ namespace Explorer
 	#pragma endregion
 
 	#pragma region UI functions
-	float GetScreenScale();
+	Vector2 GetSelectedMouseFractalPosition(float snapWithinPixels);
 
 	void DrawFractalGrid();
 
@@ -268,6 +268,10 @@ namespace Explorer
 			ChangeFractal(FRACTAL_NEWTON_4DEG);
 		else if (IsKeyPressed(KEY_SEVEN))
 			ChangeFractal(FRACTAL_NEWTON_5DEG);
+		else if (IsKeyPressed(KEY_EIGHT))
+			ChangeFractal(FRACTAL_POLYNOMIAL_2DEG);
+		else if (IsKeyPressed(KEY_NINE))
+			ChangeFractal(FRACTAL_POLYNOMIAL_3DEG);
 
 		if (IsKeyPressed(KEY_T))
 			ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
@@ -494,9 +498,29 @@ namespace Explorer
 
 	#pragma region UI function implementations
 
-	float GetScreenScale()
+	Vector2 GetSelectedMouseFractalPosition(float snapWithinPixels)
 	{
-		return std::min((float)GetScreenWidth() / (float)DESIGN_WIDTH, (float)GetScreenHeight() / (float)DESIGN_HEIGHT);
+		Vector2 mouseScreenPosition = GetMousePosition();
+		Vector2 mouseFractalPosition = GetScreenToFractalPosition(mouseScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
+		
+		Vector2 mouseSnapFractalPosition = SnapTo2DGrid(mouseFractalPosition, gridIncrement);
+		Vector2 mouseSnapScreenPosition = GetFractalToScreenPosition(mouseSnapFractalPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
+	
+		Vector2 screenDifference = Vector2Subtract(mouseScreenPosition, mouseSnapScreenPosition);
+
+		//Snap to x grid line if close
+		if (abs(screenDifference.x) < snapWithinPixels)
+		{
+			mouseFractalPosition.x = mouseSnapFractalPosition.x;
+		}
+
+		//Snap to y grid line if close
+		if (abs(screenDifference.y) < snapWithinPixels)
+		{
+			mouseFractalPosition.y = mouseSnapFractalPosition.y;
+		}
+
+		return mouseFractalPosition;
 	}
 
 	void DrawFractalGrid()
@@ -504,7 +528,7 @@ namespace Explorer
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
 
-		float screenScaleSqrt = sqrt(GetScreenScale());
+		float screenScaleSqrt = sqrt(GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT));
 
 		float gridLineThickness = 2.0f * screenScaleSqrt;
 		const float GRID_LINE_ALPHA = 0.25f;
@@ -768,7 +792,7 @@ namespace Explorer
 		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
 		Color mainBackgroundColor = DARKGRAY;
 
-		float screenScale = GetScreenScale();
+		float screenScale = GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT);
 
 		//Main rect
 
@@ -938,7 +962,7 @@ namespace Explorer
 		int screenWidth = GetScreenWidth();
 		int screenHeight = GetScreenHeight();
 
-		float screenScale = GetScreenScale();
+		float screenScale = GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT);
 
 		float statFontSize = 24.0f * sqrt(screenScale);
 
@@ -1093,7 +1117,7 @@ namespace Explorer
 
 	void UpdateDrawDraggableDots()
 	{
-		float screenScaleSqrt = sqrt(GetScreenScale());
+		float screenScaleSqrt = sqrt(GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT));
 
 		float draggableDotRadius = 6.0f * screenScaleSqrt;
 
@@ -1121,28 +1145,8 @@ namespace Explorer
 			//Update drag
 			if (draggingDotId == 0 && isDraggingDot)
 			{
-				cScreenPosition = GetMousePosition();
-
-				Vector2 newC = GetScreenToFractalPosition(cScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 snapC = SnapTo2DGrid(newC, gridIncrement);
-
-				//If close to grid intersection, snap to it
-				Vector2 screenSnapC = GetFractalToScreenPosition(snapC, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 screenDifC = Vector2Subtract(screenSnapC, cScreenPosition);
-
-				if (abs(screenDifC.x) < snapPixels)
-				{
-					newC.x = snapC.x;
-					cScreenPosition.x = screenSnapC.x;
-				}
-
-				if (abs(screenDifC.y) < snapPixels)
-				{
-					newC.y = snapC.y;
-					cScreenPosition.y = screenSnapC.y;
-				}
-
-				fractalParameters.c = newC;
+				fractalParameters.c = GetSelectedMouseFractalPosition(snapPixels);
+				cScreenPosition = GetFractalToScreenPosition(fractalParameters.c, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				shaderFractal.SetC(fractalParameters.c);
 			}
 
@@ -1169,28 +1173,8 @@ namespace Explorer
 			//Update drag
 			if (draggingDotId == 1 && isDraggingDot)
 			{
-				aScreenPosition = GetMousePosition();
-
-				Vector2 newA = GetScreenToFractalPosition(aScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 snapA = SnapTo2DGrid(newA, gridIncrement);
-
-				//If close to grid intersection, snap to it
-				Vector2 screenSnapA = GetFractalToScreenPosition(snapA, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 screenDifA = Vector2Subtract(screenSnapA, aScreenPosition);
-
-				if (abs(screenDifA.x) < snapPixels)
-				{
-					newA.x = snapA.x;
-					aScreenPosition.x = screenSnapA.x;
-				}
-
-				if (abs(screenDifA.y) < snapPixels)
-				{
-					newA.y = snapA.y;
-					aScreenPosition.y = screenSnapA.y;
-				}
-
-				fractalParameters.a = newA;
+				fractalParameters.a = GetSelectedMouseFractalPosition(snapPixels);
+				aScreenPosition = GetFractalToScreenPosition(fractalParameters.a, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				shaderFractal.SetA(fractalParameters.a);
 			}
 
@@ -1219,28 +1203,8 @@ namespace Explorer
 			//Update drag
 			if (draggingDotId == id && isDraggingDot)
 			{
-				rootScreenPosition = GetMousePosition();
-
-				Vector2 newRoot = GetScreenToFractalPosition(rootScreenPosition, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 snapRoot = SnapTo2DGrid(newRoot, gridIncrement);
-
-				//If close to grid intersection, snap to it
-				Vector2 screenSnapRoot = GetFractalToScreenPosition(snapRoot, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				Vector2 screenDifRoot = Vector2Subtract(screenSnapRoot, rootScreenPosition);
-
-				if (abs(screenDifRoot.x) < snapPixels)
-				{
-					newRoot.x = snapRoot.x;
-					rootScreenPosition.x = screenSnapRoot.x;
-				}
-
-				if (abs(screenDifRoot.y) < snapPixels)
-				{
-					newRoot.y = snapRoot.y;
-					rootScreenPosition.y = screenSnapRoot.y;
-				}
-
-				fractalParameters.roots[i] = newRoot;
+				fractalParameters.roots[i] = GetSelectedMouseFractalPosition(snapPixels);
+				GetFractalToScreenPosition(fractalParameters.roots[i], fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 				shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
 			}
 
@@ -1271,7 +1235,7 @@ namespace Explorer
 			int screenWidth = GetScreenWidth();
 			int screenHeight = GetScreenHeight();
 
-			float screenScale = GetScreenScale();
+			float screenScale = GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT);
 			float screenScaleSqrt = sqrt(screenScale);
 
 			Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
