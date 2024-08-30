@@ -26,6 +26,7 @@ namespace Explorer
 	};
 
 	const char* GetFractalName(FractalType);
+	const char* GetFractalEquation(FractalType);
 
 	//Parameters
 

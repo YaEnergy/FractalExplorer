@@ -53,6 +53,33 @@ namespace Explorer
 		}
 	}
 
+	const char* GetFractalEquation(FractalType fractalType)
+	{
+		switch (fractalType)
+		{
+			case FRACTAL_MULTIBROT:
+				return "z ^ n + c";
+			case FRACTAL_MULTICORN:
+				return "(Re(z) - Im(z) i) ^ n + c";
+			case FRACTAL_BURNING_SHIP:
+				return "(|Re(z) + |Im (z)| i) ^ 2 + c";
+			case FRACTAL_JULIA:
+				return "z ^ n + c";
+			case FRACTAL_NEWTON_3DEG:
+				return "z - a * (P(z) / P'(z)), deg P = 3";
+			case FRACTAL_NEWTON_4DEG:
+				return "z - a * (P(z) / P'(z)), deg P = 4";
+			case FRACTAL_NEWTON_5DEG:
+				return "z - a * (P(z) / P'(z)), deg P = 5";
+			case FRACTAL_POLYNOMIAL_2DEG:
+				return "P(z) + c, deg P = 2";
+			case FRACTAL_POLYNOMIAL_3DEG:
+				return "P(z) + c, deg P = 2";
+			default: //Or FRACTAL_UNKNOWN
+				return "UNKNOWN FRACTAL EQUATION";
+		}
+	}
+
 	#pragma region Parameters
 
 	int GetFractalNumRoots(FractalType type)

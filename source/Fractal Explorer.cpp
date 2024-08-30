@@ -25,19 +25,6 @@ namespace Explorer
 {
 	const float FONT_SPACING_MULTIPLIER = 1.0f / 15.0f;
 
-	const char* fractalEquations[NUM_FRACTAL_TYPES] =
-	{
-		"z ^ n + c", //Multibrot
-		"(Re(z) - Im(z) i) ^ n + c", //Multicorn
-		"(|Re(z) + |Im (z)| i) ^ 2 + c", //Burning ship
-		"z ^ n + c", //Julia
-		"z - a * (P(z) / P'(z)), deg P = 3", //Newton, deg P = 3
-		"z - a * (P(z) / P'(z)), deg P = 4", //Newton, deg P = 4
-		"z - a * (P(z) / P'(z)), deg P = 5", //Newton, deg P = 5
-		"P(z) + c, deg P = 2", //Polynomial, deg P = 2
-		"P(z) + c, deg P = 3" //Polynomial, deg P = 3
-	};
-
 	FractalParameters fractalParameters = FractalParameters();
 	ShaderFractal shaderFractal;
 
@@ -1022,15 +1009,14 @@ namespace Explorer
 			if (IsRectanglePressed(polynomialRect))
 				activePressStartedOnUI = true;
 
-
 			DrawTextEx(mainFontSemibold, polynomialText.c_str(), Vector2{ polynomialRect.x + textPaddingX, polynomialRect.y + textPaddingY }, polynomialFontSize, polynomialFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			positionY += polynomialRect.height;
 		}
 
 		//Equation
 
-		float equationFontSize = std::min(32.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, fractalEquations[fractalParameters.type], (float)screenWidth * 0.25f, FONT_SPACING_MULTIPLIER));
-		Vector2 equationTextSize = MeasureTextEx(mainFontSemibold, fractalEquations[fractalParameters.type], equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER);
+		float equationFontSize = std::min(32.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, GetFractalEquation(fractalParameters.type), (float)screenWidth * 0.25f, FONT_SPACING_MULTIPLIER));
+		Vector2 equationTextSize = MeasureTextEx(mainFontSemibold, GetFractalEquation(fractalParameters.type), equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER);
 		Rectangle equationRect = Rectangle{ (float)screenWidth * 0.5f - (equationTextSize.x + textPaddingX * 2.0f) / 2.0f, positionY, equationTextSize.x + 2.0f * textPaddingX, equationTextSize.y + 2.0f * textPaddingY };
 
 		DrawRectangleRec(equationRect, ColorAlpha(mainBackgroundColor, 0.6f));
@@ -1041,7 +1027,7 @@ namespace Explorer
 		if (IsRectanglePressed(equationRect))
 			activePressStartedOnUI = true;
 
-		DrawTextEx(mainFontSemibold, fractalEquations[fractalParameters.type], Vector2{ equationRect.x + textPaddingX, equationRect.y + textPaddingY }, equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER, WHITE);
+		DrawTextEx(mainFontSemibold, GetFractalEquation(fractalParameters.type), Vector2{equationRect.x + textPaddingX, equationRect.y + textPaddingY}, equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 	}
 
 	void DrawInfoPanel()
