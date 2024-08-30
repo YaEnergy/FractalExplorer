@@ -56,6 +56,7 @@ set(
     "source/Resources.cpp"
     "source/ComplexNumbers/ComplexDouble.cpp" 
     "source/ComplexNumbers/ComplexFloat.cpp"
+    "source/ComplexNumbers/ComplexPolynomial.cpp"
     "source/Fractal.cpp"  
     "source/UI/UIUtils.cpp"
     "source/UI/GridUtils.cpp" 

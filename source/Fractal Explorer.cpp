@@ -16,6 +16,7 @@
 #include "Resources.h"
 #include "Fractal.h"
 #include "ComplexNumbers/ComplexFloat.h"
+#include "ComplexNumbers/ComplexPolynomial.h"
 #include "UI/UIUtils.h"
 #include "UI/GridUtils.h"
 #include "UI/Notification.h"
@@ -26,13 +27,15 @@ namespace Explorer
 
 	const char* fractalEquations[NUM_FRACTAL_TYPES] =
 	{
-		"z ^ n + c",
-		"(Re(z) - Im(z) i) ^ n + c",
-		"(|Re(z) + |Im (z)| i) ^ 2 + c",
-		"z ^ n + c",
-		"z - a * (P(z) / P'(z))",
-		"z - a * (P(z) / P'(z))",
-		"z - a * (P(z) / P'(z))"
+		"z ^ n + c", //Multibrot
+		"(Re(z) - Im(z) i) ^ n + c", //Multicorn
+		"(|Re(z) + |Im (z)| i) ^ 2 + c", //Burning ship
+		"z ^ n + c", //Julia
+		"z - a * (P(z) / P'(z)), deg P = 3", //Newton, deg P = 3
+		"z - a * (P(z) / P'(z)), deg P = 4", //Newton, deg P = 4
+		"z - a * (P(z) / P'(z)), deg P = 5", //Newton, deg P = 5
+		"P(z) + c, deg P = 2", //Polynomial, deg P = 2
+		"P(z) + c, deg P = 3" //Polynomial, deg P = 3
 	};
 
 	FractalParameters fractalParameters = FractalParameters();
@@ -90,6 +93,8 @@ namespace Explorer
 	void UpdateDrawUI();
 
 	void UpdateDrawFractalSelectionPanel();
+
+	void DrawFractalEquation();
 
 	void DrawInfoPanel();
 
@@ -201,7 +206,7 @@ namespace Explorer
 			shaderFractal.SetPower(fractalParameters.power);
 
 		//roots
-		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
+		int numRoots = GetFractalNumRoots(fractalParameters.type);
 
 		if (numRoots == 2)
 		{
@@ -773,6 +778,8 @@ namespace Explorer
 		if (showInfoPanel)
 			DrawInfoPanel();
 
+		DrawFractalEquation();
+
 		//Screenshot flash
 		screenshotDeltaTime += deltaTime;
 
@@ -959,6 +966,84 @@ namespace Explorer
 		}
 	}
 
+	void DrawFractalEquation()
+	{
+		int screenWidth = GetScreenWidth();
+		int screenHeight = GetScreenHeight();
+
+		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+		Color mainBackgroundColor = DARKGRAY;
+
+		float screenScale = GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT);
+		float screenScaleSqrt = sqrt(screenScale);
+
+		float positionY = 0.0f;
+
+		float textPaddingX = 15.0f * screenScaleSqrt;
+		float textPaddingY = 2.5f * screenScaleSqrt;
+
+		//Polynomial
+
+		int numRoots = GetFractalNumRoots(fractalParameters.type);
+
+		if (numRoots > 0)
+		{
+			std::string polynomialText;
+			
+			switch (numRoots)
+			{
+				case 2:
+					polynomialText = ComplexPolynomial::GetDegreeTwoFromRoots(ComplexFloat(fractalParameters.roots[0]), ComplexFloat(fractalParameters.roots[1]));
+					break;
+				case 3:
+					polynomialText = ComplexPolynomial::GetDegreeThreeFromRoots(ComplexFloat(fractalParameters.roots[0]), ComplexFloat(fractalParameters.roots[1]), ComplexFloat(fractalParameters.roots[2]));
+					break;
+				case 4:
+					polynomialText = ComplexPolynomial::GetDegreeFourFromRoots(ComplexFloat(fractalParameters.roots[0]), ComplexFloat(fractalParameters.roots[1]), ComplexFloat(fractalParameters.roots[2]), ComplexFloat(fractalParameters.roots[3]));
+					break;
+				case 5:
+					polynomialText = ComplexPolynomial::GetDegreeFiveFromRoots(ComplexFloat(fractalParameters.roots[0]), ComplexFloat(fractalParameters.roots[1]), ComplexFloat(fractalParameters.roots[2]), ComplexFloat(fractalParameters.roots[3]), ComplexFloat(fractalParameters.roots[4]));
+					break;
+				default:
+					polynomialText = "Can't get polynomial!";
+					break;
+			}
+
+			float polynomialFontSize = std::min(32.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, polynomialText.c_str(), (float)screenWidth * 0.6f, FONT_SPACING_MULTIPLIER));
+
+			Vector2 polynomialTextSize = MeasureTextEx(mainFontSemibold, polynomialText.c_str(), polynomialFontSize, polynomialFontSize * FONT_SPACING_MULTIPLIER);
+			Rectangle polynomialRect = Rectangle{ (float)screenWidth * 0.5f - (polynomialTextSize.x + textPaddingX * 2.0f) / 2.0f, positionY, polynomialTextSize.x + 2.0f * textPaddingX, polynomialTextSize.y + 2.0f * textPaddingY };
+
+			DrawRectangleRec(polynomialRect, ColorAlpha(mainBackgroundColor, 0.4f));
+
+			if (IsRectangleHovered(polynomialRect))
+				cursorOnUI = true;
+
+			if (IsRectanglePressed(polynomialRect))
+				activePressStartedOnUI = true;
+
+
+			DrawTextEx(mainFontSemibold, polynomialText.c_str(), Vector2{ polynomialRect.x + textPaddingX, polynomialRect.y + textPaddingY }, polynomialFontSize, polynomialFontSize * FONT_SPACING_MULTIPLIER, WHITE);
+			positionY += polynomialRect.height;
+		}
+
+		//Equation
+
+		float equationFontSize = std::min(32.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, fractalEquations[fractalParameters.type], (float)screenWidth * 0.25f, FONT_SPACING_MULTIPLIER));
+		Vector2 equationTextSize = MeasureTextEx(mainFontSemibold, fractalEquations[fractalParameters.type], equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER);
+		Rectangle equationRect = Rectangle{ (float)screenWidth * 0.5f - (equationTextSize.x + textPaddingX * 2.0f) / 2.0f, positionY, equationTextSize.x + 2.0f * textPaddingX, equationTextSize.y + 2.0f * textPaddingY };
+
+		DrawRectangleRec(equationRect, ColorAlpha(mainBackgroundColor, 0.6f));
+
+		if (IsRectangleHovered(equationRect))
+			cursorOnUI = true;
+
+		if (IsRectanglePressed(equationRect))
+			activePressStartedOnUI = true;
+
+		DrawTextEx(mainFontSemibold, fractalEquations[fractalParameters.type], Vector2{ equationRect.x + textPaddingX, equationRect.y + textPaddingY }, equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER, WHITE);
+	}
+
 	void DrawInfoPanel()
 	{
 		int screenWidth = GetScreenWidth();
@@ -1033,81 +1118,6 @@ namespace Explorer
 		{
 			DrawTextEx(mainFontSemibold, TextFormat("a = %g%+gi", fractalParameters.a.x, fractalParameters.a.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			statPosition.y += statFontSize;
-		}
-
-		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
-
-		if (numRoots == 2)
-		{
-			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-
-			//P(z)
-			{
-				ComplexFloat firstDegreeFactor = -root2 - root1;
-				ComplexFloat constant = root1 * root2;
-
-				SetTextLineSpacing((int)statFontSize);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^2 + (%.03g%+.03gi)z\n+ (%.03g%+.03gi)", firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-				statPosition.y += statFontSize;
-			}
-		}
-		else if (numRoots == 3)
-		{
-			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-
-			//P(z)
-			{
-				ComplexFloat secondDegreeFactor = -root1 - root2 - root3;
-				ComplexFloat firstDegreeFactor = (root1 * root2) + (root2 * root3) + (root1 * root3);
-				ComplexFloat constant = -(root1 * root2 * root3);
-
-				SetTextLineSpacing((int)statFontSize);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^3 + (%.03g%+.03gi)z^2\n+ (%.03g%+.03gi)z + (%.03g%+.03gi)", secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-				statPosition.y += statFontSize;
-			}
-		}
-		else if (numRoots == 4)
-		{
-			ComplexFloat root1 = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-			ComplexFloat root2 = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-			ComplexFloat root3 = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-			ComplexFloat root4 = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
-
-			//P(z)
-			{
-				ComplexFloat thirdDegreeFactor = -root1 - root2 - root3 - root4;
-				ComplexFloat secondDegreeFactor = root1 * (root2 + root3 + root4) + root2 * (root3 + root4) + root3 * root4;
-				ComplexFloat firstDegreeFactor = -root3 * root4 * (root1 + root2) - root1 * root2 * (root3 + root4);
-				ComplexFloat constant = root1 * root2 * root3 * root4;
-
-				SetTextLineSpacing((int)statFontSize);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^4 + (%.03g%+.03gi)z^3\n+ (%.03g%+.03gi)z^2 + (%.03g%+.03gi)z\n+ (%.03g%+.03gi)", thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-				statPosition.y += statFontSize;
-			}
-		}
-		else if (numRoots == 5)
-		{
-			ComplexFloat a = ComplexFloat(fractalParameters.roots[0].x, fractalParameters.roots[0].y);
-			ComplexFloat b = ComplexFloat(fractalParameters.roots[1].x, fractalParameters.roots[1].y);
-			ComplexFloat c = ComplexFloat(fractalParameters.roots[2].x, fractalParameters.roots[2].y);
-			ComplexFloat d = ComplexFloat(fractalParameters.roots[3].x, fractalParameters.roots[3].y);
-			ComplexFloat e = ComplexFloat(fractalParameters.roots[4].x, fractalParameters.roots[4].y);
-
-			//P(z)
-			{
-				ComplexFloat fourthDegreeFactor = -a - b - c - d - e;
-				ComplexFloat thirdDegreeFactor = a * (b + c + d + e) + b * (c + d + e) + c * (d + e) + d * e;
-				ComplexFloat secondDegreeFactor = -c * d * (b + a + e) - a * b * (c + d + e) - b * e * (c + d) - a * e * (c + d);
-				ComplexFloat firstDegreeFactor = c * d * e * (a + b) + a * b * (d * e + c * (d + e));
-				ComplexFloat constant = -a * b * c * d * e;
-
-				SetTextLineSpacing((int)statFontSize);
-				DrawTextEx(mainFontSemibold, TextFormat("P(z) ~= z^5 + (%.03g%+.03gi)z^4\n+ (%.03g%+.03gi)z^3 + (%.03g%+.03gi)z^2\n+ (%.03g%+.03gi)z + (%.03g%+.03gi)", fourthDegreeFactor.real, fourthDegreeFactor.imaginary, thirdDegreeFactor.real, thirdDegreeFactor.imaginary, secondDegreeFactor.real, secondDegreeFactor.imaginary, firstDegreeFactor.real, firstDegreeFactor.imaginary, constant.real, constant.imaginary), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-				statPosition.y += statFontSize;
-			}
 		}
 	}
 
@@ -1187,7 +1197,7 @@ namespace Explorer
 			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.a.x, fractalParameters.a.y), Vector2Add(Vector2{ aScreenPosition.x - valueLabelSize.x / 2.0f, aScreenPosition.y - labelFontSize - valueLabelSize.y }, labelOffset), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
-		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
+		int numRoots = GetFractalNumRoots(fractalParameters.type);
 
 		for (int i = 0; i < numRoots; i++)
 		{

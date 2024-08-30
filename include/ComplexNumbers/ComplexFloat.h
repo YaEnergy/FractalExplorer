@@ -14,6 +14,13 @@ struct ComplexFloat
 		this->imaginary = imaginary;
 	}
 
+	//Easy conversion from Vector2 to ComplexFloat
+	ComplexFloat(Vector2 v)
+	{
+		real = v.x;
+		imaginary = v.y;
+	}
+
 	public:
 		float GetMagnitude() const;
 		float GetMagnitudeSquared() const;

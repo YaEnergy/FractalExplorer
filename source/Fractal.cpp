@@ -55,7 +55,7 @@ namespace Explorer
 
 	#pragma region Parameters
 
-	int GetFractalNumSettableRoots(FractalType type)
+	int GetFractalNumRoots(FractalType type)
 	{
 		switch (type)
 		{

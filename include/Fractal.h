@@ -89,7 +89,7 @@ namespace Explorer
 		}
 	};
 
-	int GetFractalNumSettableRoots(FractalType);
+	int GetFractalNumRoots(FractalType);
 
 	bool FractalSupportsPower(FractalType);
 	bool FractalSupportsC(FractalType);
@@ -105,6 +105,8 @@ namespace Explorer
 	void UnloadFractalRenderTexture();
 
 	//Shaders
+
+	//Kinda wished not all fractal types had access to all the functions, but it's okay.
 
 	class ShaderFractal
 	{
