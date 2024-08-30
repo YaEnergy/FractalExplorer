@@ -25,6 +25,10 @@ namespace Explorer
 		FRACTAL_POLYNOMIAL_3DEG = 8
 	};
 
+	const char* GetFractalName(FractalType);
+
+	//Parameters
+
 	struct FractalParameters
 	{
 		FractalType type;
@@ -85,7 +89,12 @@ namespace Explorer
 		}
 	};
 
-	const char* GetFractalName(FractalType);
+	int GetFractalNumSettableRoots(FractalType);
+
+	bool FractalSupportsPower(FractalType);
+	bool FractalSupportsC(FractalType);
+	bool FractalSupportsA(FractalType);
+	bool FractalSupportsColorBanding(FractalType);
 
 	//Render Texture
 
@@ -120,15 +129,6 @@ namespace Explorer
 			void SetA(Vector2);
 
 			void SetColorBanding(bool);
-
-			bool SupportsPower() const;
-			bool SupportsC() const;
-
-			int GetNumSettableRoots() const;
-
-			bool SupportsA() const;
-
-			bool SupportsColorBanding() const;
 
 			void Draw(Rectangle destination, bool flipX, bool flipY) const;
 

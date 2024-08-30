@@ -53,6 +53,49 @@ namespace Explorer
 		}
 	}
 
+	#pragma region Parameters
+
+	int GetFractalNumSettableRoots(FractalType type)
+	{
+		switch (type)
+		{
+			case FRACTAL_POLYNOMIAL_2DEG:
+				return 2;
+			case FRACTAL_POLYNOMIAL_3DEG:
+				return 3;
+			case FRACTAL_NEWTON_3DEG:
+				return 3;
+			case FRACTAL_NEWTON_4DEG:
+				return 4;
+			case FRACTAL_NEWTON_5DEG:
+				return 5;
+			default:
+				return 0;
+		}
+	}
+
+	bool FractalSupportsPower(FractalType type)
+	{
+		return type == FRACTAL_MULTIBROT || type == FRACTAL_MULTICORN || type == FRACTAL_JULIA;
+	}
+
+	bool FractalSupportsC(FractalType type)
+	{
+		return type == FRACTAL_JULIA;
+	}
+
+	bool FractalSupportsA(FractalType type)
+	{
+		return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG || type == FRACTAL_NEWTON_5DEG;
+	}
+
+	bool FractalSupportsColorBanding(FractalType type)
+	{
+		return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG && type != FRACTAL_NEWTON_5DEG;
+	}
+
+	#pragma endregion
+
 	#pragma region Render Texture
 	void InitFractalRenderTexture(int width, int height)
 	{
@@ -154,46 +197,6 @@ namespace Explorer
 		int colorBandingInt = colorBanding ? 1 : 0;
 		SetShaderValue(fractalShader, GetShaderLocation(fractalShader, "colorBanding"), &colorBandingInt, SHADER_UNIFORM_INT);
 	}
-
-	bool ShaderFractal::SupportsPower() const
-	{
-		return type == FRACTAL_MULTIBROT || type == FRACTAL_MULTICORN || type == FRACTAL_JULIA;
-	}
-
-	bool ShaderFractal::SupportsC() const
-	{
-		return type == FRACTAL_JULIA;
-	}
-
-	int ShaderFractal::GetNumSettableRoots() const
-	{
-		switch (type)
-		{
-			case FRACTAL_POLYNOMIAL_2DEG:
-				return 2;
-			case FRACTAL_POLYNOMIAL_3DEG:
-				return 3;
-			case FRACTAL_NEWTON_3DEG:
-				return 3;
-			case FRACTAL_NEWTON_4DEG:
-				return 4;
-			case FRACTAL_NEWTON_5DEG:
-				return 5;
-			default:
-				return 0;
-		}
-	}
-
-	bool ShaderFractal::SupportsA() const
-	{
-		return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG || type == FRACTAL_NEWTON_5DEG;
-	}
-
-	bool ShaderFractal::SupportsColorBanding() const
-	{
-		return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG && type != FRACTAL_NEWTON_5DEG;
-	}
-
 
 	void ShaderFractal::Unload()
 	{

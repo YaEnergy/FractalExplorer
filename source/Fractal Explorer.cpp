@@ -191,30 +191,32 @@ namespace Explorer
 		//c
 		fractalParameters.c = Vector2{ 0.0f, 0.0f };
 
-		if (shaderFractal.SupportsC())
+		if (FractalSupportsC(fractalParameters.type))
 			shaderFractal.SetC(fractalParameters.c);
 
 		//powers
 		fractalParameters.power = 2.0f;
 
-		if (shaderFractal.SupportsPower())
+		if (FractalSupportsPower(fractalParameters.type))
 			shaderFractal.SetPower(fractalParameters.power);
 
 		//roots
-		if (fractalParameters.type == FRACTAL_POLYNOMIAL_2DEG)
+		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
+
+		if (numRoots == 2)
 		{
 			//Defaults roots are the roots to P(z) = z^2 - 1
 			fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
 			fractalParameters.roots[1] = Vector2{ -1.0f, 0.0f };
 		}
-		else if (fractalParameters.type == FRACTAL_NEWTON_3DEG || fractalParameters.type == FRACTAL_POLYNOMIAL_3DEG)
+		else if (numRoots == 3)
 		{
 			//Default roots are the roots to P(z) = z^3 - 1
 			fractalParameters.roots[0] = Vector2{1.0f, 0.0f};
 			fractalParameters.roots[1] = Vector2{ -0.5f, sqrt(3.0f) / 2.0f };
 			fractalParameters.roots[2] = Vector2{ -0.5f, -sqrt(3.0f) / 2.0f };
 		}
-		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG)
+		else if (numRoots == 4)
 		{
 			//Default roots are the roots to P(z) = z^4 - 1
 			fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
@@ -222,7 +224,7 @@ namespace Explorer
 			fractalParameters.roots[2] = Vector2{ 0.0f, 1.0f };
 			fractalParameters.roots[3] = Vector2{ 0.0f, -1.0f };
 		}
-		else if (fractalParameters.type == FRACTAL_NEWTON_5DEG)
+		else if (numRoots == 5)
 		{
 			//Default roots are the roots to P(z) = z^5 - 1
 			fractalParameters.roots[0] = Vector2{ 1.0f, 0.0f };
@@ -232,20 +234,20 @@ namespace Explorer
 			fractalParameters.roots[4] = Vector2{ (-1.0f - sqrt(5.0f)) / 4.0f, -sqrt(10.0f - 2 * sqrt(5.0f)) / 4.0f };
 		}
 
-		if (shaderFractal.GetNumSettableRoots() > 0)
-			shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
+		if (numRoots > 0)
+			shaderFractal.SetRoots(fractalParameters.roots.data(), numRoots);
 
 		//a
 		fractalParameters.a = Vector2{ 1.0f, 0.0f };
 
-		if (shaderFractal.SupportsA())
+		if (FractalSupportsA(fractalParameters.type))
 			shaderFractal.SetA(fractalParameters.a);
 
 		//Color banding
 
 		fractalParameters.colorBanding = false;
 
-		if (shaderFractal.SupportsColorBanding())
+		if (FractalSupportsColorBanding(fractalParameters.type))
 			shaderFractal.SetColorBanding(fractalParameters.colorBanding);
 	}
 
@@ -276,7 +278,7 @@ namespace Explorer
 		if (IsKeyPressed(KEY_T))
 			ChangeFractal((FractalType)(((int)fractalParameters.type + 1) % NUM_FRACTAL_TYPES));
 
-		if (IsKeyPressed(KEY_E) && shaderFractal.SupportsColorBanding())
+		if (IsKeyPressed(KEY_E) && FractalSupportsColorBanding(fractalParameters.type))
 		{
 			fractalParameters.colorBanding = !fractalParameters.colorBanding;
 			shaderFractal.SetColorBanding(fractalParameters.colorBanding);
@@ -325,7 +327,7 @@ namespace Explorer
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 		}
 
-		if (shaderFractal.SupportsPower())
+		if (FractalSupportsPower(fractalParameters.type))
 		{
 			//Power changing using keys
 			if (IsKeyDown(KEY_F))
@@ -898,7 +900,7 @@ namespace Explorer
 			showGrid = !showGrid;
 
 		//Color banding button (if supported)
-		if (shaderFractal.SupportsColorBanding())
+		if (FractalSupportsC(fractalParameters.type))
 		{
 			Rectangle colorBandingButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 		
@@ -914,7 +916,7 @@ namespace Explorer
 		}
 
 		//Power buttons (if supported)
-		if (shaderFractal.SupportsPower())
+		if (FractalSupportsPower(fractalParameters.type))
 		{
 			//Subtract
 			Rectangle powerSubtractButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
@@ -1015,25 +1017,25 @@ namespace Explorer
 		DrawTextEx(mainFontSemibold, TextFormat("Max iterations: %i", fractalParameters.maxIterations), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		statPosition.y += statFontSize;
 
-		if (shaderFractal.SupportsPower())
+		if (FractalSupportsPower(fractalParameters.type))
 		{
 			DrawTextEx(mainFontSemibold, TextFormat("Pow: %g", fractalParameters.power), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			statPosition.y += statFontSize;
 		}
 
-		if (shaderFractal.SupportsC())
+		if (FractalSupportsC(fractalParameters.type))
 		{
 			DrawTextEx(mainFontSemibold, TextFormat("c = %g%+gi", fractalParameters.c.x, fractalParameters.c.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			statPosition.y += statFontSize;
 		}
 
-		if (shaderFractal.SupportsA())
+		if (FractalSupportsA(fractalParameters.type))
 		{
 			DrawTextEx(mainFontSemibold, TextFormat("a = %g%+gi", fractalParameters.a.x, fractalParameters.a.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			statPosition.y += statFontSize;
 		}
 
-		int numRoots = shaderFractal.GetNumSettableRoots();
+		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
 
 		if (numRoots == 2)
 		{
@@ -1129,7 +1131,7 @@ namespace Explorer
 
 		Font& mainFontSemibold = Resources::GetFont("mainFontSemibold");
 
-		if (shaderFractal.SupportsC())
+		if (FractalSupportsC(fractalParameters.type))
 		{
 			Vector2 cScreenPosition = GetFractalToScreenPosition(fractalParameters.c, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
@@ -1157,7 +1159,7 @@ namespace Explorer
 			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.c.x, fractalParameters.c.y), Vector2Add(Vector2{ cScreenPosition.x - valueLabelSize.x / 2.0f, cScreenPosition.y - labelFontSize - valueLabelSize.y }, labelOffset), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
-		if (shaderFractal.SupportsA())
+		if (FractalSupportsA(fractalParameters.type))
 		{
 			Vector2 aScreenPosition = GetFractalToScreenPosition(fractalParameters.a, fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
 
@@ -1185,7 +1187,9 @@ namespace Explorer
 			DrawTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.a.x, fractalParameters.a.y), Vector2Add(Vector2{ aScreenPosition.x - valueLabelSize.x / 2.0f, aScreenPosition.y - labelFontSize - valueLabelSize.y }, labelOffset), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		}
 
-		for (int i = 0; i < shaderFractal.GetNumSettableRoots(); i++)
+		int numRoots = GetFractalNumSettableRoots(fractalParameters.type);
+
+		for (int i = 0; i < numRoots; i++)
 		{
 			int id = 1 + i + 1;
 
@@ -1205,10 +1209,10 @@ namespace Explorer
 			{
 				fractalParameters.roots[i] = GetSelectedMouseFractalPosition(snapPixels);
 				GetFractalToScreenPosition(fractalParameters.roots[i], fractalParameters.position, fractalParameters.normalizedCenterOffset, fractalParameters.zoom, false, flipYAxis);
-				shaderFractal.SetRoots(fractalParameters.roots.data(), shaderFractal.GetNumSettableRoots());
+				shaderFractal.SetRoots(fractalParameters.roots.data(), numRoots);
 			}
 
-			DrawDraggableDot(rootScreenPosition, draggableDotRadius, ColorFromHSV(i * (360.0f / shaderFractal.GetNumSettableRoots()), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
+			DrawDraggableDot(rootScreenPosition, draggableDotRadius, ColorFromHSV(i * (360.0f / numRoots), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
 			DrawTextEx(mainFontSemibold, TextFormat("r%i", i + 1), Vector2Add(Vector2{ rootScreenPosition.x, rootScreenPosition.y - labelFontSize }, labelOffset), labelFontSize, labelFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			
 			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.roots[i].x, fractalParameters.roots[i].y), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER);
