@@ -346,6 +346,9 @@ namespace Explorer
 			if (IsKeyPressed(KEY_H))
 				fractalParameters.power = floor(fractalParameters.power);
 
+			if (fractalParameters.power < 0.0f)
+				fractalParameters.power = 0.0f;
+
 			//Update shader fractal power if any of the above power keys were pressed
 			if (IsKeyDown(KEY_F) || IsKeyDown(KEY_G) || IsKeyPressed(KEY_H))
 				shaderFractal.SetPower(fractalParameters.power);
@@ -952,6 +955,10 @@ namespace Explorer
 			if (IsRectangleDown(powerSubtractButtonRect) && CanHoldButton())
 			{
 				fractalParameters.power -= GetFrameTime();
+
+				if (fractalParameters.power < 0.0f)
+					fractalParameters.power = 0.0f;
+
 				shaderFractal.SetPower(fractalParameters.power);
 			}
 
