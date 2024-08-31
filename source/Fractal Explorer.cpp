@@ -58,7 +58,6 @@ namespace Explorer
 	float warningEndDeltaTime = 0.0f;
 	bool warningEnded = false;
 
-	void UpdateDrawWarning();
 
 	void Update();
 
@@ -75,6 +74,7 @@ namespace Explorer
 	#pragma endregion
 
 	#pragma region UI functions
+
 	Vector2 GetSelectedMouseFractalPosition(float snapWithinPixels);
 
 	void DrawFractalGrid();
@@ -97,6 +97,8 @@ namespace Explorer
 	void UpdateDrawDraggableDots();
 
 	void UpdateDrawNotification();
+
+	void UpdateDrawWarning();
 
 	//Sets cursorOnUI to true if rect is hovered, and activePressStartedOnUi if pressed
 	void CursorPanelCheck(Rectangle rect);
@@ -126,63 +128,25 @@ namespace Explorer
 		shaderFractal.Unload();
 	}
 
-	void UpdateDrawWarning()
-	{
-		if (warningEnded)
-			warningEndDeltaTime += GetFrameTime();
-
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-			warningEnded = true;
-
-		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
-
-		float alpha = 1.0f - warningEndDeltaTime / 1.0f;
-
-		int screenWidth = GetScreenWidth();
-		int screenHeight = GetScreenHeight();
-		float screenScaleSqrt = sqrt(GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT));
-
-		DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(BLACK, alpha));
-
-		const char* warningText = "!!! WARNING !!!";
-		float warningFontSize = std::min(96.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, warningText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
-		Vector2 warningSize = MeasureTextEx(mainFontSemibold, warningText, warningFontSize, warningFontSize * FONT_SPACING_MULTIPLIER);
-		DrawTextEx(mainFontSemibold, warningText, Vector2{ ((float)screenWidth - warningSize.x) / 2.0f, (float)screenHeight / 2.0f - warningSize.y }, warningFontSize, warningFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(RED, alpha));
-
-		const char* messageText = "This tool contains MANY FLASHING LIGHTS & COLOURS.";
-		float messageFontSize = std::min(48.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, messageText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
-		Vector2 messageSize = MeasureTextEx(mainFontSemibold, messageText, messageFontSize, messageFontSize * FONT_SPACING_MULTIPLIER);
-		DrawTextEx(mainFontSemibold, messageText, Vector2{ ((float)screenWidth - messageSize.x) / 2.0f, (float)screenHeight / 2.0f }, messageFontSize, messageFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(WHITE, alpha));
-
-		const char* proceedText = "Please click to proceed.";
-		float proceedFontSize = std::min(48.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, proceedText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
-		Vector2 proceedSize = MeasureTextEx(mainFontSemibold, proceedText, proceedFontSize, proceedFontSize * FONT_SPACING_MULTIPLIER);
-		DrawTextEx(mainFontSemibold, proceedText, Vector2{ ((float)screenWidth - proceedSize.x) / 2.0f, (float)screenHeight / 2.0f + messageSize.y }, proceedFontSize, proceedFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(WHITE, alpha));
-	}
-
 	void UpdateDrawFrame()
 	{
-		if (warningEnded)
-			Update();
+		Update();
 
 		BeginDrawing();
 		{
 			ClearBackground(BLACK);
 
-			if (warningEnded)
-			{
-				shaderFractal.Draw(Rectangle{ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()}, false, flipYAxis);
-				UpdateDrawUI();
-			}
-
-			if (warningEndDeltaTime <= 1.0f)
-				UpdateDrawWarning();
+			shaderFractal.Draw(Rectangle{ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()}, false, flipYAxis);
+			UpdateDrawUI();
 		}
 		EndDrawing();
 	}
 
 	void Update()
 	{
+		if (!warningEnded)
+			return;
+
 		UpdateFractal();
 
 		if (IsKeyPressed(KEY_SPACE))
@@ -797,6 +761,12 @@ namespace Explorer
 
 		cursorOnUI = false;
 
+		if (!warningEnded)
+		{
+			UpdateDrawWarning();
+			return;
+		}
+
 		if (showGrid)
 		{
 			DrawFractalGrid();
@@ -828,6 +798,9 @@ namespace Explorer
 
 		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
 			activePressStartedOnUI = false;
+
+		if (warningEndDeltaTime <= 1.0f)
+			UpdateDrawWarning();
 	}
 
 	void UpdateDrawFractalSelectionPanel()
@@ -1293,6 +1266,40 @@ namespace Explorer
 			DrawRectangleRec(notificationRect, ColorAlpha(mainBackgroundColor, 0.6f * alpha));
 			DrawTextEx(mainFontSemibold, notificationMessage, Vector2{ screenPadding + textPadding, screenHeight - notificationMessageSize.y - screenPadding - textPadding }, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, alpha));
 		}
+	}
+
+	void UpdateDrawWarning()
+	{
+		if (warningEnded)
+			warningEndDeltaTime += GetFrameTime();
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+			warningEnded = true;
+
+		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+
+		float alpha = 1.0f - warningEndDeltaTime / 1.0f;
+
+		int screenWidth = GetScreenWidth();
+		int screenHeight = GetScreenHeight();
+		float screenScaleSqrt = sqrt(GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT));
+
+		DrawRectangle(0, 0, screenWidth, screenHeight, ColorAlpha(BLACK, alpha));
+
+		const char* warningText = "!!! WARNING !!!";
+		float warningFontSize = std::min(96.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, warningText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
+		Vector2 warningSize = MeasureTextEx(mainFontSemibold, warningText, warningFontSize, warningFontSize * FONT_SPACING_MULTIPLIER);
+		DrawTextEx(mainFontSemibold, warningText, Vector2{ ((float)screenWidth - warningSize.x) / 2.0f, (float)screenHeight / 2.0f - warningSize.y }, warningFontSize, warningFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(RED, alpha));
+
+		const char* messageText = "This tool contains MANY FLASHING LIGHTS & COLOURS.";
+		float messageFontSize = std::min(48.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, messageText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
+		Vector2 messageSize = MeasureTextEx(mainFontSemibold, messageText, messageFontSize, messageFontSize * FONT_SPACING_MULTIPLIER);
+		DrawTextEx(mainFontSemibold, messageText, Vector2{ ((float)screenWidth - messageSize.x) / 2.0f, (float)screenHeight / 2.0f }, messageFontSize, messageFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(WHITE, alpha));
+
+		const char* proceedText = "Please click to proceed.";
+		float proceedFontSize = std::min(48.0f * screenScaleSqrt, GetFontSizeForWidth(mainFontSemibold, proceedText, (float)screenWidth - 20.0f * screenScaleSqrt, FONT_SPACING_MULTIPLIER));
+		Vector2 proceedSize = MeasureTextEx(mainFontSemibold, proceedText, proceedFontSize, proceedFontSize * FONT_SPACING_MULTIPLIER);
+		DrawTextEx(mainFontSemibold, proceedText, Vector2{ ((float)screenWidth - proceedSize.x) / 2.0f, (float)screenHeight / 2.0f + messageSize.y }, proceedFontSize, proceedFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(WHITE, alpha));
 	}
 
 	void CursorPanelCheck(Rectangle rect)

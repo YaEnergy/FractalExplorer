@@ -20,6 +20,7 @@ namespace Explorer
 		"newtonFractal_3.frag",
 		"newtonFractal_4.frag",
 		"newtonFractal_5.frag",
+		"newtonFractal_sin.frag",
 		"polynomialFractal_2.frag",
 		"polynomialFractal_3.frag"
 	};
@@ -39,15 +40,17 @@ namespace Explorer
 			case FRACTAL_JULIA:
 				return "Julia Set Fractal";
 			case FRACTAL_NEWTON_3DEG:
-				return "Newton Fractal - 3rd-degree polynomial";
+				return "Generalized Newton Fractal - 3rd-degree polynomial";
 			case FRACTAL_NEWTON_4DEG:
-				return "Newton Fractal - 4th-degree polynomial";
+				return "Generalized Newton Fractal - 4th-degree polynomial";
 			case FRACTAL_NEWTON_5DEG:
-				return "Newton Fractal - 5th-degree polynomial";
+				return "Generalized Newton Fractal - 5th-degree polynomial";
 			case FRACTAL_POLYNOMIAL_2DEG:
 				return "P(z)+c, deg(P)=2";
 			case FRACTAL_POLYNOMIAL_3DEG:
 				return "P(z)+c, deg(P)=3";
+			case FRACTAL_NEWTON_SIN:
+				return "Generalized Newton Fractal - P(z) = sin(z)";
 			default: //Or FRACTAL_UNKNOWN
 				return "UNKNOWN FRACTAL";
 		}
@@ -75,6 +78,8 @@ namespace Explorer
 				return "P(z) + c, deg P = 2";
 			case FRACTAL_POLYNOMIAL_3DEG:
 				return "P(z) + c, deg P = 2";
+			case FRACTAL_NEWTON_SIN:
+				return "z - a * (P(z) / P'(z)), P(z) = sin(z)";
 			default: //Or FRACTAL_UNKNOWN
 				return "UNKNOWN FRACTAL EQUATION";
 		}
@@ -113,12 +118,12 @@ namespace Explorer
 
 	bool FractalSupportsA(FractalType type)
 	{
-		return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG || type == FRACTAL_NEWTON_5DEG;
+		return type == FRACTAL_NEWTON_3DEG || type == FRACTAL_NEWTON_4DEG || type == FRACTAL_NEWTON_5DEG || type == FRACTAL_NEWTON_SIN;
 	}
 
 	bool FractalSupportsColorBanding(FractalType type)
 	{
-		return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG && type != FRACTAL_NEWTON_5DEG;
+		return type != FRACTAL_NEWTON_3DEG && type != FRACTAL_NEWTON_4DEG && type != FRACTAL_NEWTON_5DEG && type != FRACTAL_NEWTON_SIN;
 	}
 
 	#pragma endregion

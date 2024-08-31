@@ -7,7 +7,7 @@
 namespace Explorer
 {
 	//Not including FRACTAL_UNKNOWN: not a fractal
-	const int NUM_FRACTAL_TYPES = 9;
+	const int NUM_FRACTAL_TYPES = 10;
 
 	const int NUM_MAX_ROOTS = 5;
 
@@ -21,8 +21,9 @@ namespace Explorer
 		FRACTAL_NEWTON_3DEG = 4,
 		FRACTAL_NEWTON_4DEG = 5,
 		FRACTAL_NEWTON_5DEG = 6,
-		FRACTAL_POLYNOMIAL_2DEG = 7,
-		FRACTAL_POLYNOMIAL_3DEG = 8
+		FRACTAL_NEWTON_SIN = 7,
+		FRACTAL_POLYNOMIAL_2DEG = 8,
+		FRACTAL_POLYNOMIAL_3DEG = 9,
 	};
 
 	const char* GetFractalName(FractalType);
