@@ -175,7 +175,7 @@ void main()
 
     //due to floating imprecision, we might not perfectly land at a root
     float tolerance = 0.35;
-    //it seems this I suck at this
+    //it seems that I suck at this
 
     //third degree factor: 1
     vec2 thirdDegreeFactor = vec2(1.0, 0.0);

@@ -85,11 +85,16 @@ namespace Explorer
 
 	void DrawInfoPanel();
 
+	void DrawStatInfo(const char* text, Vector2 position, Vector2 textPadding, float fontSize, Color textColor, Color backgroundColor);
+
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown);
 
 	void UpdateDrawDraggableDots();
 
 	void UpdateDrawNotification();
+
+	//Sets cursorOnUI to true if rect is hovered, and activePressStartedOnUi if pressed
+	void CursorPanelCheck(Rectangle rect);
 	#pragma endregion
 
 	void Init()
@@ -797,11 +802,7 @@ namespace Explorer
 
 		DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, ColorAlpha(mainBackgroundColor, 0.4f));
 
-		if (IsRectangleHovered(fractalSelectionRect))
-			cursorOnUI = true;
-
-		if (IsRectanglePressed(fractalSelectionRect))
-			activePressStartedOnUI = true;
+		CursorPanelCheck(fractalSelectionRect);
 
 		//Fractal name
 
@@ -853,11 +854,7 @@ namespace Explorer
 
 		DrawRectangleRec(buttonPanelRect, ColorAlpha(mainBackgroundColor, 0.2f));
 
-		if (IsRectangleHovered(buttonPanelRect))
-			cursorOnUI = true;
-
-		if (IsRectanglePressed(buttonPanelRect))
-			activePressStartedOnUI = true;
+		CursorPanelCheck(buttonPanelRect);
 
 		int buttonIndex = 0;
 
@@ -894,7 +891,7 @@ namespace Explorer
 			showGrid = !showGrid;
 
 		//Color banding button (if supported)
-		if (FractalSupportsC(fractalParameters.type))
+		if (FractalSupportsColorBanding(fractalParameters.type))
 		{
 			Rectangle colorBandingButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 		
@@ -1003,11 +1000,7 @@ namespace Explorer
 
 			DrawRectangleRec(polynomialRect, ColorAlpha(mainBackgroundColor, 0.4f));
 
-			if (IsRectangleHovered(polynomialRect))
-				cursorOnUI = true;
-
-			if (IsRectanglePressed(polynomialRect))
-				activePressStartedOnUI = true;
+			CursorPanelCheck(polynomialRect);
 
 			DrawTextEx(mainFontSemibold, polynomialText.c_str(), Vector2{ polynomialRect.x + textPaddingX, polynomialRect.y + textPaddingY }, polynomialFontSize, polynomialFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			positionY += polynomialRect.height;
@@ -1021,11 +1014,7 @@ namespace Explorer
 
 		DrawRectangleRec(equationRect, ColorAlpha(mainBackgroundColor, 0.6f));
 
-		if (IsRectangleHovered(equationRect))
-			cursorOnUI = true;
-
-		if (IsRectanglePressed(equationRect))
-			activePressStartedOnUI = true;
+		CursorPanelCheck(equationRect);
 
 		DrawTextEx(mainFontSemibold, GetFractalEquation(fractalParameters.type), Vector2{equationRect.x + textPaddingX, equationRect.y + textPaddingY}, equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 	}
@@ -1040,71 +1029,67 @@ namespace Explorer
 		float statFontSize = 24.0f * sqrt(screenScale);
 
 		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
-		Color mainBackgroundColor = DARKGRAY;
-
-		//Info panel rectangle
-		//TODO: Finish info panel rectangle background
-
-		/*float infoPanelHeight = statFontSize * 4.0f + 20.0f;
-
-		if (shaderFractal.SupportsPower())
-			infoPanelHeight += statFontSize;
-
-		if (shaderFractal.SupportsC())
-			infoPanelHeight += statFontSize;
-
-		if (shaderFractal.SupportsA())
-			infoPanelHeight += statFontSize;
-
-		if (fractalParameters.type == FRACTAL_NEWTON_3DEG)
-			infoPanelHeight += statFontSize * 2.0f;
-		else if (fractalParameters.type == FRACTAL_NEWTON_4DEG || fractalParameters.type == FRACTAL_NEWTON_5DEG)
-			infoPanelHeight += statFontSize * 3.0f;
-
-		Rectangle infoPanelRect = Rectangle{ 0.0f, 0.0f, 200.0f, infoPanelHeight };
-
-		DrawRectangleRec(infoPanelRect, ColorAlpha(mainBackgroundColor, 0.6f));
-
-		if (IsRectangleHovered(infoPanelRect))
-			cursorOnUI = true;
-
-		if (IsRectanglePressed(infoPanelRect))
-			activePressStartedOnUI = true;*/
 
 		//info stats
 
-		Vector2 statPosition = Vector2{ 10, 10 };
+		Vector2 textPadding = Vector2{ 5.0f * screenScale, 0.0f };
+		Vector2 statPosition = Vector2{ 0.0f, 0.0f };
+
+		Color unevenColor = ColorAlpha(GRAY, 0.4f);
+		Color evenColor = ColorAlpha(DARKGRAY, 0.4f);
+
+		int statIndex = 0;
 
 		int fps = GetFPS();
-		DrawTextEx(mainFontSemibold, TextFormat("FPS: %i", fps), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, fps < 20 ? RED : WHITE);
-		statPosition.y += statFontSize;
+		DrawStatInfo(TextFormat("FPS: %i", fps), statPosition, textPadding, statFontSize, fps <= 20 ? RED : WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+		statPosition.y += statFontSize + 2.0f * textPadding.y;
+		statIndex++;
 
-		DrawTextEx(mainFontSemibold, TextFormat("Position: x%g, y%g", fractalParameters.position.x, fractalParameters.position.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-		statPosition.y += statFontSize;
+		DrawStatInfo(TextFormat("Position: x%g, y%g", fractalParameters.position.x, fractalParameters.position.y), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+		statPosition.y += statFontSize + 2.0f * textPadding.y;
+		statIndex++;
 		
-		DrawTextEx(mainFontSemibold, TextFormat("Zoom: %g", fractalParameters.zoom), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-		statPosition.y += statFontSize;
+		DrawStatInfo(TextFormat("Zoom: %g", fractalParameters.zoom), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+		statPosition.y += statFontSize + 2.0f * textPadding.y;
+		statIndex++;
 
-		DrawTextEx(mainFontSemibold, TextFormat("Max iterations: %i", fractalParameters.maxIterations), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-		statPosition.y += statFontSize;
+		DrawStatInfo(TextFormat("Max iterations: %i", fractalParameters.maxIterations), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+		statPosition.y += statFontSize + 2.0f * textPadding.y;
+		statIndex++;
 
 		if (FractalSupportsPower(fractalParameters.type))
 		{
-			DrawTextEx(mainFontSemibold, TextFormat("Pow: %g", fractalParameters.power), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-			statPosition.y += statFontSize;
+			DrawStatInfo(TextFormat("Pow: %g", fractalParameters.power), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+			statPosition.y += statFontSize + 2.0f * textPadding.y;
+			statIndex++;
 		}
 
 		if (FractalSupportsC(fractalParameters.type))
 		{
-			DrawTextEx(mainFontSemibold, TextFormat("c = %g%+gi", fractalParameters.c.x, fractalParameters.c.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-			statPosition.y += statFontSize;
+			DrawStatInfo(TextFormat("c = %g%+gi", fractalParameters.c.x, fractalParameters.c.y), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+			statPosition.y += statFontSize + 2.0f * textPadding.y;
+			statIndex++;
 		}
 
 		if (FractalSupportsA(fractalParameters.type))
 		{
-			DrawTextEx(mainFontSemibold, TextFormat("a = %g%+gi", fractalParameters.a.x, fractalParameters.a.y), statPosition, statFontSize, statFontSize * FONT_SPACING_MULTIPLIER, WHITE);
-			statPosition.y += statFontSize;
+			DrawStatInfo(TextFormat("a = %g%+gi", fractalParameters.a.x, fractalParameters.a.y), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+			statPosition.y += statFontSize + 2.0f * textPadding.y;
+			statIndex++;
 		}
+	}
+
+	void DrawStatInfo(const char* text, Vector2 position, Vector2 textPadding, float fontSize, Color textColor, Color backgroundColor)
+	{
+		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
+
+		Vector2 infoSize = MeasureTextEx(mainFontSemibold, text, fontSize, fontSize * FONT_SPACING_MULTIPLIER);
+		Rectangle infoRect = Rectangle{ position.x, position.y, infoSize.x + textPadding.x * 2.0f, fontSize + textPadding.y * 2.0f };
+
+		DrawRectangleRec(infoRect, backgroundColor);
+		CursorPanelCheck(infoRect);
+
+		DrawTextEx(mainFontSemibold, text, Vector2Add(position, textPadding), fontSize, fontSize * FONT_SPACING_MULTIPLIER, textColor);
 	}
 
 	void DrawDraggableDot(Vector2 position, float radius, Color fillColor, Color outlineColor, bool isHovered, bool isDown)
@@ -1252,15 +1237,20 @@ namespace Explorer
 			Vector2 notificationMessageSize = MeasureTextEx(mainFontSemibold, notificationCurrent.message.c_str(), notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER);
 			Rectangle notificationRect = Rectangle{ screenPadding, screenHeight - notificationMessageSize.y - screenPadding - 2.0f * textPadding, notificationMessageSize.x + 2.0f * textPadding, notificationMessageSize.y + 2.0f * textPadding };
 
-			if (IsRectangleHovered(notificationRect))
-				cursorOnUI = true;
-
-			if (IsRectanglePressed(notificationRect))
-				activePressStartedOnUI = true;
+			CursorPanelCheck(notificationRect);
 
 			DrawRectangleRec(notificationRect, ColorAlpha(mainBackgroundColor, 0.6f * alpha));
 			DrawTextEx(mainFontSemibold, notificationMessage, Vector2{ screenPadding + textPadding, screenHeight - notificationMessageSize.y - screenPadding - textPadding }, notificationFontSize, notificationFontSize * FONT_SPACING_MULTIPLIER, ColorAlpha(notificationCurrent.color, alpha));
 		}
+	}
+
+	void CursorPanelCheck(Rectangle rect)
+	{
+		if (IsRectangleHovered(rect))
+			cursorOnUI = true;
+
+		if (IsRectanglePressed(rect))
+			activePressStartedOnUI = true;
 	}
 	#pragma endregion
 }
