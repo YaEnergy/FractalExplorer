@@ -50,6 +50,8 @@ void DrawLoadingFrame()
 int main()
 {
 	//Init
+	SetConfigFlags(FLAG_VSYNC_HINT);
+
 	InitWindow(DESIGN_WIDTH, DESIGN_HEIGHT, "Complex Fractal Explorer");
 	InitAudioDevice();
 
@@ -77,6 +79,9 @@ int main()
 #ifdef PLATFORM_WEB
 	emscripten_set_main_loop(Explorer::UpdateDrawFrame, 0, 1);
 #else
+	//Set Target FPS to current monitor's refresh rate
+	SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+
 	while (!WindowShouldClose())
 	{
 		Explorer::UpdateDrawFrame();
