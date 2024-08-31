@@ -17,7 +17,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Set flags
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Set cmake cxx flags for release")
-    set(CMAKE_CXX_FLAGS "-O2")
+    set(CMAKE_CXX_FLAGS -O2)
 endif()
 
 # raylib
@@ -81,6 +81,10 @@ endif()
 
 if (WIN32)
     target_sources(${PROJECT_NAME} PRIVATE resource.rc)
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS} -O2)
 endif()
 
 #Web configurations
