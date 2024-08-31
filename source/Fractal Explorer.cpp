@@ -58,7 +58,6 @@ namespace Explorer
 	float warningEndDeltaTime = 0.0f;
 	bool warningEnded = false;
 
-
 	void Update();
 
 	#pragma region Fractal functions
@@ -76,6 +75,8 @@ namespace Explorer
 	#pragma region UI functions
 
 	Vector2 GetSelectedMouseFractalPosition(float snapWithinPixels);
+
+	bool CanHoldButton();
 
 	void DrawFractalGrid();
 
@@ -531,6 +532,12 @@ namespace Explorer
 		return mouseFractalPosition;
 	}
 
+	bool CanHoldButton()
+	{
+		//Can keep holding or start holding button if click started on UI, and is not dragging a dot
+		return activePressStartedOnUI && !isDraggingDot;
+	}
+
 	void DrawFractalGrid()
 	{
 		int screenWidth = GetScreenWidth();
@@ -796,8 +803,10 @@ namespace Explorer
 		//notification messages
 		UpdateDrawNotification();
 
-		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
+		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+		{
 			activePressStartedOnUI = false;
+		}
 
 		if (warningEndDeltaTime <= 1.0f)
 			UpdateDrawWarning();
@@ -940,7 +949,7 @@ namespace Explorer
 
 			buttonIndex++;
 
-			if (IsRectangleHovered(powerSubtractButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
+			if (IsRectangleDown(powerSubtractButtonRect) && CanHoldButton())
 			{
 				fractalParameters.power -= GetFrameTime();
 				shaderFractal.SetPower(fractalParameters.power);
@@ -953,7 +962,7 @@ namespace Explorer
 
 			buttonIndex++;
 
-			if (IsRectangleHovered(powerAddButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && activePressStartedOnUI)
+			if (IsRectangleDown(powerAddButtonRect) && CanHoldButton())
 			{
 				fractalParameters.power += GetFrameTime();
 				shaderFractal.SetPower(fractalParameters.power);

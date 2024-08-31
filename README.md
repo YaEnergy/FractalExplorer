@@ -14,8 +14,14 @@ and Desktop uses GLSL v330 shaders found in assets/shaders/v330.
 - Julia set
 - Tricorn (+Multicorn)
 - Burning ship
-- Newton fractal (with polynomials of the third-, fourth- and fifth-degree)
-- P(z) + c (with polynomials of the second- and third-degree)
+- Newton fractal
+	- 3rd-degree polynomial
+	- 4th-degree polynomial
+	- 5th-degree polynomial
+	- sin(z)
+- P(z) + c
+	- 2nd-degree polynomial
+	- 3rd-degree polynomial
 
 ## Desktop vs Web versions
 

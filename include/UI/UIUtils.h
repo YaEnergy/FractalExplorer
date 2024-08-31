@@ -8,9 +8,13 @@ namespace Explorer
 
 	bool IsCircleHovered(Vector2 position, float radius);
 
+	bool IsCircleDown(Vector2 position, float radius);
+
 	bool IsCirclePressed(Vector2 position, float radius);
 
 	bool IsRectangleHovered(Rectangle rectangle);
+
+	bool IsRectangleDown(Rectangle rectangle);
 
 	bool IsRectanglePressed(Rectangle rectangle);
 

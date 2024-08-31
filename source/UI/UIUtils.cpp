@@ -16,6 +16,11 @@ namespace Explorer
 		return CheckCollisionPointCircle(GetMousePosition(), position, radius);
 	}
 
+	bool IsCircleDown(Vector2 position, float radius)
+	{
+		return IsCircleHovered(position, radius) && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+	}
+
 	bool IsCirclePressed(Vector2 position, float radius)
 	{
 		return IsCircleHovered(position, radius) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
@@ -24,6 +29,11 @@ namespace Explorer
 	bool IsRectangleHovered(Rectangle rectangle)
 	{
 		return CheckCollisionPointRec(GetMousePosition(), rectangle);
+	}
+
+	bool IsRectangleDown(Rectangle rectangle)
+	{
+		return IsRectangleHovered(rectangle) && IsMouseButtonDown(MOUSE_BUTTON_LEFT);
 	}
 
 	bool IsRectanglePressed(Rectangle rectangle)
@@ -35,7 +45,7 @@ namespace Explorer
 	{
 		Color color = idleColor;
 
-		if (IsRectangleHovered(dest) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		if (IsRectangleDown(dest))
 			color = pressColor;
 		else if (IsRectangleHovered(dest))
 			color = hoverColor;

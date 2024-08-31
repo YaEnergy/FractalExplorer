@@ -31,8 +31,8 @@ namespace Explorer::Resources
 		textures.emplace("icon_info_off", LoadTexture("assets/icons/icon_info_off.png"));
 
 		//Load fonts
-		fonts.emplace("mainFontSemibold", LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 64, NULL, 0)); //NULL & 0 for loading default character set
-		fonts.emplace("mainFontRegular", LoadFontEx("assets/fonts/open-sans/OpenSans-Regular.ttf", 64, NULL, 0)); //NULL & 0 for loading default character set
+		fonts.emplace("mainFontSemibold", LoadFontEx("assets/fonts/open-sans/OpenSans-Semibold.ttf", 128, NULL, 0)); //NULL & 0 for loading default character set
+		fonts.emplace("mainFontRegular", LoadFontEx("assets/fonts/open-sans/OpenSans-Regular.ttf", 128, NULL, 0)); //NULL & 0 for loading default character set
 	}
 
 	void Unload()
