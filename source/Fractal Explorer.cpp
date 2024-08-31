@@ -791,7 +791,9 @@ namespace Explorer
 		int screenHeight = GetScreenHeight();
 
 		Font mainFontSemibold = Resources::GetFont("mainFontSemibold");
-		Color mainBackgroundColor = DARKGRAY;
+
+		Color mainBackgroundColor = ColorAlpha(DARKGRAY, 0.4f);
+		Color altBackgroundColor = ColorAlpha(GRAY, 0.4f);
 
 		float screenScale = GetScreenScale(DESIGN_WIDTH, DESIGN_HEIGHT);
 
@@ -800,7 +802,7 @@ namespace Explorer
 		float fractalSelectionHeight = 32.0f * screenScale;
 		Rectangle fractalSelectionRect = Rectangle{ (float)screenWidth * 0.25f, (float)screenHeight - fractalSelectionHeight * 1.5f, (float)screenWidth * 0.5f, fractalSelectionHeight };
 
-		DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, ColorAlpha(mainBackgroundColor, 0.4f));
+		DrawRectangleRec(Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height }, mainBackgroundColor);
 
 		CursorPanelCheck(fractalSelectionRect);
 
@@ -814,7 +816,7 @@ namespace Explorer
 		//Previous fractal button
 
 		Rectangle prevButtonRect = Rectangle{ fractalSelectionRect.x, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
-		Color prevButtonColor = mainBackgroundColor;
+		Color prevButtonColor = DARKGRAY;
 
 		if (IsRectangleHovered(prevButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 			prevButtonColor = RAYWHITE;
@@ -833,7 +835,7 @@ namespace Explorer
 		//Next fractal button
 
 		Rectangle nextButtonRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.width - fractalSelectionRect.height, fractalSelectionRect.y, fractalSelectionRect.height, fractalSelectionRect.height };
-		Color nextButtonColor = mainBackgroundColor;
+		Color nextButtonColor = DARKGRAY;
 
 		if (IsRectangleHovered(nextButtonRect) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 			nextButtonColor = RAYWHITE;
@@ -852,16 +854,20 @@ namespace Explorer
 		//Top rect
 		Rectangle buttonPanelRect = Rectangle{ fractalSelectionRect.x + fractalSelectionRect.height, fractalSelectionRect.y - fractalSelectionRect.height, fractalSelectionRect.width - fractalSelectionRect.height * 2.0f, fractalSelectionRect.height };
 
-		DrawRectangleRec(buttonPanelRect, ColorAlpha(mainBackgroundColor, 0.2f));
+		DrawRectangleRec(buttonPanelRect, altBackgroundColor);
 
 		CursorPanelCheck(buttonPanelRect);
 
 		int buttonIndex = 0;
 
+		Color defaultImageColor = WHITE;
+		Color hoveredImageColor = LIGHTGRAY;
+		Color pressedImageColor = DARKGRAY;
+
 		//Info panel visibility
 		Rectangle infoButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 
-		DrawTextureButton(showInfoPanel ? Resources::GetTexture("icon_info_on") : Resources::GetTexture("icon_info_off"), infoButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+		DrawTextureButton(showInfoPanel ? Resources::GetTexture("icon_info_on") : Resources::GetTexture("icon_info_off"), infoButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 		buttonIndex++;
 
@@ -872,7 +878,7 @@ namespace Explorer
 
 		Rectangle screenshotButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 	
-		DrawTextureButton(Resources::GetTexture("icon_screenshot"), screenshotButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+		DrawTextureButton(Resources::GetTexture("icon_screenshot"), screenshotButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 		buttonIndex++;
 
@@ -883,7 +889,7 @@ namespace Explorer
 
 		Rectangle gridVisButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 
-		DrawTextureButton(showGrid ? Resources::GetTexture("icon_grid_on") : Resources::GetTexture("icon_grid_off"), gridVisButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+		DrawTextureButton(showGrid ? Resources::GetTexture("icon_grid_on") : Resources::GetTexture("icon_grid_off"), gridVisButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 		buttonIndex++;
 
@@ -895,7 +901,7 @@ namespace Explorer
 		{
 			Rectangle colorBandingButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 		
-			DrawTextureButton(fractalParameters.colorBanding ? Resources::GetTexture("icon_colorbanding_on") : Resources::GetTexture("icon_colorbanding_off"), colorBandingButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+			DrawTextureButton(fractalParameters.colorBanding ? Resources::GetTexture("icon_colorbanding_on") : Resources::GetTexture("icon_colorbanding_off"), colorBandingButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 			buttonIndex++;
 
@@ -912,7 +918,7 @@ namespace Explorer
 			//Subtract
 			Rectangle powerSubtractButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 
-			DrawTextureButton(Resources::GetTexture("icon_power_subtract"), powerSubtractButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+			DrawTextureButton(Resources::GetTexture("icon_power_subtract"), powerSubtractButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 			buttonIndex++;
 
@@ -925,7 +931,7 @@ namespace Explorer
 			//Add
 			Rectangle powerAddButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 
-			DrawTextureButton(Resources::GetTexture("icon_power_add"), powerAddButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+			DrawTextureButton(Resources::GetTexture("icon_power_add"), powerAddButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 			buttonIndex++;
 
@@ -938,7 +944,7 @@ namespace Explorer
 			//Floor
 			Rectangle powerFloorButtonRect = Rectangle{ buttonPanelRect.x + buttonPanelRect.height * buttonIndex, buttonPanelRect.y, buttonPanelRect.height, buttonPanelRect.height };
 
-			DrawTextureButton(Resources::GetTexture("icon_power_floor"), powerFloorButtonRect, WHITE, LIGHTGRAY, DARKGRAY);
+			DrawTextureButton(Resources::GetTexture("icon_power_floor"), powerFloorButtonRect, defaultImageColor, hoveredImageColor, pressedImageColor);
 
 			buttonIndex++;
 
@@ -998,7 +1004,7 @@ namespace Explorer
 			Vector2 polynomialTextSize = MeasureTextEx(mainFontSemibold, polynomialText.c_str(), polynomialFontSize, polynomialFontSize * FONT_SPACING_MULTIPLIER);
 			Rectangle polynomialRect = Rectangle{ (float)screenWidth * 0.5f - (polynomialTextSize.x + textPaddingX * 2.0f) / 2.0f, positionY, polynomialTextSize.x + 2.0f * textPaddingX, polynomialTextSize.y + 2.0f * textPaddingY };
 
-			DrawRectangleRec(polynomialRect, ColorAlpha(mainBackgroundColor, 0.4f));
+			DrawRectangleRec(polynomialRect, ColorAlpha(GRAY, 0.4f));
 
 			CursorPanelCheck(polynomialRect);
 
@@ -1012,7 +1018,7 @@ namespace Explorer
 		Vector2 equationTextSize = MeasureTextEx(mainFontSemibold, GetFractalEquation(fractalParameters.type), equationFontSize, equationFontSize * FONT_SPACING_MULTIPLIER);
 		Rectangle equationRect = Rectangle{ (float)screenWidth * 0.5f - (equationTextSize.x + textPaddingX * 2.0f) / 2.0f, positionY, equationTextSize.x + 2.0f * textPaddingX, equationTextSize.y + 2.0f * textPaddingY };
 
-		DrawRectangleRec(equationRect, ColorAlpha(mainBackgroundColor, 0.6f));
+		DrawRectangleRec(equationRect, ColorAlpha(DARKGRAY, 0.4f));
 
 		CursorPanelCheck(equationRect);
 
@@ -1059,7 +1065,7 @@ namespace Explorer
 
 		if (FractalSupportsPower(fractalParameters.type))
 		{
-			DrawStatInfo(TextFormat("Pow: %g", fractalParameters.power), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
+			DrawStatInfo(TextFormat("n = %g", fractalParameters.power), statPosition, textPadding, statFontSize, WHITE, statIndex % 2 == 0 ? evenColor : unevenColor);
 			statPosition.y += statFontSize + 2.0f * textPadding.y;
 			statIndex++;
 		}
@@ -1133,7 +1139,7 @@ namespace Explorer
 				shaderFractal.SetC(fractalParameters.c);
 			}
 
-			DrawDraggableDot(cScreenPosition, draggableDotRadius, WHITE, BLACK, IsCircleHovered(cScreenPosition, 6.0f), draggingDotId == 0);
+			DrawDraggableDot(cScreenPosition, draggableDotRadius, WHITE, BLACK, IsCircleHovered(cScreenPosition, draggableDotRadius), draggingDotId == 0);
 			DrawTextEx(mainFontSemibold, "c", Vector2Add(Vector2{ cScreenPosition.x, cScreenPosition.y - labelFontSize }, labelOffset), labelFontSize, labelFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		
 			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.c.x, fractalParameters.c.y), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER);
@@ -1161,7 +1167,7 @@ namespace Explorer
 				shaderFractal.SetA(fractalParameters.a);
 			}
 
-			DrawDraggableDot(aScreenPosition, draggableDotRadius, PINK, BLACK, IsCircleHovered(aScreenPosition, 6.0f), draggingDotId == 1);
+			DrawDraggableDot(aScreenPosition, draggableDotRadius, PINK, BLACK, IsCircleHovered(aScreenPosition, draggableDotRadius), draggingDotId == 1);
 			DrawTextEx(mainFontSemibold, "a", Vector2Add(Vector2{ aScreenPosition.x, aScreenPosition.y - labelFontSize }, labelOffset), labelFontSize, labelFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 		
 			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.a.x, fractalParameters.a.y), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER);
@@ -1193,7 +1199,7 @@ namespace Explorer
 				shaderFractal.SetRoots(fractalParameters.roots.data(), numRoots);
 			}
 
-			DrawDraggableDot(rootScreenPosition, draggableDotRadius, ColorFromHSV(i * (360.0f / numRoots), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, 6.0f), draggingDotId == id);
+			DrawDraggableDot(rootScreenPosition, draggableDotRadius, ColorFromHSV(i * (360.0f / numRoots), 1.0f, 0.8f), BLACK, IsCircleHovered(rootScreenPosition, draggableDotRadius), draggingDotId == id);
 			DrawTextEx(mainFontSemibold, TextFormat("r%i", i + 1), Vector2Add(Vector2{ rootScreenPosition.x, rootScreenPosition.y - labelFontSize }, labelOffset), labelFontSize, labelFontSize * FONT_SPACING_MULTIPLIER, WHITE);
 			
 			Vector2 valueLabelSize = MeasureTextEx(mainFontSemibold, TextFormat("%g%+gi", fractalParameters.roots[i].x, fractalParameters.roots[i].y), valueFontSize, valueFontSize * FONT_SPACING_MULTIPLIER);
