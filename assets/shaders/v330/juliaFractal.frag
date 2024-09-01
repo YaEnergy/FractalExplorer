@@ -75,6 +75,19 @@ vec2 ComplexDivide(vec2 a, vec2 b)
 //z^power
 vec2 ComplexPow(vec2 z, float power)
 {
+    //ref: https://registry.khronos.org/OpenGL-Refpages/gl4/
+    //according to the above ref, pow(x, y) with (x < 0) or (x = 0 & y <= 0) produces undefined.
+    //but on certain GPUs, for some reason (x = 0) also causes issues.
+    //I find this very strange as, for example: 0 * 0 (or 0^2) would equal 0, right?
+    //I'm glad that I found this issue, because this would've gone unnoticed if I didn't have my school computer.
+    //this only proved to be an issue for multibrot & multicorn as their z starts at vec2(0.0, 0.0), which meant z.x * z.x + z.y * z.y produced 0
+    //the julia fractal however, does not.
+    //I'm not completely sure if they produced undefined, but given what was happening it was most likely the case.
+
+    //z.x * z.x + z.y * z.y, will never be less than zero, so only this check is neccessary
+    if (z.x * z.x + z.y * z.y == 0.0)
+        return vec2(0.0, 0.0);
+
     return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 

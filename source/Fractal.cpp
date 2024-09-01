@@ -77,7 +77,7 @@ namespace Explorer
 			case FRACTAL_POLYNOMIAL_2DEG:
 				return "P(z) + c, deg P = 2";
 			case FRACTAL_POLYNOMIAL_3DEG:
-				return "P(z) + c, deg P = 2";
+				return "P(z) + c, deg P = 3";
 			case FRACTAL_NEWTON_SIN:
 				return "z - a * (P(z) / P'(z)), P(z) = sin(z)";
 			default: //Or FRACTAL_UNKNOWN

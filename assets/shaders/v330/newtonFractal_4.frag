@@ -83,12 +83,6 @@ vec2 ComplexDivide(vec2 a, vec2 b)
     return vec2( (a.x *  b.x - a.y * b.y) / (b.x * b.x + b.y * b.y), (a.y * b.x - a.x * b.y) / (b.x * b.x + b.y * b.y) );
 }
 
-//z^power
-vec2 ComplexPow(vec2 z, float power)
-{
-    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
-}
-
 //Fourth-degree polynomial function for complex numbers (az^4 + bz^3 + cz^2 + dz + e)
 vec2 FourthDegreePolynomial(vec2 z, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e)
 {
