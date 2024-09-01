@@ -313,7 +313,7 @@ namespace Explorer
 		UpdateFractalCamera();
 
 		//Iteration keys
-		if (IsKeyPressed(KEY_KP_ADD))
+		if (IsKeyPressed(KEY_KP_ADD) || IsKeyPressed(KEY_L))
 		{
 			fractalParameters.maxIterations++;
 
@@ -328,7 +328,7 @@ namespace Explorer
 			
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
 		}
-		else if (IsKeyPressed(KEY_KP_SUBTRACT) && fractalParameters.maxIterations > 0)
+		else if ((IsKeyPressed(KEY_KP_SUBTRACT) || IsKeyPressed(KEY_K)) && fractalParameters.maxIterations > 0)
 		{
 			fractalParameters.maxIterations--;
 			shaderFractal.SetMaxIterations(fractalParameters.maxIterations);
