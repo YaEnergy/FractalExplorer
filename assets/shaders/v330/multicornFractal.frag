@@ -40,12 +40,6 @@ vec2 ComplexConjugate(vec2 z)
     return vec2(z.x, -z.y);
 }
 
-//z = a + b
-vec2 ComplexAdd(vec2 a, vec2 b)
-{
-    return vec2(a.x + b.x, a.y + b.y);
-}
-
 //z = a * b
 vec2 ComplexMultiply(vec2 a, vec2 b)
 {

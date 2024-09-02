@@ -65,7 +65,7 @@ namespace Explorer
 			case FRACTAL_MULTICORN:
 				return "(Re(z) - Im(z) i) ^ n + c";
 			case FRACTAL_BURNING_SHIP:
-				return "(|Re(z) + |Im (z)| i) ^ 2 + c";
+				return "(|Re(z) + |Im (z)| i) ^ n + c";
 			case FRACTAL_JULIA:
 				return "z ^ n + c";
 			case FRACTAL_NEWTON_3DEG:
@@ -108,7 +108,7 @@ namespace Explorer
 
 	bool FractalSupportsPower(FractalType type)
 	{
-		return type == FRACTAL_MULTIBROT || type == FRACTAL_MULTICORN || type == FRACTAL_JULIA;
+		return type == FRACTAL_MULTIBROT || type == FRACTAL_MULTICORN || type == FRACTAL_JULIA || type == FRACTAL_BURNING_SHIP;
 	}
 
 	bool FractalSupportsC(FractalType type)

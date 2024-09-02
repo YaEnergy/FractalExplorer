@@ -25,12 +25,6 @@ uniform int colorBanding;
 
 uniform vec2 roots[NUM_ROOTS];
 
-//2-argument arctangent, used to (for example:) get the angle of a complex number
-float atan2(float y, float x)
-{
-    return x > 0.0 ? atan(y / x) : atan(y / x) + PI;
-}
-
 float ComplexAbs(vec2 z)
 {
     return sqrt(z.x * z.x + z.y * z.y);
@@ -39,12 +33,6 @@ float ComplexAbs(vec2 z)
 float ComplexAbsSquared(vec2 z)
 {
     return z.x * z.x + z.y * z.y;
-}
-
-//z = a + b
-vec2 ComplexAdd(vec2 a, vec2 b)
-{
-    return vec2(a.x + b.x, a.y + b.y);
 }
 
 //z = a * b

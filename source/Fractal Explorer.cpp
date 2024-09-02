@@ -420,7 +420,7 @@ namespace Explorer
 
 		//Zooming using pinching
 		Vector2 pinchMovement = GetGesturePinchVector();
-		fractalParameters.zoom += fractalParameters.zoom * 0.5f * Vector2Length(pinchMovement);
+		fractalParameters.zoom += fractalParameters.zoom * 0.25f * Vector2Length(pinchMovement);
 
 		//min & max zoom
 		fractalParameters.zoom = std::clamp(fractalParameters.zoom, 1.0f / 100000.0f, pow(10.0f, 10.0f));

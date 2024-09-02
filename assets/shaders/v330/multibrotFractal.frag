@@ -40,35 +40,10 @@ vec2 ComplexConjugate(vec2 z)
     return vec2(z.x, -z.y);
 }
 
-//z = a + b
-vec2 ComplexAdd(vec2 a, vec2 b)
-{
-    return vec2(a.x + b.x, a.y + b.y);
-}
-
 //z = a * b
 vec2 ComplexMultiply(vec2 a, vec2 b)
 {
     return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
-
-//z = a / b
-vec2 ComplexDivide(vec2 a, vec2 b)
-{
-    //ref: Delta 4B, p. 133
-			
-			//z1 / z2
-			//(a + bi) / (c + di)
-			//(a + bi) / (c + di) * ((c - di) / (c - di))
-			//(ac - adi + bco - bdi*i)/(c*c-d*d*i*i)
-			//(ac + bd - adi + bci)/(c*c+d*d)
-			//((ac + bd) + (bc - ad)i) / (c*c+d*d)
-			//(ac + bd) / (c*c+d*d) + (bc - ad) / (c*c + d * d) i
-
-			//real: (ac + bd) / (c*c+d*d)
-			//imaginary: (bc - ad) / (c*c + d * d) i
-
-    return vec2( (a.x *  b.x - a.y * b.y) / (b.x * b.x + b.y * b.y), (a.y * b.x - a.x * b.y) / (b.x * b.x + b.y * b.y) );
 }
 
 //z^power

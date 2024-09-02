@@ -12,12 +12,21 @@ varying vec4 fragColor;
 
 uniform float widthStretch;
 
-uniform vec2 position;
-uniform vec2 offset;
-uniform float zoom;
+uniform float power;
 uniform int maxIterations;
 
+uniform vec2 position;
+uniform vec2 offset;
+
+uniform float zoom;
+
 uniform int colorBanding;
+
+//2-argument arctangent, used to (for example:) get the angle of a complex number
+float atan2(float y, float x)
+{
+    return x > 0.0 ? atan(y / x) : atan(y / x) + PI;
+}
 
 float ComplexAbs(vec2 z)
 {
@@ -39,6 +48,25 @@ vec2 ComplexAdd(vec2 a, vec2 b)
 vec2 ComplexMultiply(vec2 a, vec2 b)
 {
     return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+//z^power
+vec2 ComplexPow(vec2 z, float power)
+{
+    //ref: https://registry.khronos.org/OpenGL-Refpages/gl4/
+    //according to the above ref, pow(x, y) with (x < 0) or (x = 0 & y <= 0) produces undefined.
+    //but on certain GPUs, for some reason (x = 0) also causes issues.
+    //I find this very strange as, for example: 0 * 0 (or 0^2) would equal 0, right?
+    //I'm glad that I found this issue, because this would've gone unnoticed if I didn't have my school computer.
+    //this only proved to be an issue for multibrot & multicorn as their z starts at vec2(0.0, 0.0), which meant z.x * z.x + z.y * z.y produced 0
+    //the julia fractal however, does not.
+    //I'm not completely sure if they produced undefined, but given what was happening it was most likely the case.
+
+    //z.x * z.x + z.y * z.y, will never be less than zero, so only this check is neccessary
+    if (z.x * z.x + z.y * z.y == 0.0)
+        return vec2(0.0, 0.0);
+
+    return vec2(pow(z.x * z.x + z.y * z.y, power / 2.0) * cos(power * atan2(z.y, z.x)), pow(z.x * z.x + z.y * z.y, power / 2.0) * sin(power * atan2(z.y, z.x)));
 }
 
 vec3 hsv2rgb(vec3 hsv)
@@ -104,16 +132,35 @@ void main()
             break;
 
         vec2 shipZ = vec2(abs(z.x), abs(z.y));
-        z = ComplexMultiply(shipZ, shipZ) + c;
+
+        //Why no power for loops for whole exponents (integer power value):
+        //  for loops can only use constant values, so we can't use the power value converted into an integer in our loop.
+        //  for perfomance, power 1, 2, 3, 4 & 5 are the only exceptions where ComplexMultiply will be applied multiple times instead of ComplexPow
+        //  if this was v330, we could use for loops instead for every power value that is an whole number
+        //
+        //I know this looks bad, but it's better than just using ComplexPow
+
+        if (power == 1.0)
+            z = shipZ + c;
+        else if (power == 2.0)
+            z = ComplexMultiply(shipZ, shipZ) + c;
+        else if (power == 3.0)
+            z = ComplexMultiply(ComplexMultiply(shipZ, shipZ), shipZ) + c;
+        else if (power == 4.0)
+            z = ComplexMultiply(ComplexMultiply(ComplexMultiply(shipZ, shipZ), shipZ), shipZ) + c;
+        else if (power == 5.0)
+            z = ComplexMultiply(ComplexMultiply(ComplexMultiply(ComplexMultiply(shipZ, shipZ), shipZ), shipZ), shipZ) + c;
+        else
+            z = ComplexPow(shipZ, power) + c;
 
         if (ComplexAbsSquared(z) > escapeRadius * escapeRadius)
         {
-            float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(2.0);
+            float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(power);
 
             gl_FragColor = hsva2rgba(vec4(mod((float(i) + 1.0 - nu) * 3.0, 360.0), 1.0, 1.0, 1.0));
             return;
         }
     }
     
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 255.0);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 } 

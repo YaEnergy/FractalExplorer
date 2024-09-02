@@ -27,12 +27,6 @@ uniform vec2[NUM_ROOTS] roots = vec2[NUM_ROOTS]
 
 out vec4 finalColor;
 
-//2-argument arctangent, used to (for example:) get the angle of a complex number
-float atan2(float y, float x)
-{
-    return x > 0 ? atan(y / x) : atan(y / x) + PI;
-}
-
 float ComplexAbs(vec2 z)
 {
     return sqrt(z.x * z.x + z.y * z.y);
@@ -41,17 +35,6 @@ float ComplexAbs(vec2 z)
 float ComplexAbsSquared(vec2 z)
 {
     return z.x * z.x + z.y * z.y;
-}
-
-vec2 ComplexConjugate(vec2 z)
-{
-    return vec2(z.x, -z.y);
-}
-
-//z = a + b
-vec2 ComplexAdd(vec2 a, vec2 b)
-{
-    return vec2(a.x + b.x, a.y + b.y);
 }
 
 //z = a * b

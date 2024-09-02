@@ -7,10 +7,13 @@ in vec4 fragColor;
 
 uniform float widthStretch = 1.0;
 
+uniform float power = 2.0;
+uniform int maxIterations = 20;
+
 uniform vec2 position = vec2(0.0, 0.0);
 uniform vec2 offset = vec2(0.0, 0.0);
+
 uniform float zoom = 1.0;
-uniform int maxIterations = 20;
 
 uniform int colorBanding = 0;
 
@@ -143,11 +146,32 @@ void main()
     vec2 c = ((vec2((fragTexCoord.x + offset.x) / widthStretch, fragTexCoord.y + offset.y)) / zoom) + position;
     vec2 z = vec2(0.0, 0.0);
 
-    while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+   //if power is a whole number & above 0 (excluding 0), multiply the complex number by itself that many times instead of using ComplexPow, it's less expensive
+    if (mod(power, 1.0) == 0.0 && power > 0.0)
     {
-        vec2 shipZ = vec2(abs(z.x), abs(z.y));
-        z = ComplexMultiply(shipZ, shipZ) + c;
-        complexIterations++;
+        while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+        {
+            vec2 shipZ = vec2(abs(z.x), abs(z.y));
+            vec2 newZ = shipZ;
+
+            for (int i = 1; i < int(power); i++)
+            {
+                newZ = ComplexMultiply(newZ, shipZ);
+            }
+
+            z = newZ + c;
+        
+            complexIterations++;
+        }
+    }
+    else
+    {
+        while (ComplexAbsSquared(z) <= escapeRadius * escapeRadius && complexIterations < maxIterations)
+        {
+            z = ComplexPow(vec2(abs(z.x), abs(z.y)), power) + c;
+        
+            complexIterations++;
+        }
     }
 
     if (complexIterations == maxIterations)
@@ -156,7 +180,7 @@ void main()
     }
     else
     {
-        float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(2.0);
+        float nu = colorBanding == 1 ? 1.0 : log(log(ComplexAbsSquared(z)) / 2.0 / log(2.0) ) / log(power);
 
         finalColor = hsva2rgba(vec4(mod((complexIterations + 1 - nu) * 3.0, 360.0), 1.0, 1.0, 1.0));
     }
