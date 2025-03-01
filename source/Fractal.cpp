@@ -1,7 +1,8 @@
 #include "Fractal.h"
 
+#include <cstddef>
+
 #include "raylib.h"
-#include "raymath.h"
 
 namespace Explorer
 {

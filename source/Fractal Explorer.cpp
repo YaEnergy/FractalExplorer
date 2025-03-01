@@ -3,7 +3,6 @@
 #include <iostream>
 #include <cmath>
 #include <string>
-#include <vector>
 #include <filesystem>
 
 #ifdef PLATFORM_WEB
@@ -423,7 +422,7 @@ namespace Explorer
 		fractalParameters.zoom += fractalParameters.zoom * 0.25f * Vector2Length(pinchMovement);
 
 		//min & max zoom
-		fractalParameters.zoom = std::clamp(fractalParameters.zoom, 1.0f / 100000.0f, pow(10.0f, 10.0f));
+		fractalParameters.zoom = Clamp(fractalParameters.zoom, 1.0f / 100000.0f, pow(10.0f, 10.0f));
 
 		//Update shader fractal zoom & grid increment if necessary
 		if (IsKeyDown(KEY_I) || IsKeyDown(KEY_O) || mouseWheelMoved != 0.0f || Vector2Length(pinchMovement) != 0.0f)
@@ -582,7 +581,7 @@ namespace Explorer
 		//Start at multiple of increment closest to min fractal x and draw markers until max fractal x
 
 		//don't let the x-axis marker increment numbers go offscreen
-		float incrementXPosY = std::clamp(
+		float incrementXPosY = Clamp(
 			fractalCenterScreenPosition.y + markerLength / 2.0f + numberPadding,
 			numberPadding,
 			std::max((float)screenHeight - numberFontSize - numberPadding, numberPadding)
@@ -618,7 +617,7 @@ namespace Explorer
 		//Start at multiple of increment closest to min fractal y and draw markers until max fractal y
 
 		//don't let the y-axis marker increment numbers go offscreen
-		float incrementYPosX = std::clamp(
+		float incrementYPosX = Clamp(
 			fractalCenterScreenPosition.x - markerLength / 2.0f - numberPadding,
 			numberPadding,
 			std::max((float)screenWidth - numberPadding, numberPadding)
@@ -666,7 +665,7 @@ namespace Explorer
 			Vector2
 			{
 				screenWidth - letterXSize.x - letterPadding,
-				std::clamp(
+				Clamp(
 					fractalCenterScreenPosition.y - letterXSize.y - letterPadding,
 					letterPadding * 2.0f + letterXSize.y,
 					std::max((float)screenHeight - letterXSize.y - letterPadding, letterPadding * 2.0f + letterXSize.y)
@@ -683,7 +682,7 @@ namespace Explorer
 			"y ^",
 			Vector2
 			{
-				std::clamp(
+				Clamp(
 					fractalCenterScreenPosition.x + letterPadding,
 					letterPadding,
 					std::max((float)screenWidth - letterYSize.x - letterPadding, letterPadding)

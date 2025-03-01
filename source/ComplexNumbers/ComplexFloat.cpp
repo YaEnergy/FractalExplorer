@@ -1,9 +1,8 @@
+#include "ComplexNumbers/ComplexFloat.h"
+
 #include <cmath>
 
 #include "raylib.h"
-#include "raymath.h"
-
-#include "ComplexNumbers/ComplexFloat.h"
 
 float ComplexFloat::GetMagnitudeSquared() const
 {
@@ -22,7 +21,7 @@ float ComplexFloat::GetAngleRadians() const
 
 ComplexFloat ComplexFloat::FromPolarForm(float magnitude, float angleRadians)
 {
-	return ComplexFloat{ magnitude * cos(angleRadians), magnitude * sin(angleRadians) };
+	return ComplexFloat{ magnitude * (float)cos(angleRadians), magnitude * (float)sin(angleRadians) };
 }
 
 Vector2 ComplexFloat::ToVector2() const
