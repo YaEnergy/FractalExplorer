@@ -21,7 +21,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # raylib
-set(RAYLIB_VERSION 5.0)
+set(RAYLIB_VERSION 5.5)
 
 if (${PLATFORM} MATCHES "Web")
     set(GLSL_VERSION 100)
