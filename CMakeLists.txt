@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for Fractal Explorer, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -13,12 +13,6 @@ project ("ComplexFractalExplorer" VERSION 1.1.0)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Set flags
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(STATUS "Set cmake cxx flags for release")
-    set(CMAKE_CXX_FLAGS -O2)
-endif()
 
 # raylib
 set(RAYLIB_VERSION 5.5)
@@ -79,15 +73,28 @@ else()
     add_executable (${PROJECT_NAME} ${SOURCES})
 endif()
 
-if (WIN32)
-    target_sources(${PROJECT_NAME} PRIVATE resource.rc)
-endif()
+target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra -Wpedantic)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${PROJECT_NAME} PRIVATE ${COMPILE_OPTIONS} -O2)
+    target_compile_options(${PROJECT_NAME} PUBLIC -O2)
+endif()
+target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib)
+
+# Windows icon
+if (WIN32)
+    target_sources(${PROJECT_NAME} PUBLIC resource.rc)
 endif()
 
-#Web configurations
+# Checks if OSX and links appropriate frameworks (only required on MacOS)
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+endif()
+
+# Web configurations
 if (${PLATFORM} MATCHES "Web")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so that you can directly open it.
@@ -102,17 +109,6 @@ if (${PLATFORM} MATCHES "Web")
         # "C:/tools/emsdk/upstream/emscripten/system/include" # To see what I can call in VS 2022
     )
 endif ()
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
-
-target_link_libraries(${PROJECT_NAME} raylib)
-
-# Checks if OSX and links appropriate frameworks (only required on MacOS)
-if (APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
-    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
-    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
-endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
