@@ -16,7 +16,7 @@ float ComplexFloat::GetMagnitude() const
 
 float ComplexFloat::GetAngleRadians() const
 {
-	return real > 0 ? atan(imaginary / real) : atan(imaginary / real) + 180.0f * DEG2RAD;
+	return real > 0 ? atan(imaginary / real) : atan(imaginary / real) + PI;
 }
 
 ComplexFloat ComplexFloat::FromPolarForm(float magnitude, float angleRadians)

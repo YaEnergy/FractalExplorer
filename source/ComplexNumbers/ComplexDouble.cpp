@@ -16,7 +16,7 @@ double ComplexDouble::GetMagnitude() const
 
 double ComplexDouble::GetAngleRadians() const
 {
-	return real > 0 ? atan(imaginary / real) : atan(imaginary / real) + 180.0 * (double)DEG2RAD;
+	return real > 0 ? atan(imaginary / real) : atan(imaginary / real) + (double)PI;
 }
 
 ComplexDouble ComplexDouble::FromPolarForm(double magnitude, double angleRadians)
