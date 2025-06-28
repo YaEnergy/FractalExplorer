@@ -51,15 +51,15 @@ endif()
 # Main
 set(
 	SOURCES 
-    "source/main.cpp"
-	"source/Fractal Explorer.cpp"
-    "source/Resources.cpp"
-    "source/ComplexNumbers/ComplexDouble.cpp" 
-    "source/ComplexNumbers/ComplexFloat.cpp"
-    "source/ComplexNumbers/ComplexPolynomial.cpp"
-    "source/Fractal.cpp"  
-    "source/UI/UIUtils.cpp"
-    "source/UI/GridUtils.cpp" 
+    "src/main.cpp"
+	"src/Fractal Explorer.cpp"
+    "src/Resources.cpp"
+    "src/ComplexNumbers/ComplexDouble.cpp" 
+    "src/ComplexNumbers/ComplexFloat.cpp"
+    "src/ComplexNumbers/ComplexPolynomial.cpp"
+    "src/Fractal.cpp"  
+    "src/UI/UIUtils.cpp"
+    "src/UI/GridUtils.cpp" 
 )
 
 set(
